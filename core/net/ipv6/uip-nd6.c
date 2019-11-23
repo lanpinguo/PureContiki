@@ -192,7 +192,7 @@ ns_input(void)
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
   PRINTF(" with target address ");
   PRINT6ADDR((uip_ipaddr_t *) (&UIP_ND6_NS_BUF->tgtipaddr));
-  PRINTF("\n");
+  PRINTF("\r\n");
   UIP_STAT(++uip_stat.nd6.recv);
 
 #if UIP_CONF_IPV6_CHECKS
@@ -358,7 +358,7 @@ create_na:
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF(" with target address ");
   PRINT6ADDR(&UIP_ND6_NA_BUF->tgtipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
   return;
 
 discard:
@@ -429,7 +429,7 @@ uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF(" with target address ");
   PRINT6ADDR(tgt);
-  PRINTF("\n");
+  PRINTF("\r\n");
   return;
 }
 #endif /* UIP_ND6_SEND_NS */
@@ -468,7 +468,7 @@ na_input(void)
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
   PRINTF(" with target address ");
   PRINT6ADDR((uip_ipaddr_t *) (&UIP_ND6_NA_BUF->tgtipaddr));
-  PRINTF("\n");
+  PRINTF("\r\n");
   UIP_STAT(++uip_stat.nd6.recv);
 
   /*
@@ -622,7 +622,7 @@ rs_input(void)
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF(" to ");
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
   UIP_STAT(++uip_stat.nd6.recv);
 
 
@@ -810,7 +810,7 @@ uip_nd6_ra_output(uip_ipaddr_t * dest)
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
   PRINTF(" from ");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
   return;
 }
 #endif /* UIP_ND6_SEND_RA */
@@ -852,7 +852,7 @@ uip_nd6_rs_output(void)
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
   PRINTF(" from ");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
   return;
 }
 /*---------------------------------------------------------------------------*/
@@ -874,7 +874,7 @@ ra_input(void)
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF(" to ");
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
   UIP_STAT(++uip_stat.nd6.recv);
 
 #if UIP_CONF_IPV6_CHECKS

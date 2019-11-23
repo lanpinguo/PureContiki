@@ -264,7 +264,7 @@ ip64_set_ipv6_address(const uip_ip6addr_t *addr)
 #if DEBUG
   PRINTF("ip64_set_ipv6_address: configuring address ");
   uip_debug_ipaddr_print(addr);
-  PRINTF("\n");
+  PRINTF("\r\n");
 #endif /* DEBUG */
 }
 /*---------------------------------------------------------------------------*/
@@ -492,7 +492,7 @@ ip64_6to4(const uint8_t *ipv6packet, const uint16_t ipv6packet_len,
 #if DEBUG
     PRINTF("ip64_6to4: Could not convert IPv6 destination address.\n");
     uip_debug_ipaddr_print(&v6hdr->destipaddr);
-    PRINTF("\n");
+    PRINTF("\r\n");
 #endif /* DEBUG */
     return 0;
   }

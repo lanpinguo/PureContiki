@@ -370,7 +370,7 @@ decode_name(const unsigned char *query, char *dest,
     }
   }
 
-  //DEBUG_PRINTF("\"\n");
+  //DEBUG_PRINTF("\"\r\n");
   *dest = 0;
   return len != 0;
 }
@@ -442,7 +442,7 @@ skip_name(unsigned char *query)
     };
     DEBUG_PRINTF(".");
   } while(*query != 0);
-  DEBUG_PRINTF("\n");
+  DEBUG_PRINTF("\r\n");
   return query + 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -1097,7 +1097,7 @@ resolv_set_hostname(const char *hostname)
     strncat(resolv_hostname, ".local", RESOLV_CONF_MAX_DOMAIN_NAME_SIZE - strlen(resolv_hostname));
   }
 
-  PRINTF("resolver: hostname changed to \"%s\"\n", resolv_hostname);
+  PRINTF("resolver: hostname changed to \"%s\"\r\n", resolv_hostname);
 
   start_name_collision_check(0);
 }

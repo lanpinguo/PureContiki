@@ -70,7 +70,7 @@ ip64_eth_interface_input(uint8_t *packet, uint16_t len)
       PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
       PRINTF(" destination ");
       PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-      PRINTF("\n");
+      PRINTF("\r\n");
 
       tcpip_input();
       printf("Done\n");
@@ -93,7 +93,7 @@ output(void)
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF(" destination ");
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   printf("<--------------\n");
   len = ip64_6to4(&uip_buf[UIP_LLH_LEN], uip_len,

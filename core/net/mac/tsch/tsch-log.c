@@ -103,7 +103,7 @@ tsch_log_process_pending(void)
         if(log->tx.drift_used) {
           printf(", dr %d", log->tx.drift);
         }
-        printf("\n");
+        printf("\r\n");
         break;
       case tsch_log_rx:
         printf("%s-%u-%u %u rx %d",

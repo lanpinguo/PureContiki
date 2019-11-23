@@ -56,7 +56,7 @@
 #ifdef SHELL_CONF_PROMPT
 extern char shell_prompt_text[];
 #else
-static char shell_prompt_text[] = "Contiki> ";
+static char shell_prompt_text[] = "Contiki>";
 #endif
 
 #ifdef SHELL_CONF_BANNER

@@ -584,7 +584,7 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
              ies.ie_tsch_slotframe_and_link.slotframe_size,
              ies.ie_tsch_slotframe_and_link.num_links);
       PRINTLLADDR((const uip_lladdr_t *)&frame.src_addr);
-      PRINTF("\n");
+      PRINTF("\r\n");
 
       return 1;
     }

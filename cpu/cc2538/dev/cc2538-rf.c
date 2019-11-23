@@ -633,7 +633,7 @@ prepare(const void *payload, unsigned short payload_len)
       PRINTF("%02x", ((unsigned char *)(payload))[i]);
     }
   }
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   return 0;
 }
@@ -646,7 +646,7 @@ transmit(unsigned short transmit_len)
   rtimer_clock_t t0;
   uint8_t was_off = 0;
 
-  PRINTF("RF: Transmit\n");
+  PRINTF("RF: Transmit\r\n");
 
   if(!(rf_flags & RX_ACTIVE)) {
     t0 = RTIMER_NOW();

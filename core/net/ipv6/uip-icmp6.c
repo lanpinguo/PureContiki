@@ -129,7 +129,7 @@ echo_request_input(void)
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF(" to ");
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   /* IP header */
   UIP_IP_BUF->ttl = uip_ds6_if.cur_hop_limit;
@@ -174,7 +174,7 @@ echo_request_input(void)
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
   PRINTF(" from ");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
   UIP_STAT(++uip_stat.icmp.sent);
   return;
 }
@@ -261,7 +261,7 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param) {
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
   PRINTF(" from ");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
   return;
 }
 
@@ -305,7 +305,7 @@ echo_reply_input(void)
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF(" to ");
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   uip_ipaddr_copy(&sender, &UIP_IP_BUF->srcipaddr);
   ttl = UIP_IP_BUF->ttl;

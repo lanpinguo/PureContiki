@@ -153,7 +153,7 @@ rpl_purge_routes(void)
         /* Don't schedule more than 1 No-Path DAO, let next iteration handle that */
         return;
       }
-      PRINTF("\n");
+      PRINTF("\r\n");
     } else {
       r = uip_ds6_route_next(r);
     }
@@ -244,7 +244,7 @@ rpl_add_route(rpl_dag_t *dag, uip_ipaddr_t *prefix, int prefix_len,
   PRINT6ADDR(prefix);
   PRINTF("/%d via ", prefix_len);
   PRINT6ADDR(next_hop);
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   return rep;
 }
@@ -315,7 +315,7 @@ rpl_purge_dags(void)
             if(!instance->dag_table[i].joined) {
               PRINTF("RPL: Removing dag ");
               PRINT6ADDR(&instance->dag_table[i].dag_id);
-              PRINTF("\n");
+              PRINTF("\r\n");
               rpl_free_dag(&instance->dag_table[i]);
             }
           } else {

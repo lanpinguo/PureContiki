@@ -334,7 +334,7 @@ parse_announcements(const linkaddr_t *from)
   /*  for(i = 0; i < packetbuf_datalen(); ++i) {
     printf("%02x ", ((uint8_t *)packetbuf_dataptr())[i]);
   }
-  printf("\n");*/
+  printf("\r\n");*/
 
   for(i = 0; i < adata.num; ++i) {
     /*   printf("%d.%d: announcement %d: %d\n",

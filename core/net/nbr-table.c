@@ -468,7 +468,7 @@ print_table()
         PRINTF(" [%d:%d]", (used_map[i] & (1 << j)) != 0,
                (locked_map[i] & (1 << j)) != 0);
       }
-      PRINTF("\n");
+      PRINTF("\r\n");
     }
   }
 }

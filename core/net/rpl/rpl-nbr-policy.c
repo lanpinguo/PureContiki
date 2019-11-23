@@ -154,7 +154,7 @@ update_nbr(void)
     } else if(is_used > 1) {
       PRINTF("NBR-POLICY: *** Neighbor is both child and candidate parent: ");
       PRINTLLADDR((uip_lladdr_t *)lladdr);
-      PRINTF("\n");
+      PRINTF("\r\n");
     }
 
     nbr = nbr_table_next(ds6_neighbors, nbr);

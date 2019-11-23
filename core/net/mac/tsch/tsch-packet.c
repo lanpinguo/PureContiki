@@ -370,7 +370,7 @@ tsch_packet_parse_eb(const uint8_t *buf, int buf_size,
     PRINTLLADDR((const uip_lladdr_t *)&frame->src_addr);
     PRINTF(" to 0x%x/", frame->dest_pid);
     PRINTLLADDR((const uip_lladdr_t *)&frame->dest_addr);
-    PRINTF("\n");
+    PRINTF("\r\n");
     return 0;
   }
 

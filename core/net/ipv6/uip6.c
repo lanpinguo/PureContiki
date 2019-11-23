@@ -1147,7 +1147,7 @@ uip_process(uint8_t flag)
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF(" to ");
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   if(uip_is_addr_mcast(&UIP_IP_BUF->srcipaddr)){
     UIP_STAT(++uip_stat.ip.drop);
@@ -1243,7 +1243,7 @@ uip_process(uint8_t flag)
       UIP_IP_BUF->ttl = UIP_IP_BUF->ttl - 1;
       PRINTF("Forwarding packet to ");
       PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-      PRINTF("\n");
+      PRINTF("\r\n");
       UIP_STAT(++uip_stat.ip.forwarded);
       goto send;
     } else {
@@ -2274,7 +2274,7 @@ uip_process(uint8_t flag)
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
   PRINTF(" from ");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   if(uip_connr->tcpstateflags & UIP_STOPPED) {
     /* If the connection has issued uip_stop(), we advertise a zero

@@ -300,7 +300,7 @@ rpl_process_srh_header(void)
 
       PRINTF("RPL: SRH next hop ");
       PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-      PRINTF("\n");
+      PRINTF("\r\n");
     }
     uip_ext_len = last_uip_ext_len;
     return 1;
@@ -391,7 +391,7 @@ insert_srh_header(void)
 
     PRINTF("RPL: SRH Hop ");
     PRINT6ADDR(&node_addr);
-    PRINTF("\n");
+    PRINTF("\r\n");
     node = node->parent;
     path_len++;
   }

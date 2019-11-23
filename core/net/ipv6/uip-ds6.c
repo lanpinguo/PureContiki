@@ -603,7 +603,7 @@ uip_ds6_dad(uip_ds6_addr_t *addr)
    */
   PRINTF("DAD succeeded, ipaddr: ");
   PRINT6ADDR(&addr->ipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   addr->state = ADDR_PREFERRED;
   return;

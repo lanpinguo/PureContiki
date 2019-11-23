@@ -611,7 +611,7 @@ handle_timer(void *ptr)
         if(locmpptr->sw->count == 0) {
           PRINTF("ROLL TM: M=%u Free Window ", m);
           PRINT_SEED(&locmpptr->sw->seed_id);
-          PRINTF("\n");
+          PRINTF("\r\n");
           window_free(locmpptr->sw);
         }
         MCAST_PACKET_FREE(locmpptr);
@@ -705,7 +705,7 @@ window_lookup(seed_id_t *s, uint8_t m)
       iterswptr--) {
     VERBOSE_PRINTF("ROLL TM: M=%u (%u) ", SLIDING_WINDOW_GET_M(iterswptr), m);
     VERBOSE_PRINT_SEED(&iterswptr->seed_id);
-    VERBOSE_PRINTF("\n");
+    VERBOSE_PRINTF("\r\n");
     if(seed_id_cmp(s, &iterswptr->seed_id) &&
        SLIDING_WINDOW_GET_M(iterswptr) == m) {
       return iterswptr;
@@ -1105,7 +1105,7 @@ icmp_input()
     PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
     PRINTF(" to ");
     PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-    PRINTF("\n");
+    PRINTF("\r\n");
     ROLL_TM_STATS_ADD(icmp_bad);
     goto discard;
   }

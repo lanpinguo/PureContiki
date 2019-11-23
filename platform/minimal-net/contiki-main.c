@@ -121,7 +121,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 	  if(uip_ds6_if.addr_list[i].isused) {
 	    printf("IPV6 Address: ");
 	    sprint_ip6(uip_ds6_if.addr_list[i].ipaddr);
-	    printf("\n");
+	    printf("\r\n");
 	  }
 	}
       }
@@ -331,7 +331,7 @@ main(int argc, char **argv)
       if(uip_ds6_if.addr_list[i].isused) {
         printf("IPV6 Addresss: ");
         sprint_ip6(uip_ds6_if.addr_list[i].ipaddr);
-        printf("\n");
+        printf("\r\n");
         interface_count++;
       }
     }

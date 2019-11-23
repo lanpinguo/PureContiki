@@ -627,7 +627,7 @@ uncompress_addr(uip_ipaddr_t *ipaddr, uint8_t const prefix[],
   }
 
   PRINT6ADDR(ipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
 }
 
 /*--------------------------------------------------------------------*/
@@ -676,7 +676,7 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
       uint8_t data = ((uint8_t *) (UIP_IP_BUF))[ndx];
       PRINTF("%02x", data);
     }
-    PRINTF("\n");
+    PRINTF("\r\n");
   }
 #endif
 
@@ -1715,7 +1715,7 @@ input(void)
         uint8_t data = ((uint8_t *) (UIP_IP_BUF))[ndx];
         PRINTF("%02x", data);
       }
-      PRINTF("\n");
+      PRINTF("\r\n");
     }
 #endif
 

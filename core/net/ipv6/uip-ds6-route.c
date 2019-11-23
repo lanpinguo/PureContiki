@@ -260,7 +260,7 @@ uip_ds6_route_lookup(uip_ipaddr_t *addr)
 
   PRINTF("uip-ds6-route: Looking up route for ");
   PRINT6ADDR(addr);
-  PRINTF("\n");
+  PRINTF("\r\n");
 
 
   found_route = NULL;
@@ -284,7 +284,7 @@ uip_ds6_route_lookup(uip_ipaddr_t *addr)
     PRINT6ADDR(addr);
     PRINTF(" via ");
     PRINT6ADDR(uip_ds6_route_nexthop(found_route));
-    PRINTF("\n");
+    PRINTF("\r\n");
   } else {
     PRINTF("uip-ds6-route: No route found\n");
   }
@@ -322,7 +322,7 @@ uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length,
   if(nexthop_lladdr == NULL) {
     PRINTF("uip_ds6_route_add: neighbor link-local address unknown for ");
     PRINT6ADDR(nexthop);
-    PRINTF("\n");
+    PRINTF("\r\n");
     return NULL;
   }
 
@@ -362,7 +362,7 @@ uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length,
       }
       PRINTF("uip_ds6_route_add: dropping route to ");
       PRINT6ADDR(&oldest->ipaddr);
-      PRINTF("\n");
+      PRINTF("\r\n");
       uip_ds6_route_rm(oldest);
     }
 
@@ -445,7 +445,7 @@ uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length,
   PRINT6ADDR(ipaddr);
   PRINTF(" via ");
   PRINT6ADDR(nexthop);
-  PRINTF("\n");
+  PRINTF("\r\n");
   ANNOTATE("#L %u 1;blue\n", nexthop->u8[sizeof(uip_ipaddr_t) - 1]);
 
 #if UIP_DS6_NOTIFICATIONS
@@ -475,7 +475,7 @@ uip_ds6_route_rm(uip_ds6_route_t *route)
 
     PRINTF("uip_ds6_route_rm: removing route: ");
     PRINT6ADDR(&route->ipaddr);
-    PRINTF("\n");
+    PRINTF("\r\n");
 
     /* Remove the route from the route list */
     list_remove(routelist, route);
@@ -488,7 +488,7 @@ uip_ds6_route_rm(uip_ds6_route_t *route)
     if(neighbor_route == NULL) {
       PRINTF("uip_ds6_route_rm: neighbor_route was NULL for ");
       uip_debug_ipaddr_print(&route->ipaddr);
-      PRINTF("\n");
+      PRINTF("\r\n");
     }
     list_remove(route->neighbor_routes->route_list, neighbor_route);
     if(list_head(route->neighbor_routes->route_list) == NULL) {
@@ -599,7 +599,7 @@ uip_ds6_defrt_add(uip_ipaddr_t *ipaddr, unsigned long interval)
     } else {
       PRINTF("uip_ds6_defrt_add: adding default route to ");
       PRINT6ADDR(ipaddr);
-      PRINTF("\n");
+      PRINTF("\r\n");
     }
 
     list_push(defaultrouterlist, d);
@@ -684,18 +684,18 @@ uip_ds6_defrt_choose(void)
       d = list_item_next(d)) {
     PRINTF("Defrt, IP address ");
     PRINT6ADDR(&d->ipaddr);
-    PRINTF("\n");
+    PRINTF("\r\n");
     bestnbr = uip_ds6_nbr_lookup(&d->ipaddr);
     if(bestnbr != NULL && bestnbr->state != NBR_INCOMPLETE) {
       PRINTF("Defrt found, IP address ");
       PRINT6ADDR(&d->ipaddr);
-      PRINTF("\n");
+      PRINTF("\r\n");
       return &d->ipaddr;
     } else {
       addr = &d->ipaddr;
       PRINTF("Defrt INCOMPLETE found, IP address ");
       PRINT6ADDR(&d->ipaddr);
-      PRINTF("\n");
+      PRINTF("\r\n");
     }
   }
   return addr;

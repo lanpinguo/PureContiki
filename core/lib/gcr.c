@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
       pos++;
     }
   }
-  printf("\n");
+  printf("\r\n");
   printf("Encoded result %d chars (from %d) \n", pos, i);
   gcr_init();
   for (i = 0; i < pos; i++) {

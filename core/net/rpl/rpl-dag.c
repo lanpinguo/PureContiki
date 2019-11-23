@@ -243,7 +243,7 @@ rpl_set_preferred_parent(rpl_dag_t *dag, rpl_parent_t *p)
     } else {
       PRINTF("NULL");
     }
-    PRINTF("\n");
+    PRINTF("\r\n");
 
 #ifdef RPL_CALLBACK_PARENT_SWITCH
     RPL_CALLBACK_PARENT_SWITCH(dag->preferred_parent, p);
@@ -432,7 +432,7 @@ rpl_set_root(uint8_t instance_id, uip_ipaddr_t *dag_id)
 
   PRINTF("RPL: Node set to be a DAG root with DAG ID ");
   PRINT6ADDR(&dag->dag_id);
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   ANNOTATE("#A root=%u\n", dag->dag_id.u8[sizeof(dag->dag_id) - 1]);
 
@@ -489,7 +489,7 @@ check_prefix(rpl_prefix_t *last_prefix, rpl_prefix_t *new_prefix)
     if(rep != NULL) {
       PRINTF("RPL: removing global IP address ");
       PRINT6ADDR(&ipaddr);
-      PRINTF("\n");
+      PRINTF("\r\n");
       uip_ds6_addr_rm(rep);
     }
   }
@@ -499,7 +499,7 @@ check_prefix(rpl_prefix_t *last_prefix, rpl_prefix_t *new_prefix)
     if(uip_ds6_addr_lookup(&ipaddr) == NULL) {
       PRINTF("RPL: adding global IP address ");
       PRINT6ADDR(&ipaddr);
-      PRINTF("\n");
+      PRINTF("\r\n");
       uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
     }
   }
@@ -540,7 +540,7 @@ rpl_set_default_route(rpl_instance_t *instance, uip_ipaddr_t *from)
   if(instance->def_route != NULL) {
     PRINTF("RPL: Removing default route through ");
     PRINT6ADDR(&instance->def_route->ipaddr);
-    PRINTF("\n");
+    PRINTF("\r\n");
     uip_ds6_defrt_rm(instance->def_route);
     instance->def_route = NULL;
   }
@@ -548,7 +548,7 @@ rpl_set_default_route(rpl_instance_t *instance, uip_ipaddr_t *from)
   if(from != NULL) {
     PRINTF("RPL: Adding default route through ");
     PRINT6ADDR(from);
-    PRINTF("\n");
+    PRINTF("\r\n");
     instance->def_route = uip_ds6_defrt_add(from,
         RPL_DEFAULT_ROUTE_INFINITE_LIFETIME ? 0 : RPL_LIFETIME(instance, instance->default_lifetime));
     if(instance->def_route == NULL) {
@@ -658,7 +658,7 @@ rpl_free_dag(rpl_dag_t *dag)
   if(dag->joined) {
     PRINTF("RPL: Leaving the DAG ");
     PRINT6ADDR(&dag->dag_id);
-    PRINTF("\n");
+    PRINTF("\r\n");
     dag->joined = 0;
 
     /* Remove routes installed by DAOs. */
@@ -686,7 +686,7 @@ rpl_add_parent(rpl_dag_t *dag, rpl_dio_t *dio, uip_ipaddr_t *addr)
 
   PRINTF("RPL: rpl_add_parent lladdr %p ", lladdr);
   PRINT6ADDR(addr);
-  PRINTF("\n");
+  PRINTF("\r\n");
   if(lladdr != NULL) {
     /* Add parent in rpl_parents - again this is due to DIO */
     p = nbr_table_add_lladdr(rpl_parents, (linkaddr_t *)lladdr,
@@ -790,7 +790,7 @@ rpl_select_dag(rpl_instance_t *instance, rpl_parent_t *p)
 
     PRINTF("RPL: New preferred DAG: ");
     PRINT6ADDR(&best_dag->dag_id);
-    PRINTF("\n");
+    PRINTF("\r\n");
 
     if(best_dag->prefix_info.flags & UIP_ND6_RA_FLAG_AUTONOMOUS) {
       check_prefix(&instance->current_dag->prefix_info, &best_dag->prefix_info);
@@ -935,7 +935,7 @@ rpl_remove_parent(rpl_parent_t *parent)
 {
   PRINTF("RPL: Removing parent ");
   PRINT6ADDR(rpl_get_parent_ipaddr(parent));
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   rpl_nullify_parent(parent);
 
@@ -954,7 +954,7 @@ rpl_nullify_parent(rpl_parent_t *parent)
       if(dag->instance->def_route != NULL) {
         PRINTF("RPL: Removing default route ");
         PRINT6ADDR(rpl_get_parent_ipaddr(parent));
-        PRINTF("\n");
+        PRINTF("\r\n");
         uip_ds6_defrt_rm(dag->instance->def_route);
         dag->instance->def_route = NULL;
       }
@@ -970,7 +970,7 @@ rpl_nullify_parent(rpl_parent_t *parent)
 
   PRINTF("RPL: Nullifying parent ");
   PRINT6ADDR(rpl_get_parent_ipaddr(parent));
-  PRINTF("\n");
+  PRINTF("\r\n");
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -982,7 +982,7 @@ rpl_move_parent(rpl_dag_t *dag_src, rpl_dag_t *dag_dst, rpl_parent_t *parent)
     if(dag_src->joined && dag_src->instance->def_route != NULL) {
       PRINTF("RPL: Removing default route ");
       PRINT6ADDR(rpl_get_parent_ipaddr(parent));
-      PRINTF("\n");
+      PRINTF("\r\n");
       PRINTF("RPL: rpl_move_parent\n");
       uip_ds6_defrt_rm(dag_src->instance->def_route);
       dag_src->instance->def_route = NULL;
@@ -996,7 +996,7 @@ rpl_move_parent(rpl_dag_t *dag_src, rpl_dag_t *dag_dst, rpl_parent_t *parent)
 
   PRINTF("RPL: Moving parent ");
   PRINT6ADDR(rpl_get_parent_ipaddr(parent));
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   parent->dag = dag_dst;
 }
@@ -1165,7 +1165,7 @@ rpl_join_instance(uip_ipaddr_t *from, rpl_dio_t *dio)
   PRINTF("RPL: Joined DAG with instance ID %u, rank %hu, DAG ID ",
          dio->instance_id, dag->rank);
   PRINT6ADDR(&dag->dag_id);
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   ANNOTATE("#A join=%u\n", dag->dag_id.u8[sizeof(dag->dag_id) - 1]);
 
@@ -1255,7 +1255,7 @@ rpl_add_dag(uip_ipaddr_t *from, rpl_dio_t *dio)
   PRINTF("RPL: Joined DAG with instance ID %u, rank %hu, DAG ID ",
          dio->instance_id, dag->rank);
   PRINT6ADDR(&dag->dag_id);
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   ANNOTATE("#A join=%u\n", dag->dag_id.u8[sizeof(dag->dag_id) - 1]);
 
@@ -1376,7 +1376,7 @@ rpl_process_parent_event(rpl_instance_t *instance, rpl_parent_t *p)
       && !rpl_parent_is_reachable(p) && instance->mop > RPL_MOP_NON_STORING) {
     PRINTF("RPL: Unacceptable link %u, removing routes via: ", rpl_get_parent_link_metric(p));
     PRINT6ADDR(rpl_get_parent_ipaddr(p));
-    PRINTF("\n");
+    PRINTF("\r\n");
     rpl_remove_routes_by_nexthop(rpl_get_parent_ipaddr(p), p->dag);
   }
 
@@ -1427,7 +1427,7 @@ add_nbr_from_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
   if(rpl_icmp6_update_nbr_table(from, NBR_TABLE_REASON_RPL_DIO, dio) == NULL) {
     PRINTF("RPL: Out of memory, dropping DIO from ");
     PRINT6ADDR(from);
-    PRINTF("\n");
+    PRINTF("\r\n");
     return 0;
   }
   return 1;
@@ -1571,7 +1571,7 @@ rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
       }
       PRINTF("RPL: New candidate parent with rank %u: ", (unsigned)p->rank);
       PRINT6ADDR(from);
-      PRINTF("\n");
+      PRINTF("\r\n");
     } else {
       p = rpl_find_parent(previous_dag, from);
       if(p != NULL) {

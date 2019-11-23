@@ -68,7 +68,7 @@ input_callback(void)
       memcpy(&prefix, &uip_buf[2], 8);
       PRINTF("Setting prefix ");
       PRINT6ADDR(&prefix);
-      PRINTF("\n");
+      PRINTF("\r\n");
       set_prefix_64(&prefix);
     }
 #endif
@@ -126,7 +126,7 @@ output(void)
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF(" destination ");
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
   */
   if(uip_ipaddr_cmp(&last_sender, &UIP_IP_BUF->srcipaddr)) {
     PRINTF("ip64-interface: output, not sending bounced message\n");

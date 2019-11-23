@@ -522,6 +522,8 @@ typedef uint32_t rtimer_clock_t;
 #define DATA_OUT_PKT_SIZE_MAX   (USB_EP2_SIZE)
 
 
+#define SHELL_CONF_PROMPT
+
 /** @} */
 /*---------------------------------------------------------------------------*/
 

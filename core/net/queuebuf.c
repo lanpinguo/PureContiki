@@ -466,7 +466,7 @@ queuebuf_debug_print(void)
       q = list_item_next(q)) {
     printf("%s,%d,%lu ", q->file, q->line, q->time);
   }
-  printf("\n");
+  printf("\r\n");
 #endif /* QUEUEBUF_DEBUG */
 }
 /*---------------------------------------------------------------------------*/

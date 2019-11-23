@@ -155,7 +155,7 @@ icmp_output()
 
   VERBOSE_PRINTF("ESMRF: ICMPv6 Out - Hdr @ %p, payload @ %p to: ", UIP_ICMP_BUF, mob);
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF("\n");
+  PRINTF("\r\n");
 
   UIP_IP_BUF->len[0] = (UIP_ICMPH_LEN + payload_len) >> 8;
   UIP_IP_BUF->len[1] = (UIP_ICMPH_LEN + payload_len) & 0xff;
@@ -390,7 +390,7 @@ out(void)
     PRINTF("ESMRF: I am not the Root\n");
 	PRINTF("Send multicast-on-befalf message (ICMPv6) instead to  ");
     PRINT6ADDR(&dag_t->dag_id);
-    PRINTF("\n");
+    PRINTF("\r\n");
     icmp_output();
     uip_slen=0;
     return;
