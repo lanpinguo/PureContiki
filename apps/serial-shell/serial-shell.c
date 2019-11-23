@@ -82,8 +82,10 @@ shell_default_output(const char *text1, int len1, const char *text2, int len2)
 void
 shell_prompt(char *str)
 {
-  printf("\r\n%d.%d: %s", linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-	 str);
+  printf("\r\n%02x.%02x: %s", 
+  			linkaddr_node_addr.u8[LINKADDR_CONF_SIZE - 2],
+  			linkaddr_node_addr.u8[LINKADDR_CONF_SIZE - 1],
+	 		str);
 }
 /*---------------------------------------------------------------------------*/
 void
