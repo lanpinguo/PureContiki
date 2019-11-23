@@ -67,6 +67,7 @@ shell_default_output(const char *text1, int len1, const char *text2, int len2)
     len2 = 0;
   }
 
+  printf("\r\n");
   /* Precision (printf("%.Ns", text1)) not supported on all platforms.
      putchar(c) not be supported on all platforms. */
   for(i = 0; i < len1; i++) {
@@ -81,7 +82,7 @@ shell_default_output(const char *text1, int len1, const char *text2, int len2)
 void
 shell_prompt(char *str)
 {
-  printf("%d.%d: %s", linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+  printf("\r\n%d.%d: %s", linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
 	 str);
 }
 /*---------------------------------------------------------------------------*/

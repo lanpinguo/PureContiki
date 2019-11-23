@@ -34,9 +34,10 @@
 
 #include "lib/ringbuf.h"
 
+#include <stdio.h>
+
 #define DEBUG 0
 #if DEBUG
-#include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
@@ -89,7 +90,9 @@ serial_line_input_byte(unsigned char c)
       overflow = 0;
     }
   }
-	PRINTF("[%c]",c);
+
+  /* echo */
+  printf("%c",c);
   /* Wake up consumer process */
   process_poll(&serial_line_process);
   return 1;
