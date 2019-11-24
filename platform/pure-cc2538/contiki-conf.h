@@ -381,6 +381,11 @@ typedef uint32_t rtimer_clock_t;
 #define CC2538_RF_CONF_AUTOACK               1 /**< RF H/W generates ACKs */
 #endif /* CC2538_CONF_AUTOACK */
 
+#ifndef RDC_CONF_HARDWARE_ACK
+#define RDC_CONF_HARDWARE_ACK                1 /**< RF H/W hw auto ACK */
+#endif /* RDC_CONF_HARDWARE_ACK */
+
+
 #ifndef CC2538_RF_CONF_TX_USE_DMA
 #define CC2538_RF_CONF_TX_USE_DMA            1 /**< RF TX over DMA */
 #endif
