@@ -19,6 +19,7 @@ LDFLAGS += -mcpu=cortex-m3 -mthumb -nostartfiles
 LDFLAGS += -T $(LDSCRIPT)
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
 LDFLAGS += -Wl,-Map=$(@:.elf=-$(TARGET).map),--cref,--no-warn-mismatch
+LDFLAGS += --specs=nosys.specs 
 OBJCOPY_FLAGS += -O binary --gap-fill 0xff
 OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
 

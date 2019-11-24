@@ -100,8 +100,8 @@ create_dag_callback(void *ptr)
 
     dag = rpl_get_any_dag();
 
-    PRINTF("RPL: Found a network we did not create\n");
-    PRINTF("RPL: version %d grounded %d preference %d used %d joined %d rank %d\n",
+    PRINTF("RPL: Found a network we did not create\r\n");
+    PRINTF("RPL: version %d grounded %d preference %d used %d joined %d rank %d\r\n",
            dag->version, dag->grounded,
            dag->preference, dag->used,
            dag->joined, dag->rank);
@@ -159,7 +159,7 @@ set_global_address(void)
     if(uip_ds6_if.addr_list[i].isused &&
        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
       uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
-      printf("\r\n");
+      printf("\r\r\n");
     }
   }
 
@@ -222,14 +222,14 @@ rpl_dag_root_init_dag_immediately(void)
 
       uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
       rpl_set_prefix(dag, &prefix, 64);
-      PRINTF("RPL: rpl_dag_root_init_dag: created a new RPL dag\n");
+      PRINTF("RPL: rpl_dag_root_init_dag: created a new RPL dag\r\n");
       return 0;
     } else {
-      PRINTF("RPL: rpl_dag_root_init_dag: failed to create a new RPL DAG\n");
+      PRINTF("RPL: rpl_dag_root_init_dag: failed to create a new RPL DAG\r\n");
       return -1;
     }
   } else {
-    PRINTF("RPL: rpl_dag_root_init_dag: failed to create a new RPL DAG, no preferred IP address found\n");
+    PRINTF("RPL: rpl_dag_root_init_dag: failed to create a new RPL DAG, no preferred IP address found\r\n");
     return -2;
   }
 }

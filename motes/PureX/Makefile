@@ -4,7 +4,9 @@ CONTIKI_PROJECT = PureX
 TARGET = pure-cc2538
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-APPS = serial-shell
+
+APPS = serial-shell 
+APPS += ping6
 #CONTIKI_WITH_RIME = 1
 CONTIKI_WITH_IPV6 = 1
 #CONTIKI_WITH_IPV4 =1
