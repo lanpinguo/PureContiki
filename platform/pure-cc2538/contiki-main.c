@@ -340,7 +340,7 @@ main(void)
   watchdog_start();
   //fade(LEDS_ORANGE);
 
-  cc2538_rf_set_promiscous_mode(0);
+  cc2538_rf_set_promiscous_mode(1);
 
   //mac_sniffer_callback = usbeth_send;
 
