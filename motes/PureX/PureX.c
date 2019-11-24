@@ -101,36 +101,27 @@ static struct uip_udp_conn *server_conn;
 
 
 
-#define TEST  2
+/*---------------------------------------------------------------------------*/
+static void
+print_local_addresses(void)
+{
+  int i;
+  uint8_t state;
 
-#if TEST == 1
-static uint8_t pkt_index = 0;
-static uint8_t test_data[UIP_BUFSIZE] = {
-  0x14,0x75,0x90,0x73,0x55,0xb4,0x98,0x54,0x1b,0xa2,0x87,0xd0,0x08,0x00,0x45,0x00,
-  0x00,0x34,0x1b,0x1c,0x40,0x00,0x40,0x06,0x4c,0x1b,0xc0,0xa8,0x02,0x64,0x0d,0xe6,
-  0x02,0x9b,0xdb,0x17,0x00,0x16,0xfb,0x07,0x2b,0x89,0x00,0x00,0x00,0x00,0x80,0x02,
-  0xfa,0xf0,0x9e,0xd3,0x00,0x00,0x02,0x04,0x05,0xb4,0x01,0x03,0x03,0x08,0x01,0x01,
-  0x04,0x02
-};
+  PRINTF("Server IPv6 addresses: ");
+  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+    state = uip_ds6_if.addr_list[i].state;
+    if(state == ADDR_TENTATIVE || state == ADDR_PREFERRED) {
+      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+      PRINTF("\n");
+      /* hack to make address "final" */
+      if (state == ADDR_TENTATIVE) {
+	uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
+      }
+    }
+  }
+}
 
-#elif TEST == 2
-static uint8_t pkt_index = 0;
-static uint8_t test_data[UIP_BUFSIZE] = {
-  0x41, 0xd8, 0xf9, 0x34, 0x12, 0xff, 0xff, 0xf1, 0xfd, 0x05, 0x10, 0x00, 0x4b, 0x12, 0x00, 0x7a,
-  0x3b, 0x3a, 0x1a, 0x9b, 0x00, 0x0c, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
-
-#elif TEST == 3
-static uint8_t test_data[] = {
-  0x02, 0x00, 0x00, 0x00, 0x00, 0x12, 0xf4, 0x8e, 0x38, 0x86, 0x3e, 0x8b, 0x08, 0x00, 0x45, 0x00,
-  0x00, 0x44, 0xc3, 0x61, 0x40, 0x00, 0x40, 0x11, 0xf0, 0x65, 0xc0, 0xa8, 0x02, 0xc9, 0xc0, 0xa8,
-  0x02, 0xc8, 0x90, 0x41, 0x04, 0x00, 0x00, 0x30, 0xb4, 0x45, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36,
-  0x37, 0x38, 0x39, 0x30, 0x39, 0x38, 0x37, 0x36, 0x35, 0x34, 0x33, 0x33, 0x34, 0x36, 0x37, 0x38,
-  0x39, 0x30, 0x2d, 0x30, 0x39, 0x38, 0x37, 0x36, 0x35, 0x34, 0x33, 0x33, 0x34, 0x35, 0x36, 0x37,
-  0x38, 0x39, 0x00, 0x00, 0x00,0x00
-};
-
-#endif
 /*---------------------------------------------------------------------------*/
 PROCESS(udp_server_process, "UDP server process");
 
@@ -140,29 +131,73 @@ SHELL_COMMAND(pure_command,
 	      "pure [num]: blink LEDs ([num] times)",
 	      &shell_debug_process);
 /*---------------------------------------------------------------------------*/
+#define MAX_PAYLOAD_LEN		30
+static int seq_id;
+static int reply;
+
+static struct uip_udp_conn *client_conn;
+static uip_ipaddr_t server_ipaddr;
+
+static void
+send_packet(void *ptr)
+{
+  char buf[MAX_PAYLOAD_LEN];
+
+#ifdef SERVER_REPLY
+  uint8_t num_used = 0;
+  uip_ds6_nbr_t *nbr;
+
+  nbr = nbr_table_head(ds6_neighbors);
+  while(nbr != NULL) {
+    nbr = nbr_table_next(ds6_neighbors, nbr);
+    num_used++;
+  }
+
+  if(seq_id > 0) {
+    ANNOTATE("#A r=%d/%d,color=%s,n=%d %d\n", reply, seq_id,
+             reply == seq_id ? "GREEN" : "RED", uip_ds6_route_num_routes(), num_used);
+  }
+#endif /* SERVER_REPLY */
+
+  seq_id++;
+  PRINTF("DATA send to %d 'Hello %d'\n",
+         server_ipaddr.u8[sizeof(server_ipaddr.u8) - 1], seq_id);
+  sprintf(buf, "Hello %d from the client", seq_id);
+  uip_udp_packet_sendto(client_conn, buf, strlen(buf),
+                        &server_ipaddr, UIP_HTONS(UDP_SERVER_PORT));
+}
+
 PROCESS_THREAD(shell_debug_process, ev, data)
 {
 
 
-  PROCESS_BEGIN();
+	PROCESS_BEGIN();
 
-  
-#if TEST == 1
-  pkt_index++;
-  test_data[0] = pkt_index;
-  usbeth_send(test_data,66);
-  printf("\r\nusbeth_send: %d\r\n", pkt_index);
-#elif TEST == 2
-  pkt_index++;
-  usbeth_send(test_data,64);
-  printf("\r\nusbeth_send: %d\r\n", pkt_index);
-#elif TEST == 3
-  usbeth_l2_send(test_data, sizeof(test_data) - 4);
-#endif
+	PROCESS_PAUSE();
 
-  
+	/*set_global_address();*/
 
-  PROCESS_END();
+	PRINTF("UDP client process started nbr:%d routes:%d\n",
+	     NBR_TABLE_CONF_MAX_NEIGHBORS, UIP_CONF_MAX_ROUTES);
+
+	print_local_addresses();
+
+	/* new connection with remote host */
+	client_conn = udp_new(NULL, UIP_HTONS(UDP_SERVER_PORT), NULL); 
+	if(client_conn == NULL) {
+		PRINTF("No UDP connection available, exiting the process!\n");
+		PROCESS_EXIT();
+	}
+	udp_bind(client_conn, UIP_HTONS(UDP_CLIENT_PORT)); 
+
+	PRINTF("Created a connection with the server ");
+	PRINT6ADDR(&client_conn->ripaddr);
+	PRINTF(" local/remote port %u/%u\n",
+			UIP_HTONS(client_conn->lport), UIP_HTONS(client_conn->rport));
+
+	send_packet(NULL);
+	
+	PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -282,26 +317,7 @@ tcpip_handler(void)
 #endif
   }
 }
-/*---------------------------------------------------------------------------*/
-static void
-print_local_addresses(void)
-{
-  int i;
-  uint8_t state;
 
-  PRINTF("Server IPv6 addresses: ");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(state == ADDR_TENTATIVE || state == ADDR_PREFERRED) {
-      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTF("\n");
-      /* hack to make address "final" */
-      if (state == ADDR_TENTATIVE) {
-	uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
-      }
-    }
-  }
-}
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udp_server_process, ev, data)
 {
