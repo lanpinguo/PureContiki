@@ -53,19 +53,30 @@ void net_debug_lladdr_print(const uip_lladdr_t *addr);
 #define DEBUG_ANNOTATE  2
 #define DEBUG_FULL      DEBUG_ANNOTATE | DEBUG_PRINT
 
+extern FUNC_DEBUG_PRINT dbg_print_net;
+
+
 /* PRINTA will always print if the debug routines are called directly */
 #ifdef __AVR__
 #include <avr/pgmspace.h>
 #define PRINTA(FORMAT,args...) printf_P(PSTR(FORMAT),##args)
 #else
-#define PRINTA(...) printf(__VA_ARGS__)
+#define PRINTA(...) do{ \
+	if(dbg_print_net){ \
+		dbg_print_net(__VA_ARGS__); \
+	}\
+}while(0) 
 #endif
 
 #if (DEBUG) & DEBUG_ANNOTATE
 #ifdef __AVR__
 #define ANNOTATE(FORMAT,args...) printf_P(PSTR(FORMAT),##args)
 #else
-#define ANNOTATE(...) printf(__VA_ARGS__)
+#define ANNOTATE(...) do{ \
+	if(dbg_print_net){ \
+		dbg_print_net(__VA_ARGS__); \
+	}\
+}while(0) 
 #endif
 #else
 #define ANNOTATE(...)
@@ -75,7 +86,12 @@ void net_debug_lladdr_print(const uip_lladdr_t *addr);
 #ifdef __AVR__
 #define PRINTF(FORMAT,args...) printf_P(PSTR(FORMAT),##args)
 #else
-#define PRINTF(...) printf(__VA_ARGS__)
+#define PRINTF(...) do{ \
+	if(dbg_print_net){ \
+		dbg_print_net(__VA_ARGS__); \
+	}\
+}while(0) 
+
 #endif
 #define PRINTLLADDR(lladdr) net_debug_lladdr_print(lladdr)
 #else

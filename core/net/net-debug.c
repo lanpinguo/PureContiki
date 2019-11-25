@@ -40,6 +40,9 @@
 
 #include "net/net-debug.h"
 
+
+FUNC_DEBUG_PRINT dbg_print_net = NULL;
+
 /*---------------------------------------------------------------------------*/
 void
 net_debug_lladdr_print(const uip_lladdr_t *addr)

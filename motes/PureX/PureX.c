@@ -231,20 +231,42 @@ SHELL_COMMAND(dbg_sw_command,
 		&shell_dbg_switch_process);
 
 extern 	FUNC_DEBUG_PRINT dbg_print_csma;
+
 PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 {
-
-
+	static int mod_id;
+	const char *nextptr;
+	
+	
 	PROCESS_BEGIN();
-
-	PROCESS_PAUSE();
-
-	if(dbg_print_csma){
-		dbg_print_csma = NULL;
+	
+	if(data != NULL) {
+	  mod_id = shell_strtolong(data, &nextptr);
+	  if(nextptr != data) {
+	  }
 	}
-	else{
-		dbg_print_csma = printf;
+	switch(mod_id){
+		case 1:
+			if(dbg_print_net){
+				dbg_print_net = NULL;
+			}
+			else{
+				dbg_print_net = printf;
+			}
+			break;
+		case 2:
+			if(dbg_print_csma){
+				dbg_print_csma = NULL;
+			}
+			else{
+				dbg_print_csma = printf;
+			}
+			break;
+		default:
+			break;
 	}
+
+	printf("\r\ntoggle module [%d] debug switch\r\n",mod_id);	
 	
 	PROCESS_END();
 }
