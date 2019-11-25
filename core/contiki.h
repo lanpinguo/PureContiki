@@ -55,4 +55,8 @@
 
 #include "sys/energest.h"
 
+/* dynamic debug print */
+typedef int (*FUNC_DEBUG_PRINT)(const char * format,...);
+
+
 #endif /* CONTIKI_H_ */

@@ -130,6 +130,7 @@ SHELL_COMMAND(pure_command,
 	      "pure",
 	      "pure [num]: blink LEDs ([num] times)",
 	      &shell_debug_process);
+
 PROCESS(shell_list_neighbor_process, "list rpl neighbor");
 SHELL_COMMAND(list_neighbor_command,
 	      "lsnb",
@@ -223,11 +224,40 @@ PROCESS_THREAD(shell_list_neighbor_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 
+PROCESS(shell_dbg_switch_process, "debug switch");
+SHELL_COMMAND(dbg_sw_command,
+		"debug",
+		"debug [enable|disable] [module]: turn on/off the debug info of module",
+		&shell_dbg_switch_process);
+
+extern 	FUNC_DEBUG_PRINT dbg_print_csma;
+PROCESS_THREAD(shell_dbg_switch_process, ev, data)
+{
+
+
+	PROCESS_BEGIN();
+
+	PROCESS_PAUSE();
+
+	if(dbg_print_csma){
+		dbg_print_csma = NULL;
+	}
+	else{
+		dbg_print_csma = printf;
+	}
+	
+	PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+
+
+
 void
 shell_pure_init(void)
 {
   shell_register_command(&pure_command);
   shell_register_command(&list_neighbor_command);
+  shell_register_command(&dbg_sw_command);
 }
 
 

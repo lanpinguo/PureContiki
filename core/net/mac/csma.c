@@ -55,10 +55,17 @@
 
 #include <stdio.h>
 
-#define DEBUG 0
+FUNC_DEBUG_PRINT dbg_print_csma = NULL;
+
+
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
+#define PRINTF(...) do{ \
+	if(dbg_print_csma){ \
+		dbg_print_csma(__VA_ARGS__); \
+	}\
+}while(0) 
 #else /* DEBUG */
 #define PRINTF(...)
 #endif /* DEBUG */
