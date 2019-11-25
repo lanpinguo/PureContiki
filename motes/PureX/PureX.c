@@ -113,7 +113,7 @@ print_local_addresses(void)
     state = uip_ds6_if.addr_list[i].state;
     if(state == ADDR_TENTATIVE || state == ADDR_PREFERRED) {
       PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTF("\n");
+      PRINTF("\r\n");
       /* hack to make address "final" */
       if (state == ADDR_TENTATIVE) {
 	uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
@@ -130,6 +130,14 @@ SHELL_COMMAND(pure_command,
 	      "pure",
 	      "pure [num]: blink LEDs ([num] times)",
 	      &shell_debug_process);
+PROCESS(shell_list_neighbor_process, "list rpl neighbor");
+SHELL_COMMAND(list_neighbor_command,
+	      "lsnb",
+	      "lsnb: list rpl neighbors",
+	      &shell_list_neighbor_process);
+
+
+
 /*---------------------------------------------------------------------------*/
 #define MAX_PAYLOAD_LEN		30
 static int seq_id;
@@ -154,13 +162,13 @@ send_packet(void *ptr)
   }
 
   if(seq_id > 0) {
-    ANNOTATE("#A r=%d/%d,color=%s,n=%d %d\n", reply, seq_id,
+    ANNOTATE("#A r=%d/%d,color=%s,n=%d %d\r\n", reply, seq_id,
              reply == seq_id ? "GREEN" : "RED", uip_ds6_route_num_routes(), num_used);
   }
 #endif /* SERVER_REPLY */
 
   seq_id++;
-  PRINTF("DATA send to %d 'Hello %d'\n",
+  PRINTF("DATA send to %d 'Hello %d'\r\n",
          server_ipaddr.u8[sizeof(server_ipaddr.u8) - 1], seq_id);
   sprintf(buf, "Hello %d from the client", seq_id);
   uip_udp_packet_sendto(client_conn, buf, strlen(buf),
@@ -177,7 +185,7 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 
 	/*set_global_address();*/
 
-	PRINTF("UDP client process started nbr:%d routes:%d\n",
+	PRINTF("UDP client process started nbr:%d routes:%d\r\n",
 	     NBR_TABLE_CONF_MAX_NEIGHBORS, UIP_CONF_MAX_ROUTES);
 
 	print_local_addresses();
@@ -185,14 +193,14 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 	/* new connection with remote host */
 	client_conn = udp_new(NULL, UIP_HTONS(UDP_SERVER_PORT), NULL); 
 	if(client_conn == NULL) {
-		PRINTF("No UDP connection available, exiting the process!\n");
+		PRINTF("No UDP connection available, exiting the process!\r\n");
 		PROCESS_EXIT();
 	}
 	udp_bind(client_conn, UIP_HTONS(UDP_CLIENT_PORT)); 
 
 	PRINTF("Created a connection with the server ");
 	PRINT6ADDR(&client_conn->ripaddr);
-	PRINTF(" local/remote port %u/%u\n",
+	PRINTF(" local/remote port %u/%u\r\n",
 			UIP_HTONS(client_conn->lport), UIP_HTONS(client_conn->rport));
 
 	send_packet(NULL);
@@ -200,10 +208,26 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 	PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+
+PROCESS_THREAD(shell_list_neighbor_process, ev, data)
+{
+
+
+	PROCESS_BEGIN();
+
+	PROCESS_PAUSE();
+
+	rpl_print_neighbor_list();	
+	
+	PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+
 void
 shell_pure_init(void)
 {
   shell_register_command(&pure_command);
+  shell_register_command(&list_neighbor_command);
 }
 
 
@@ -277,22 +301,22 @@ uint8_t CRC8(uint8_t crc, uint8_t byte)
 PROCESS_THREAD(humidity_sensor_process, ev, data)
 {
 	static uint8_t rc = 0;
-  //static struct etimer et;
-  
+	//static struct etimer et;
 
-  PROCESS_BEGIN();
 
-  rc += 1;
-  //etimer_set(&et, CLOCK_SECOND * 2);
+	PROCESS_BEGIN();
+
+	rc += 1;
+	//etimer_set(&et, CLOCK_SECOND * 2);
 	printf("\r\nThis is OTA tester (%x)\r\n",rc);
 
 
 
 	//EnterNvmApplication(0,5);
-	
-  //PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-  PROCESS_END();
+	//PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+	PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
 
@@ -308,9 +332,9 @@ tcpip_handler(void)
     PRINTF("DATA recv '%s' from ", appdata);
     PRINTF("%d",
            UIP_IP_BUF->srcipaddr.u8[sizeof(UIP_IP_BUF->srcipaddr.u8) - 1]);
-    PRINTF("\n");
+    PRINTF("\r\n");
 #if SERVER_REPLY
-    PRINTF("DATA sending reply\n");
+    PRINTF("DATA sending reply\r\n");
     uip_ipaddr_copy(&server_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
     uip_udp_packet_send(server_conn, "Reply", sizeof("Reply"));
     uip_create_unspecified(&server_conn->ripaddr);
@@ -330,7 +354,7 @@ PROCESS_THREAD(udp_server_process, ev, data)
 
   SENSORS_ACTIVATE(button_sensor);
 
-  PRINTF("UDP server started. nbr:%d routes:%d\n",
+  PRINTF("\r\nUDP server started. nbr:%d routes:%d \r\n",
          NBR_TABLE_CONF_MAX_NEIGHBORS, UIP_CONF_MAX_ROUTES);
 
 #if UIP_CONF_ROUTER
@@ -366,9 +390,9 @@ PROCESS_THREAD(udp_server_process, ev, data)
     dag = rpl_set_root(RPL_DEFAULT_INSTANCE,(uip_ip6addr_t *)&ipaddr);
     uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
     rpl_set_prefix(dag, &ipaddr, 64);
-    PRINTF("created a new RPL dag\n");
+    PRINTF("created a new RPL dag\r\n");
   } else {
-    PRINTF("failed to create a new RPL DAG\n");
+    PRINTF("failed to create a new RPL DAG\r\n");
   }
 #endif /* UIP_CONF_ROUTER */
   
@@ -380,14 +404,14 @@ PROCESS_THREAD(udp_server_process, ev, data)
 
   server_conn = udp_new(NULL, UIP_HTONS(UDP_CLIENT_PORT), NULL);
   if(server_conn == NULL) {
-    PRINTF("No UDP connection available, exiting the process!\n");
+    PRINTF("No UDP connection available, exiting the process!\r\n");
     PROCESS_EXIT();
   }
   udp_bind(server_conn, UIP_HTONS(UDP_SERVER_PORT));
 
   PRINTF("Created a server connection with remote address ");
   PRINT6ADDR(&server_conn->ripaddr);
-  PRINTF(" local/remote port %u/%u\n", UIP_HTONS(server_conn->lport),
+  PRINTF(" local/remote port %u/%u\r\n", UIP_HTONS(server_conn->lport),
          UIP_HTONS(server_conn->rport));
 
   while(1) {
@@ -395,7 +419,7 @@ PROCESS_THREAD(udp_server_process, ev, data)
     if(ev == tcpip_event) {
       tcpip_handler();
     } else if (ev == sensors_event && data == &button_sensor) {
-      PRINTF("Initiaing global repair\n");
+      PRINTF("Initiaing global repair\r\n");
       rpl_repair_root(RPL_DEFAULT_INSTANCE);
     }
   }
