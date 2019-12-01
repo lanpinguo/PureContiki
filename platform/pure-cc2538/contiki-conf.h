@@ -431,6 +431,8 @@ typedef uint32_t rtimer_clock_t;
 #endif
 
 #define UIP_CONF_ND6_SEND_RA                 1
+#define UIP_CONF_ND6_SEND_NS  				 1
+#define UIP_CONF_ND6_SEND_NA  				 1
 #define UIP_CONF_IP_FORWARD                  0
 #define RPL_CONF_STATS                       1
 

@@ -217,7 +217,7 @@ PROCESS_THREAD(shell_list_neighbor_process, ev, data)
 	PROCESS_BEGIN();
 
 	PROCESS_PAUSE();
-
+	uip_ds6_nbr_dump();
 	rpl_print_neighbor_list();	
 	
 	PROCESS_END();

@@ -52,7 +52,7 @@
 #include "net/packetbuf.h"
 #include "net/ipv6/uip-ds6-nbr.h"
 
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_FULL
 #include "net/ip/uip-debug.h"
 
 #ifdef UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED
@@ -164,6 +164,29 @@ uip_ds6_nbr_num(void)
   }
   return num;
 }
+
+/*---------------------------------------------------------------------------*/
+int
+uip_ds6_nbr_dump(void)
+{
+  uip_ds6_nbr_t *nbr;
+  int num;
+  
+
+  num = 0;
+  for(nbr = nbr_table_head(ds6_neighbors);
+      nbr != NULL;
+      nbr = nbr_table_next(ds6_neighbors, nbr))
+  {
+	PRINTF("\r\nNBR-%d:[",num);
+	PRINT6ADDR(&nbr->ipaddr);
+	PRINTF(" state : %d, isrouter : %d ]\r\n",nbr->state,nbr->isrouter);
+    num++;
+  }
+  return num;
+}
+
+
 /*---------------------------------------------------------------------------*/
 uip_ds6_nbr_t *
 uip_ds6_nbr_lookup(const uip_ipaddr_t *ipaddr)
