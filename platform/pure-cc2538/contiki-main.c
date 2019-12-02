@@ -95,13 +95,13 @@ char shell_prompt_text[] = "Mote>";
 void
 log_message(char *m1, char *m2)
 {
-  printf("%s%s\n", m1, m2);
+  printf("\r\n%s%s", m1, m2);
 }
 /*---------------------------------------------------------------------------*/
 void
 uip_log(char *m)
 {
-  printf("uIP: '%s'\n", m);
+  printf("\r\nuIP: '%s'", m);
 }
 
 
