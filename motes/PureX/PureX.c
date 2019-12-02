@@ -150,11 +150,19 @@ static uip_ipaddr_t server_ipaddr;
 static void
 send_packet(void *ptr)
 {
-  char buf[MAX_PAYLOAD_LEN];
+	char buf[MAX_PAYLOAD_LEN];
+	uip_ds6_nbr_t *nbr;
+	uip_ipaddr_t ipaddr;
+
+	nbr = nbr_table_head(ds6_neighbors);
+	memcpy(&ipaddr,&nbr->ipaddr,sizeof(ipaddr));
+	ipaddr.u8[0] = 0xFD;
+	ipaddr.u8[1] = 0x00;
+
+	uip_ipaddr_print(&ipaddr);
 
 #ifdef SERVER_REPLY
   uint8_t num_used = 0;
-  uip_ds6_nbr_t *nbr;
 
   nbr = nbr_table_head(ds6_neighbors);
   while(nbr != NULL) {
@@ -173,13 +181,12 @@ send_packet(void *ptr)
          server_ipaddr.u8[sizeof(server_ipaddr.u8) - 1], seq_id);
   sprintf(buf, "Hello %d from the client", seq_id);
   uip_udp_packet_sendto(client_conn, buf, strlen(buf),
-                        &server_ipaddr, UIP_HTONS(UDP_SERVER_PORT));
+                        &ipaddr, UIP_HTONS(UDP_SERVER_PORT));
 }
 
 PROCESS_THREAD(shell_debug_process, ev, data)
 {
 	uip_ds6_nbr_t *nbr;
-	uip_ipaddr_t ipaddr;
 
 
 
@@ -197,13 +204,8 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 
 	print_local_addresses();
 
-	memcpy(&ipaddr,&nbr->ipaddr,sizeof(ipaddr));
-	ipaddr.u8[0] = 0xFD;
-	ipaddr.u8[1] = 0x00;
-
-	uip_ipaddr_print(&ipaddr);
 	/* new connection with remote host */
-	client_conn = udp_new(&ipaddr, UIP_HTONS(UDP_SERVER_PORT), NULL); 
+	client_conn = udp_new(NULL, UIP_HTONS(UDP_SERVER_PORT), NULL); 
 	if(client_conn == NULL) {
 		printf("No UDP connection available, exiting the process!\r\n");
 		PROCESS_EXIT();
