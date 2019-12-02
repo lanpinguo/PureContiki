@@ -156,8 +156,8 @@ send_packet(void *ptr)
 
 	nbr = nbr_table_head(ds6_neighbors);
 	memcpy(&ipaddr,&nbr->ipaddr,sizeof(ipaddr));
-	ipaddr.u8[0] = 0xFD;
-	ipaddr.u8[1] = 0x00;
+	//ipaddr.u8[0] = 0xFD;
+	//ipaddr.u8[1] = 0x00;
 
 	uip_ipaddr_print(&ipaddr);
 
