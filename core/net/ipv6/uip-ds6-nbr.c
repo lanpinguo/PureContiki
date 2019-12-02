@@ -165,6 +165,9 @@ uip_ds6_nbr_num(void)
   return num;
 }
 
+
+
+
 /*---------------------------------------------------------------------------*/
 int
 uip_ds6_nbr_dump(void)
@@ -178,9 +181,9 @@ uip_ds6_nbr_dump(void)
       nbr != NULL;
       nbr = nbr_table_next(ds6_neighbors, nbr))
   {
-	PRINTF("\r\nNBR-%d:[",num);
-	PRINT6ADDR(&nbr->ipaddr);
-	PRINTF(" state : %d, isrouter : %d ]\r\n",nbr->state,nbr->isrouter);
+	printf("\r\nNBR-%d:[",num);
+	uip_ipaddr_print(&nbr->ipaddr);
+	printf(" state : %d, isrouter : %d ]\r\n",nbr->state,nbr->isrouter);
     num++;
   }
   return num;
