@@ -408,6 +408,8 @@ typedef uint32_t rtimer_clock_t;
 
 #if NETSTACK_CONF_WITH_IPV6
 /* Addresses, Sizes and Interfaces */
+#define UIP_CONF_DS6_DEFAULT_PREFIX			 0xFD00
+
 /* 8-byte addresses here, 2 otherwise */
 #define LINKADDR_CONF_SIZE                   8
 #define UIP_CONF_LL_802154                   1
