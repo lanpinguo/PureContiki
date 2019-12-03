@@ -12,7 +12,7 @@ REST_RESOURCES_FILES += res-leds.c
 PROJECTDIRS += $(REST_RESOURCES_DIR)
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
-PROJECT_SOURCEFILES += coap-server.c 
+PROJECT_SOURCEFILES += coap-server.c coap-client.c
 
 
 APPS = serial-shell 

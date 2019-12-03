@@ -498,6 +498,10 @@ typedef uint32_t rtimer_clock_t;
 #endif
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
+
+
+#define COAP_OBSERVE_CLIENT 				 1
+
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

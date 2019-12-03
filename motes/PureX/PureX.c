@@ -85,6 +85,7 @@
 #include "usb-core.h"
 #include "shell-memdebug.h"
 #include "coap-server.h"
+#include "coap-client.h"
 /*#include "ping6.h"*/
 
 
@@ -309,7 +310,8 @@ PROCESS(humidity_sensor_process, "Temp & Humidity process");
 AUTOSTART_PROCESSES(&pure_x_shell_process,\
 	&humidity_sensor_process,\
 	&udp_server_process, \
-	&coap_server_process);
+	&coap_server_process,\
+	&er_pure_x_observe_client);
 
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(pure_x_shell_process, ev, data)
