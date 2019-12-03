@@ -5,8 +5,20 @@ TARGET = pure-cc2538
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
+REST_RESOURCES_DIR = ./resources
+
+REST_RESOURCES_FILES += res-leds.c 
+
+PROJECTDIRS += $(REST_RESOURCES_DIR)
+PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
+
+PROJECT_SOURCEFILES += coap-server.c 
+
+
 APPS = serial-shell 
-APPS += ping6
+#APPS += ping6
+APPS += er-coap
+APPS += rest-engine
 #CONTIKI_WITH_RIME = 1
 CONTIKI_WITH_IPV6 = 1
 #CONTIKI_WITH_IPV4 =1
