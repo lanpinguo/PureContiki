@@ -396,14 +396,17 @@ typedef uint32_t rtimer_clock_t;
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
- * \name IPv6, RIME and network buffer configuration
+ * \name IPv6, COAP and network buffer configuration
  *
  * @{
  */
 
+
+#define REST_MAX_CHUNK_SIZE            		18
+
 /* Don't let contiki-default-conf.h decide if we are an IPv6 build */
 #ifndef NETSTACK_CONF_WITH_IPV6
-#define NETSTACK_CONF_WITH_IPV6                        0
+#define NETSTACK_CONF_WITH_IPV6              0
 #endif
 
 #if NETSTACK_CONF_WITH_IPV6

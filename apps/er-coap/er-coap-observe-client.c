@@ -45,10 +45,15 @@
 
 /* Compile this code only if client-side support for CoAP Observe is required */
 #if COAP_OBSERVE_CLIENT
+FUNC_DEBUG_PRINT dbg_print_er_coap_observe_client = NULL;
 
 #define DEBUG 1
 #if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
+#define PRINTF(...) do{ \
+	if(dbg_print_er_coap_observe_client){ \
+		dbg_print_er_coap_observe_client(__VA_ARGS__); \
+	}\
+}while(0) 
 #define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:" \
                                 "%02x%02x:%02x%02x:%02x%02x:%02x%02x]", \
                                 ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], \
@@ -115,7 +120,7 @@ coap_obs_add_observee(uip_ipaddr_t *addr, uint16_t port,
     o->notification_callback = notification_callback;
     o->data = data;
     /* stimer_set(&o->refresh_timer, COAP_OBSERVING_REFRESH_INTERVAL); */
-    PRINTF("Adding obs_subject for /%s [0x%02X%02X]\n", o->url, o->token[0],
+    PRINTF("Adding obs_subject for /%s [0x%02X%02X]\r\n", o->url, o->token[0],
            o->token[1]);
     list_add(obs_subjects_list, o);
   }
@@ -126,7 +131,7 @@ coap_obs_add_observee(uip_ipaddr_t *addr, uint16_t port,
 void
 coap_obs_remove_observee(coap_observee_t *o)
 {
-  PRINTF("Removing obs_subject for /%s [0x%02X%02X]\n", o->url, o->token[0],
+  PRINTF("Removing obs_subject for /%s [0x%02X%02X]\r\n", o->url, o->token[0],
          o->token[1]);
   memb_free(&obs_subjects_memb, o);
   list_remove(obs_subjects_list, o);
@@ -139,7 +144,7 @@ coap_get_obs_subject_by_token(const uint8_t *token, size_t token_len)
 
   for(obs = (coap_observee_t *)list_head(obs_subjects_list); obs;
       obs = obs->next) {
-    PRINTF("Looking for token 0x%02X%02X\n", token[0], token[1]);
+    PRINTF("Looking for token 0x%02X%02X\r\n", token[0], token[1]);
     if(obs->token_len == token_len
        && memcmp(obs->token, token, token_len) == 0) {
       return obs;
@@ -158,7 +163,7 @@ coap_obs_remove_observee_by_token(uip_ipaddr_t *addr, uint16_t port,
 
   for(obs = (coap_observee_t *)list_head(obs_subjects_list); obs;
       obs = obs->next) {
-    PRINTF("Remove check Token 0x%02X%02X\n", token[0], token[1]);
+    PRINTF("Remove check Token 0x%02X%02X\r\n", token[0], token[1]);
     if(uip_ipaddr_cmp(&obs->addr, addr)
        && obs->port == port
        && obs->token_len == token_len
@@ -179,7 +184,7 @@ coap_obs_remove_observee_by_url(uip_ipaddr_t *addr, uint16_t port,
 
   for(obs = (coap_observee_t *)list_head(obs_subjects_list); obs;
       obs = obs->next) {
-    PRINTF("Remove check URL %s\n", url);
+    PRINTF("Remove check URL %s\r\n", url);
     if(uip_ipaddr_cmp(&obs->addr, addr)
        && obs->port == port
        && (obs->url == url || memcmp(obs->url, url, strlen(obs->url)) == 0)) {
@@ -209,16 +214,16 @@ classify_notification(void *response, int first)
 
   pkt = (coap_packet_t *)response;
   if(!pkt) {
-    PRINTF("no response\n");
+    PRINTF("no response\r\n");
     return NO_REPLY_FROM_SERVER;
   }
-  PRINTF("server replied\n");
+  PRINTF("server replied\r\n");
   if(!IS_RESPONSE_CODE_2_XX(pkt)) {
-    PRINTF("error response code\n");
+    PRINTF("error response code\r\n");
     return ERROR_RESPONSE_CODE;
   }
   if(!IS_OPTION(pkt, COAP_OPTION_OBSERVE)) {
-    PRINTF("server does not support observe\n");
+    PRINTF("server does not support observe\r\n");
     return OBSERVE_NOT_SUPPORTED;
   }
   if(first) {
@@ -238,20 +243,20 @@ coap_handle_notification(uip_ipaddr_t *addr, uint16_t port,
   coap_notification_flag_t flag;
   uint32_t observe;
 
-  PRINTF("coap_handle_notification()\n");
+  PRINTF("coap_handle_notification()\r\n");
   pkt = (coap_packet_t *)notification;
   token_len = get_token(pkt, &token);
-  PRINTF("Getting token\n");
+  PRINTF("Getting token\r\n");
   if(0 == token_len) {
     PRINTF("Error while handling coap observe notification: "
-           "no token in message\n");
+           "no token in message\r\n");
     return;
   }
-  PRINTF("Getting observee info\n");
+  PRINTF("Getting observee info\r\n");
   obs = coap_get_obs_subject_by_token(token, token_len);
   if(NULL == obs) {
     PRINTF("Error while handling coap observe notification: "
-           "no matching token found\n");
+           "no matching token found\r\n");
     simple_reply(COAP_TYPE_RST, addr, port, notification);
     return;
   }
@@ -265,7 +270,7 @@ coap_handle_notification(uip_ipaddr_t *addr, uint16_t port,
     if(flag == NOTIFICATION_OK) {
       coap_get_header_observe(notification, &observe);
       if(observe == obs->last_observe) {
-        PRINTF("Discarding duplicate\n");
+        PRINTF("Discarding duplicate\r\n");
         return;
       }
       obs->last_observe = observe;

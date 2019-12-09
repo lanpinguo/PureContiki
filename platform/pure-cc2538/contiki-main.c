@@ -90,18 +90,24 @@
 /*---------------------------------------------------------------------------*/
 
 char shell_prompt_text[] = "Mote>";
+FUNC_DEBUG_PRINT dbg_print_ip = NULL;
+FUNC_DEBUG_PRINT dbg_print_log = NULL;
 
 /*---------------------------------------------------------------------------*/
 void
 log_message(char *m1, char *m2)
 {
-  printf("\r\n%s%s", m1, m2);
+	if(dbg_print_log){ 
+		dbg_print_log("\r\n%s%s", m1, m2);
+	}
 }
 /*---------------------------------------------------------------------------*/
 void
 uip_log(char *m)
 {
-  printf("\r\nuIP: '%s'", m);
+	if(dbg_print_ip){ 
+		dbg_print_ip("\r\nuIP: '%s'", m);
+	}
 }
 
 

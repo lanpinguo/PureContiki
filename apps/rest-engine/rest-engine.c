@@ -42,10 +42,17 @@
 #include "contiki.h"
 #include "rest-engine.h"
 
-#define DEBUG 0
+FUNC_DEBUG_PRINT dbg_print_rest_engine = NULL;
+
+
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
+#define PRINTF(...) do{ \
+	if(dbg_print_rest_engine){ \
+		dbg_print_rest_engine(__VA_ARGS__); \
+	}\
+}while(0) 
 #define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
 #define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]", (lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3], (lladdr)->addr[4], (lladdr)->addr[5])
 #else
@@ -74,7 +81,7 @@ rest_init_engine(void)
   static uint8_t initialized = 0;
 
   if(initialized) {
-    PRINTF("REST engine process already running - double initialization?\n");
+    PRINTF("REST engine process already running - double initialization?\r\n");
     return;
   }
   initialized = 1;
@@ -105,16 +112,16 @@ rest_activate_resource(resource_t *resource, char *path)
   resource->url = path;
   list_add(restful_services, resource);
 
-  PRINTF("Activating: %s\n", resource->url);
+  PRINTF("Activating: %s\r\n", resource->url);
 
   /* Only add periodic resources with a periodic_handler and a period > 0. */
   if(resource->flags & IS_PERIODIC && resource->periodic->periodic_handler
      && resource->periodic->period) {
-    PRINTF("Periodic resource: %p (%s)\n", resource->periodic,
+    PRINTF("Periodic resource: %p (%s)\r\n", resource->periodic,
            resource->periodic->resource->url);
     list_add(restful_periodic_services, resource->periodic);
     if(process_is_running(&rest_engine_process)) {
-      PRINTF("Periodic: Set timer for /%s to %lu\n",
+      PRINTF("Periodic: Set timer for /%s to %lu\r\n",
              resource->url, resource->periodic->period);
       PROCESS_CONTEXT_BEGIN(&rest_engine_process);
       etimer_set(&resource->periodic->periodic_timer,
@@ -157,7 +164,7 @@ rest_invoke_restful_service(void *request, void *response, uint8_t *buffer,
       found = 1;
       rest_resource_flags_t method = REST.get_method_type(request);
 
-      PRINTF("/%s, method %u, resource->flags %u\n", resource->url,
+      PRINTF("/%s, method %u, resource->flags %u\r\n", resource->url,
              (uint16_t)method, resource->flags);
 
       if((method & METHOD_GET) && resource->get_handler != NULL) {
@@ -206,7 +213,7 @@ PROCESS_THREAD(rest_engine_process, ev, data)
         (periodic_resource_t *)list_head(restful_periodic_services);
       periodic_resource; periodic_resource = periodic_resource->next) {
     if(periodic_resource->periodic_handler && periodic_resource->period) {
-      PRINTF("Periodic: Set timer for /%s to %lu\n",
+      PRINTF("Periodic: Set timer for /%s to %lu\r\n",
              periodic_resource->resource->url, periodic_resource->period);
       etimer_set(&periodic_resource->periodic_timer,
                  periodic_resource->period);
@@ -222,7 +229,7 @@ PROCESS_THREAD(rest_engine_process, ev, data)
         if(periodic_resource->period
            && etimer_expired(&periodic_resource->periodic_timer)) {
 
-          PRINTF("Periodic: etimer expired for /%s (period: %lu)\n",
+          PRINTF("Periodic: etimer expired for /%s (period: %lu)\r\n",
                  periodic_resource->resource->url, periodic_resource->period);
 
           /* Call the periodic_handler function, which was checked during adding to list. */
