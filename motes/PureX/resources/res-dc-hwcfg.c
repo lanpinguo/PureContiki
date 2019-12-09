@@ -74,7 +74,7 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
     response,
     buffer,
 /*    snprintf((char *)buffer, MAX_COAP_PAYLOAD, "VMX\t%d.000\nIMX\t%d.000\nINT\t%d\r\n", v_max, i_max, interval)); */
-    snprintf((char *)buffer, MAX_COAP_PAYLOAD, "VMX\t%d.000\nIMX\t%d.000\r\n", v_max, i_max));
+    snprintf((char *)buffer, MAX_COAP_PAYLOAD, "VMX\t%d.000,IMX\t%d.000\r\n", v_max, i_max));
 
 #if PLATFORM_HAS_LEDS
   /* set yellow led when sending packet */
@@ -99,14 +99,14 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
   if(REST.get_post_variable(request, "VMX", &variable) > 0) {
     int v_max = atoi(variable);
     if(/*dc_hw_sensor.configure(0, v_max)*/ 1) {
-      PRINTF("Value out of range: must be 0 <= VMX <= 30");
+      PRINTF("Value out of range: must be 0 <= VMX <= 30\r\n");
     }
   }
 
   if(REST.get_post_variable(request, "IMX", &variable) > 0) {
     int i_max = atoi(variable);
     if(/*dc_hw_sensor.configure(1, i_max)*/ 1) {
-      PRINTF("Value out of range: must be 0 <= Imax <= 6");
+      PRINTF("Value out of range: must be 0 <= Imax <= 6\r\n");
     }
   }
 

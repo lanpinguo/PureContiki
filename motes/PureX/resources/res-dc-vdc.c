@@ -102,7 +102,7 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
     int vdc_grid = atoi(variable);
     /* PRINTF("VG: %d\r\n",vdc_grid); */
     if(1) {
-      PRINTF("Value out of range: must be 0 <= Vgrid <= Vmax");
+      PRINTF("Value out of range: must be 0 <= Vgrid <= Vmax\r\n");
     }
   }
 
@@ -110,7 +110,7 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
     int vdc_slope = atoi(variable);
     /* PRINTF("SL: %d\r\n",vdc_slope); */
     if(1) {
-      PRINTF("Error: SLOPE is not set!");
+      PRINTF("Error: SLOPE is not set!\r\n");
     }
   }
 
@@ -118,7 +118,7 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
     int vdc_pmax = atoi(variable);
     /* PRINTF("PMAX: %d\r\n",vdc_pmax); */
     if(1) {
-      PRINTF("Error: PMAX is not set!");
+      PRINTF("Error: PMAX is not set!\r\n");
     }
   }
 
