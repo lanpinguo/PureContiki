@@ -220,6 +220,68 @@
 #define SPI1_RX_PIN             5
 #endif  /* #if SPI1_IN_USE */
 /** @} */
+
+
+#define PLATFORM_HAS_SWITCH     1
+
+/** @} */
+/*---------------------------------------------------------------------------*/
+/** \name Switch configuration
+ *
+ * Switches on the Pure-X are connected as follows:
+ * - LED_CTRL -> PA2
+ * - SWITCH0 -> PA6
+ * - SWITCH1 -> PA5
+ * - SWITCH2 -> PA4
+ * - SWITCH3 -> PB0
+ * - SWITCH4 -> PB1
+ * - SWITCH5 -> PB2
+ * - SWITCH6 -> PB3
+ * - SWITCH7 -> PB4
+ * @{
+ */
+
+/** INDICATE_CTRL -> PA6 */
+#define LED_CTRL_PORT     GPIO_A_NUM
+#define LED_CTRL_PIN      2
+
+/** SWITCH0 -> PA6 */
+#define SWITCH0_PORT      GPIO_A_NUM
+#define SWITCH0_PIN       6
+
+/** SWITCH1 -> PA5 */
+#define SWITCH1_PORT      GPIO_A_NUM
+#define SWITCH1_PIN       5
+
+/** SWITCH2 -> PA4 */
+#define SWITCH2_PORT      GPIO_A_NUM
+#define SWITCH2_PIN       4
+
+/** SWITCH3 -> PB0 */
+#define SWITCH3_PORT      GPIO_B_NUM
+#define SWITCH3_PIN       0
+
+/** SWITCH4 -> PB1 */
+#define SWITCH4_PORT      GPIO_B_NUM
+#define SWITCH4_PIN       1
+
+/** SWITCH5 -> PB2 */
+#define SWITCH5_PORT      GPIO_B_NUM
+#define SWITCH5_PIN       2
+
+/** SWITCH6 -> PB3 */
+#define SWITCH6_PORT      GPIO_B_NUM
+#define SWITCH6_PIN       3
+
+/** SWITCH7 -> PB4 */
+#define SWITCH7_PORT      GPIO_B_NUM
+#define SWITCH7_PIN       4
+
+
+/** @} */
+
+
+
 /*---------------------------------------------------------------------------*/
 /**
  * \name Device string used on startup
