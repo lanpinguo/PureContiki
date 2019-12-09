@@ -144,7 +144,7 @@ SHELL_COMMAND(list_neighbor_command,
 /*---------------------------------------------------------------------------*/
 #define MAX_PAYLOAD_LEN		30
 static int seq_id;
-static int reply;
+//static int reply;
 
 static struct uip_udp_conn *client_conn;
 static uip_ipaddr_t server_ipaddr;
@@ -188,11 +188,11 @@ send_packet(void *ptr)
 
 PROCESS_THREAD(shell_debug_process, ev, data)
 {
-	uip_ds6_nbr_t *nbr;
+	//uip_ds6_nbr_t *nbr;
 
 
 
-	nbr = nbr_table_head(ds6_neighbors);
+	//nbr = nbr_table_head(ds6_neighbors);
 
 
 	PROCESS_BEGIN();
@@ -246,6 +246,12 @@ SHELL_COMMAND(dbg_sw_command,
 		&shell_dbg_switch_process);
 
 extern 	FUNC_DEBUG_PRINT dbg_print_csma;
+extern 	FUNC_DEBUG_PRINT dbg_print_rest_engine;
+extern 	FUNC_DEBUG_PRINT dbg_print_er_coap;
+extern 	FUNC_DEBUG_PRINT dbg_print_ip;
+extern 	FUNC_DEBUG_PRINT dbg_print_log;
+extern  FUNC_DEBUG_PRINT dbg_print_er_coap_engine;
+extern  FUNC_DEBUG_PRINT dbg_print_er_coap_observe_client;
 
 PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 {
@@ -277,6 +283,54 @@ PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 				dbg_print_csma = printf;
 			}
 			break;
+		case 3:
+			if(dbg_print_ip){
+				(dbg_print_ip) = NULL;
+			}
+			else{
+				(dbg_print_ip) = printf;
+			}
+			break;
+		case 4:
+			if((dbg_print_log)){
+				dbg_print_log = NULL;
+			}
+			else{
+				dbg_print_log = printf;
+			}
+			break;
+		case 5:
+			if(dbg_print_rest_engine){
+				dbg_print_rest_engine = NULL;
+			}
+			else{
+				dbg_print_rest_engine = printf;
+			}
+			break;
+		case 6:
+			if(dbg_print_er_coap){
+				dbg_print_er_coap = NULL;
+			}
+			else{
+				dbg_print_er_coap = printf;
+			}
+			break;
+		case 7:
+			if(dbg_print_er_coap_engine){
+				dbg_print_er_coap_engine = NULL;
+			}
+			else{
+				dbg_print_er_coap_engine = printf;
+			}
+			break;
+		case 8:
+			if(dbg_print_er_coap_observe_client){
+				dbg_print_er_coap_observe_client = NULL;
+			}
+			else{
+				dbg_print_er_coap_observe_client = printf;
+			}
+			break;
 		default:
 			break;
 	}
@@ -287,6 +341,41 @@ PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 
+PROCESS(dbg_coap_client_process, "debug coap client");
+SHELL_COMMAND(coap_client_command,
+		"coap",
+		"coap [enable|disable] [mode]: coap client debug ",
+		&dbg_coap_client_process);
+
+
+PROCESS_THREAD(dbg_coap_client_process, ev, data)
+{
+	static int mod_id;
+	const char *nextptr;
+	
+	
+	PROCESS_BEGIN();
+	
+	if(data != NULL) {
+	  mod_id = shell_strtolong(data, &nextptr);
+	  if(nextptr != data) {
+	  }
+	}
+	switch(mod_id){
+		case 1:
+			process_start(&coap_client_process, NULL);
+			break;
+		case 2:
+			break;
+		default:
+			break;
+	}
+
+	printf("\r\ncoap client mode [%d] \r\n",mod_id);	
+	
+	PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
 
 
 void
@@ -295,6 +384,7 @@ shell_pure_init(void)
   shell_register_command(&pure_command);
   shell_register_command(&list_neighbor_command);
   shell_register_command(&dbg_sw_command);
+  shell_register_command(&coap_client_command);
 }
 
 
@@ -310,8 +400,7 @@ PROCESS(humidity_sensor_process, "Temp & Humidity process");
 AUTOSTART_PROCESSES(&pure_x_shell_process,\
 	&humidity_sensor_process,\
 	&udp_server_process, \
-	&coap_server_process,\
-	&er_pure_x_observe_client);
+	&coap_server_process);
 
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(pure_x_shell_process, ev, data)

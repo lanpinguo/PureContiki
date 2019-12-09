@@ -45,20 +45,39 @@
 /* Common resources */
 extern resource_t res_leds;
 
+/*
+ * Resources to be activated need to be imported through the extern keyword.
+ * The build system automatically compiles the resources in the corresponding sub-directory.
+ */
+extern resource_t
+/*  res_hello, */
+/*  res_push, */
+/*  res_event, */
+/*  res_sub; */
+/*  res_dc_status_obs; */
+/*  res_dc_status, */
+	res_leds,
+#ifdef CO2
+	res_dc_co2,
+#endif
+	res_dc_status_obs,
+	res_dc_vdc,
+	res_dc_hwcfg;
 
 
-/*---------------------------------------------------------------------------*/
-const char *coap_server_not_found_msg = "Resource not found";
-const char *coap_server_supported_msg = "Supported:"
-                                        "text/plain,"
-                                        "application/json,"
-                                        "application/xml";
 /*---------------------------------------------------------------------------*/
 static void
 start_board_resources(void)
 {
 
   rest_activate_resource(&res_leds, "lt");
+#ifdef CO2
+  rest_activate_resource(&res_dc_co2, "dcdc/co2");
+#endif
+  rest_activate_resource(&res_dc_status_obs, "dcdc/status");
+/*  rest_activate_resource(&res_dc_status, "dcdc/status"); */
+  rest_activate_resource(&res_dc_vdc, "dcdc/vdc");
+  rest_activate_resource(&res_dc_hwcfg, "dcdc/hwcfg");
 
 }
 /*---------------------------------------------------------------------------*/
@@ -68,7 +87,7 @@ PROCESS_THREAD(coap_server_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  printf("PureX CoAP Server");
+  printf("PureX CoAP Server\r\n");
 
   /* Initialize the REST engine. */
   rest_init_engine();
