@@ -272,10 +272,10 @@ main(void)
 	//leds_init();
 	//fade(LEDS_YELLOW);
 
-#if 0  
-	REG(GPIO_C_BASE + GPIO_DIR) |= 0x0F; /* PC2~PC3 output*/
-	REG(GPIO_C_BASE + GPIO_AFSEL) = 0x0;
-	REG(GPIO_C_BASE + GPIO_DATA) = 0x0D;
+#if 1  
+	REG(GPIO_B_BASE + GPIO_DIR) |= 0x0F; /* PC2~PC3 output*/
+	REG(GPIO_B_BASE + GPIO_AFSEL) = 0x0;
+	REG(GPIO_B_BASE + GPIO_DATA) = 0x0a;
 #endif
 
 	process_init();

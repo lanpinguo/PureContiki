@@ -44,6 +44,8 @@
 #include "reg.h"
 #include "dev/gpio.h"
 #include "dev/relay_switch.h"
+#include "stdio.h"
+
 
 #define SWITCH_GPIO_D_PIN_MASK   ((1<<LED_CTRL_PIN)|(1<<SWITCH0_PIN)|(1<<SWITCH1_PIN)|(1<<SWITCH2_PIN))
 #define SWITCH_GPIO_B_PIN_MASK   ((1<<SWITCH3_PIN)|(1<<SWITCH4_PIN)|(1<<SWITCH5_PIN)|(1<<SWITCH6_PIN)|(1<<SWITCH7_PIN))
@@ -67,8 +69,8 @@ void
 relay_switch_init(void)
 {
   /* Software controlled */
-  GPIO_SOFTWARE_CONTROL(SWITCH0_PORT, SWITCH_GPIO_D_PIN_MASK);
-  GPIO_SOFTWARE_CONTROL(SWITCH3_PORT, SWITCH_GPIO_B_PIN_MASK);
+  //GPIO_SOFTWARE_CONTROL(SWITCH0_PORT, SWITCH_GPIO_D_PIN_MASK);
+  //GPIO_SOFTWARE_CONTROL(SWITCH3_PORT, SWITCH_GPIO_B_PIN_MASK);
   
   GPIO_SET_OUTPUT(SWITCH0_PORT, SWITCH_GPIO_D_PIN_MASK);
   GPIO_SET_OUTPUT(SWITCH3_PORT, SWITCH_GPIO_B_PIN_MASK);
@@ -89,7 +91,8 @@ relay_switch_set(uint8_t sw, uint8_t value)
 	if(sw > (SWITCH_NUM - 1)){
 		return ;
 	}
-	
+	printf("relay = [sw:%d,value:%d,port:%d,pin:%04x]\r\n",
+			sw,value,relay_sw_table[sw].port,relay_sw_table[sw].pin);
 	GPIO_WRITE_PIN(relay_sw_table[sw].port, relay_sw_table[sw].pin, value);
 }
 /*---------------------------------------------------------------------------*/
