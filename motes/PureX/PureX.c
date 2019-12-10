@@ -252,6 +252,7 @@ extern 	FUNC_DEBUG_PRINT dbg_print_ip;
 extern 	FUNC_DEBUG_PRINT dbg_print_log;
 extern  FUNC_DEBUG_PRINT dbg_print_er_coap_engine;
 extern  FUNC_DEBUG_PRINT dbg_print_er_coap_observe_client;
+process_event_t dbg_event;
 
 PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 {
@@ -359,11 +360,12 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 	if(data != NULL) {
 	  mod_id = shell_strtolong(data, &nextptr);
 	  if(nextptr != data) {
+	  	printf("%s\r\n",nextptr);
 	  }
 	}
 	switch(mod_id){
 		case 1:
-			process_start(&coap_client_process, NULL);
+			process_post(&coap_client_process, dbg_event, "hello world");
 			break;
 		case 2:
 			break;
@@ -400,7 +402,8 @@ PROCESS(humidity_sensor_process, "Temp & Humidity process");
 AUTOSTART_PROCESSES(&pure_x_shell_process,\
 	&humidity_sensor_process,\
 	&udp_server_process, \
-	&coap_server_process);
+	&coap_server_process, \
+	&coap_client_process);
 
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(pure_x_shell_process, ev, data)

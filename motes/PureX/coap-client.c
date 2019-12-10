@@ -283,6 +283,8 @@ toggle_observation(void)
 /*---------------------------------------------------------------------------*/
 static int count_get = 0;
 static int count_put = 0;
+extern process_event_t dbg_event;
+
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(coap_client_process, ev, data)
 {
@@ -317,6 +319,16 @@ PROCESS_THREAD(coap_client_process, ev, data)
       tcpip_handler();
     }
 
+    if(ev == dbg_event) {
+		printf("data:%s",(char*)data);
+		coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+		coap_set_header_uri_path(request, service_urls[0]);
+		PRINTF("GET %d: %s\r\n", count_get, service_urls[0]);
+        COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+                              client_chunk_handler);
+    }
+
+#if 0
     if(etimer_expired(&et)) {
       count_get++;
 
@@ -427,6 +439,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 
       etimer_reset(&et);
     }
+#endif	
   } /* END_WHILE(1) */
 
   PROCESS_END();
