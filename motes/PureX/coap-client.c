@@ -218,11 +218,10 @@ generate_random_payload(int type, char *msg)
 }
 
 static void
-generate_relay_sw_config_payload(int type, char *msg)
+generate_relay_sw_config_payload(int index, int state, char *msg)
 {
-  if(type == 4) {   /* relay-sw */
-    snprintf((char *)msg, 64, "&index=%d&mode=%s", (random_rand() % 8) + 1, (random_rand() % 1) == 0 ? "off":"on");
-  } 
+   /* relay-sw */
+	snprintf((char *)msg, 64, "&index=%d&mode=%s", index, state == 0 ? "off":"on");
 }
 
 /*----------------------------------------------------------------------------*/
@@ -284,6 +283,9 @@ toggle_observation(void)
 static int count_get = 0;
 static int count_put = 0;
 extern process_event_t dbg_event;
+extern 	int coap_conf;
+extern 	int mod_id;
+extern int coap_param;
 
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(coap_client_process, ev, data)
@@ -320,12 +322,27 @@ PROCESS_THREAD(coap_client_process, ev, data)
     }
 
     if(ev == dbg_event) {
-		printf("data:%s",(char*)data);
-		coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
-		coap_set_header_uri_path(request, service_urls[0]);
-		PRINTF("GET %d: %s\r\n", count_get, service_urls[0]);
-        COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
-                              client_chunk_handler);
+
+		printf("coap_conf:%d",coap_conf);
+		if(mod_id == 1){
+			coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+			coap_set_header_uri_path(request, service_urls[0]);
+			PRINTF("GET %d: %s\r\n", count_get, service_urls[0]);
+			COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+			                      client_chunk_handler);
+		}
+		else if (mod_id == 2){
+			char msg[64] = "";
+			coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+			coap_set_header_uri_path(request, service_urls[4]);
+			generate_relay_sw_config_payload(coap_conf,coap_param, msg);
+			coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
+			PRINTF("PUT %d: %s PAYLOAD: %s\r\n", count_get, service_urls[4], msg);
+			COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+			                      client_chunk_handler);
+
+
+		}
     }
 
 #if 0
