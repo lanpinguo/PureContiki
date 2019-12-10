@@ -103,10 +103,10 @@ static int count_notify = 0;
 static struct etimer et;
 
 /* Example URIs that can be queried. */
-#define NUMBER_OF_URLS 4
+#define NUMBER_OF_URLS 5
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
 char *service_urls[NUMBER_OF_URLS] =
-{ ".well-known/core", "/dcdc/status", "/dcdc/vdc", "/dcdc/hwcfg" };
+{ ".well-known/core", "/dcdc/status", "/dcdc/vdc", "/dcdc/hwcfg","relay-sw" };
 /*
    #if PLATFORM_HAS_BUTTON
    static int uri_switch = 0;
@@ -216,6 +216,15 @@ generate_random_payload(int type, char *msg)
     snprintf((char *)msg, 64, "&VMX=%d&IMX=%d", (random_rand() % 25) + 1, (random_rand() % 6) + 1);
   }
 }
+
+static void
+generate_relay_sw_config_payload(int type, char *msg)
+{
+  if(type == 4) {   /* relay-sw */
+    snprintf((char *)msg, 64, "&index=%d&mode=%s", (random_rand() % 8) + 1, (random_rand() % 1) == 0 ? "off":"on");
+  } 
+}
+
 /*----------------------------------------------------------------------------*/
 /*
  * Handle the response to the observe request and the following notifications
@@ -316,7 +325,10 @@ PROCESS_THREAD(coap_client_process, ev, data)
         /* TEST GET: looping through the 3 resources: status, vdc, hwcfg */
         /* Also CoAP GET doesn't need to have a payload */
         coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
-        if(count_get % 3 == 1) {
+        if(count_get % 3 == 0) {
+          coap_set_header_uri_path(request, service_urls[0]);
+          PRINTF("GET %d: %s\r\n", count_get, service_urls[0]);
+        } else if(count_get % 3 == 1) {
           coap_set_header_uri_path(request, service_urls[1]);
           PRINTF("GET %d: %s\r\n", count_get, service_urls[1]);
         } else if(count_get % 3 == 2) {
@@ -358,12 +370,17 @@ PROCESS_THREAD(coap_client_process, ev, data)
         count_put++;
         coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
 
-        if(count_put % 2 == 0) {
+        if(count_put % 3 == 0) {
           coap_set_header_uri_path(request, service_urls[3]);
           generate_random_payload(3, msg);
           coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
           PRINTF("PUT %d: %s PAYLOAD: %s\r\n", count_get, service_urls[3], msg);
-        } else {
+        }else if(count_put % 3 == 1){
+          coap_set_header_uri_path(request, service_urls[4]);
+          generate_relay_sw_config_payload(4, msg);
+          coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
+          PRINTF("PUT %d: %s PAYLOAD: %s\r\n", count_get, service_urls[4], msg);
+		}else {
           coap_set_header_uri_path(request, service_urls[2]);
           generate_random_payload(2, msg);
           coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);

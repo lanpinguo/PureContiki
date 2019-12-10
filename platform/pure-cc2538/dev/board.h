@@ -222,7 +222,7 @@
 /** @} */
 
 
-#define PLATFORM_HAS_SWITCH     1
+#define PLATFORM_HAS_RELAY_SWITCH     1
 
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -230,9 +230,9 @@
  *
  * Switches on the Pure-X are connected as follows:
  * - LED_CTRL -> PA2
- * - SWITCH0 -> PA6
- * - SWITCH1 -> PA5
- * - SWITCH2 -> PA4
+ * - SWITCH0 -> PD3
+ * - SWITCH1 -> PD1
+ * - SWITCH2 -> PD0
  * - SWITCH3 -> PB0
  * - SWITCH4 -> PB1
  * - SWITCH5 -> PB2
@@ -241,21 +241,24 @@
  * @{
  */
 
-/** INDICATE_CTRL -> PA6 */
-#define LED_CTRL_PORT     GPIO_A_NUM
-#define LED_CTRL_PIN      2
+#define SWITCH_NUM     	  (8+1) /* place led ctrl pin on index 0*/
 
-/** SWITCH0 -> PA6 */
-#define SWITCH0_PORT      GPIO_A_NUM
-#define SWITCH0_PIN       6
 
-/** SWITCH1 -> PA5 */
-#define SWITCH1_PORT      GPIO_A_NUM
-#define SWITCH1_PIN       5
+/** INDICATE_CTRL -> PD6 */
+#define LED_CTRL_PORT     GPIO_D_NUM
+#define LED_CTRL_PIN      6
 
-/** SWITCH2 -> PA4 */
-#define SWITCH2_PORT      GPIO_A_NUM
-#define SWITCH2_PIN       4
+/** SWITCH0 -> PD3 */
+#define SWITCH0_PORT      GPIO_D_NUM
+#define SWITCH0_PIN       3
+
+/** SWITCH1 -> PD1 */
+#define SWITCH1_PORT      GPIO_D_NUM
+#define SWITCH1_PIN       1
+
+/** SWITCH2 -> PD0 */
+#define SWITCH2_PORT      GPIO_D_NUM
+#define SWITCH2_PIN       0
 
 /** SWITCH3 -> PB0 */
 #define SWITCH3_PORT      GPIO_B_NUM

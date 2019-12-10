@@ -72,6 +72,10 @@
 #include <cdc-eth.h>
 #include <contikimac.h>
 
+#if PLATFORM_HAS_RELAY_SWITCH
+#include "relay_switch.h"
+#endif
+
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
@@ -250,20 +254,23 @@ int rf_ext_driver_register(void)
 int
 main(void)
 {
-  
 
-  nvic_init();
 
-  ioc_init();
-  sys_ctrl_init();
-  clock_init();
-  lpm_init();
-  rtimer_init();
-  gpio_init();
+	nvic_init();
 
-  //debug_led();
-  //leds_init();
-  //fade(LEDS_YELLOW);
+	ioc_init();
+	sys_ctrl_init();
+	clock_init();
+	lpm_init();
+	rtimer_init();
+	gpio_init();
+
+#if PLATFORM_HAS_RELAY_SWITCH
+	relay_switch_init();
+#endif
+	//debug_led();
+	//leds_init();
+	//fade(LEDS_YELLOW);
 
 #if 0  
 	REG(GPIO_C_BASE + GPIO_DIR) |= 0x0F; /* PC2~PC3 output*/
@@ -271,97 +278,97 @@ main(void)
 	REG(GPIO_C_BASE + GPIO_DATA) = 0x0D;
 #endif
 
-  process_init();
+	process_init();
 
-  watchdog_init();
-  button_sensor_init();
+	watchdog_init();
+	button_sensor_init();
 
-  /*
-   * Character I/O Initialisation.
-   * When the UART receives a character it will call serial_line_input_byte to
-   * notify the core. The same applies for the USB driver.
-   *
-   * If slip-arch is also linked in afterwards (e.g. if we are a border router)
-   * it will overwrite one of the two peripheral input callbacks. Characters
-   * received over the relevant peripheral will be handled by
-   * slip_input_byte instead
-   */
+	/*
+	* Character I/O Initialisation.
+	* When the UART receives a character it will call serial_line_input_byte to
+	* notify the core. The same applies for the USB driver.
+	*
+	* If slip-arch is also linked in afterwards (e.g. if we are a border router)
+	* it will overwrite one of the two peripheral input callbacks. Characters
+	* received over the relevant peripheral will be handled by
+	* slip_input_byte instead
+	*/
 #if UART_CONF_ENABLE
-  uart_init(0);
-  uart_init(1);
-  uart_set_input(SERIAL_LINE_CONF_UART, serial_line_input_byte);
+	uart_init(0);
+	uart_init(1);
+	uart_set_input(SERIAL_LINE_CONF_UART, serial_line_input_byte);
 #endif
 
 #if USB_SERIAL_CONF_ENABLE
-  usb_serial_init();
-  usb_serial_set_input(serial_line_input_byte);
+	usb_serial_init();
+	usb_serial_set_input(serial_line_input_byte);
 #endif
 
 #if USB_ETH_CONF_ENABLE
-  usb_cdc_eth_setup();
+	usb_cdc_eth_setup();
 #endif
 
-  serial_line_init();
+	serial_line_init();
 
-  INTERRUPTS_ENABLE();
-  //fade(LEDS_GREEN);
+	INTERRUPTS_ENABLE();
+	//fade(LEDS_GREEN);
 
-  PUTS(CONTIKI_VERSION_STRING);
-  PUTS(BOARD_STRING);
+	PUTS(CONTIKI_VERSION_STRING);
+	PUTS(BOARD_STRING);
 #if STARTUP_CONF_VERBOSE
-  soc_print_info();
+	soc_print_info();
 #endif
 
 
-  PRINTF("\r\nSys Status: 0x%08lx\r\n", REG(SYS_CTRL_CLOCK_STA));
-  PRINTF("Net: ");
-  PRINTF("%s\r\n", NETSTACK_NETWORK.name);
-  PRINTF("MAC: ");
-  PRINTF("%s\r\n", NETSTACK_MAC.name);
-  PRINTF("RDC: ");
-  PRINTF("%s\r\n", NETSTACK_RDC.name);
+	PRINTF("\r\nSys Status: 0x%08lx\r\n", REG(SYS_CTRL_CLOCK_STA));
+	PRINTF("Net: ");
+	PRINTF("%s\r\n", NETSTACK_NETWORK.name);
+	PRINTF("MAC: ");
+	PRINTF("%s\r\n", NETSTACK_MAC.name);
+	PRINTF("RDC: ");
+	PRINTF("%s\r\n", NETSTACK_RDC.name);
 
-  /* Initialise the H/W RNG engine. */
-  random_init(0);
+	/* Initialise the H/W RNG engine. */
+	random_init(0);
 
-  udma_init();
+	udma_init();
 
-  process_start(&etimer_process, NULL);
-  ctimer_init();
+	process_start(&etimer_process, NULL);
+	ctimer_init();
 
-  rf_ext_driver_register();
+	rf_ext_driver_register();
 
 
-  set_rf_params();
+	set_rf_params();
 
 #if CRYPTO_CONF_INIT
-  crypto_init();
-  crypto_disable();
+	crypto_init();
+	crypto_disable();
 #endif
 
-  netstack_init();
+	netstack_init();
 
 #if NETSTACK_CONF_WITH_IPV6
-  memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
-  queuebuf_init();
-  process_start(&tcpip_process, NULL);
+	memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
+	queuebuf_init();
+	process_start(&tcpip_process, NULL);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-  adc_init();
+	adc_init();
 
-  process_start(&sensors_process, NULL);
+	process_start(&sensors_process, NULL);
 
-  energest_init();
-  ENERGEST_ON(ENERGEST_TYPE_CPU);
+	energest_init();
+	ENERGEST_ON(ENERGEST_TYPE_CPU);
 
-  autostart_start(autostart_processes);
+	autostart_start(autostart_processes);
 
-  watchdog_start();
-  //fade(LEDS_ORANGE);
+	watchdog_start();
+	//fade(LEDS_ORANGE);
 
-  cc2538_rf_set_promiscous_mode(1);
+	cc2538_rf_set_promiscous_mode(1);
 
-  //mac_sniffer_callback = usbeth_send;
+	//mac_sniffer_callback = usbeth_send;
 
 #if 0
 	REG(GPIO_C_BASE + GPIO_DIR) |= 0x0F; /* PC2~PC3 output*/
@@ -369,18 +376,18 @@ main(void)
 	REG(GPIO_C_BASE + GPIO_DATA) = 0x0F;
 	printf("\r\n2 GPIOC:%x",REG(GPIO_C_BASE + GPIO_DATA));
 #endif	
-  while(1) {
-    uint8_t r;
-    do {
-      /* Reset watchdog and handle polls and events */
-      watchdog_periodic();
+	while(1) {
+		uint8_t r;
+		do {
+			/* Reset watchdog and handle polls and events */
+			watchdog_periodic();
 
-      r = process_run();
-    } while(r > 0);
+			r = process_run();
+		} while(r > 0);
 
-    /* We have serviced all pending events. Enter a Low-Power mode. */
-    lpm_enter();
-  }
+		/* We have serviced all pending events. Enter a Low-Power mode. */
+		lpm_enter();
+	}
 }
 /*---------------------------------------------------------------------------*/
 
