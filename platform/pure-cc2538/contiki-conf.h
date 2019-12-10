@@ -401,8 +401,10 @@ typedef uint32_t rtimer_clock_t;
  * @{
  */
 
+/*                                      Hdr                  CoF  If-Match         Obs Blo strings   */
+#define COAP_MAX_HEADER_SIZE           (4 + COAP_TOKEN_LEN + 3 + 1 + COAP_ETAG_LEN + 4 + 4 + 0)  /* 65 */
 
-#define REST_MAX_CHUNK_SIZE            		18
+#define REST_MAX_CHUNK_SIZE            		48
 
 /* Don't let contiki-default-conf.h decide if we are an IPv6 build */
 #ifndef NETSTACK_CONF_WITH_IPV6
