@@ -348,23 +348,12 @@ SHELL_COMMAND(coap_client_command,
 		"coap [enable|disable] [mode]: coap client debug ",
 		&dbg_coap_client_process);
 
-int str_split(char * str,char delim[],char* argv[],int argc_max)
-{
-	int argc = 0;
-	char *ap;
 
-	for (;((ap = strsep(&str, " \t")) != NULL) && (argc < argc_max); argc++)
-	{       
-		argv[argc] = ap;
-	}
-	return argc;
-}
 PROCESS_THREAD(dbg_coap_client_process, ev, data)
 {
 	//const char *nextptr;
 	char* argv[5];
 	int argc;
-	int success = 1;
 	static COAP_CLIENT_ARG_t coap_args;
 	
 	PROCESS_BEGIN();
@@ -408,15 +397,11 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 	goto DONE;
 	
 ERROR:
-	success = 0;
+	printf("\r\nWrong param\r\n");
+    PROCESS_EXIT();
 
 DONE:	
-	if(success){
-		printf("\r\nSuccessfully\r\n");/*dummp avoid compiler error*/
-	}
-	else{
-		printf("\r\nWrong param\r\n");
-	}
+	printf("\r\nSuccessfully\r\n");/*dummp avoid compiler error*/
 	PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
