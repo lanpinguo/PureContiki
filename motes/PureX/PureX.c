@@ -348,19 +348,19 @@ SHELL_COMMAND(coap_client_command,
 		"coap [enable|disable] [mode]: coap client debug ",
 		&dbg_coap_client_process);
 
-COAP_CLIENT_ARG_t coap_args;
 
 PROCESS_THREAD(dbg_coap_client_process, ev, data)
 {
 	const char *nextptr;
 	
+	static COAP_CLIENT_ARG_t coap_args;
 	
 	PROCESS_BEGIN();
 	
 	if(data != NULL) {
 	  coap_args.mod_id = shell_strtolong(data, &nextptr);
 	  if(nextptr != data) {
-	  	printf("%s\r\n",nextptr);
+	  	/*printf("%s\r\n",nextptr);*/
 		coap_args.coap_conf = shell_strtolong(nextptr, &nextptr);
 	  	
 		if(nextptr != NULL) {
@@ -368,7 +368,7 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 		}
 	  }
 	}
-	process_post(&coap_client_process, dbg_event, "hello world");
+	process_post(&coap_client_process, dbg_event, &coap_args);
 
 	printf("\r\ncoap client mode [%d] \r\n",coap_args.mod_id);	
 	

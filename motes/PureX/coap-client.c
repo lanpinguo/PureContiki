@@ -283,7 +283,7 @@ toggle_observation(void)
 static int count_get = 0;
 static int count_put = 0;
 extern process_event_t dbg_event;
-extern COAP_CLIENT_ARG_t coap_args;
+//extern COAP_CLIENT_ARG_t coap_args;
 
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(coap_client_process, ev, data)
@@ -293,7 +293,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
    static int print = 0;
    #endif
  */
-	COAP_CLIENT_ARG_t* p_coap_args = &coap_args;
+	COAP_CLIENT_ARG_t* p_coap_args;
 
 	PROCESS_BEGIN();
 
@@ -313,36 +313,39 @@ PROCESS_THREAD(coap_client_process, ev, data)
 
 	etimer_set(&et, GET_INTERVAL * CLOCK_SECOND);
 
-  while(1) {
-    PROCESS_YIELD();
+	while(1) {
+		PROCESS_YIELD();
 
-    if(ev == tcpip_event) {
-      printf("TCPIP_HANDLER\r\n");
-      tcpip_handler();
-    }
-
-    if(ev == dbg_event) {
-
-		if(p_coap_args->mod_id == 1){
-			coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
-			coap_set_header_uri_path(request, service_urls[0]);
-			PRINTF("GET %d: %s\r\n", count_get, service_urls[0]);
-			COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
-			                      client_chunk_handler);
+		if(ev == tcpip_event) {
+			printf("TCPIP_HANDLER\r\n");
+			tcpip_handler();
 		}
-		else if (p_coap_args->mod_id == 2){
-			char msg[64] = "";
-			coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
-			coap_set_header_uri_path(request, service_urls[4]);
-			generate_relay_sw_config_payload(p_coap_args->coap_conf,p_coap_args->coap_param, msg);
-			coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
-			PRINTF("PUT %d: %s PAYLOAD: %s\r\n", count_get, service_urls[4], msg);
-			COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
-			                      client_chunk_handler);
+
+		if(ev == dbg_event) {
+
+			p_coap_args = (COAP_CLIENT_ARG_t*)data;
+			printf("modid:%d,coap_conf:%d,coap_param:%d\r\n",p_coap_args->mod_id,p_coap_args->coap_conf,p_coap_args->coap_param);
+
+			if(p_coap_args->mod_id == 1){
+				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+				coap_set_header_uri_path(request, service_urls[0]);
+				PRINTF("GET %d: %s\r\n", count_get, service_urls[0]);
+				COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+					                  client_chunk_handler);
+			}
+			else if (p_coap_args->mod_id == 2){
+				char msg[64] = "";
+				coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+				coap_set_header_uri_path(request, service_urls[4]);
+				generate_relay_sw_config_payload(p_coap_args->coap_conf,p_coap_args->coap_param, msg);
+				coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
+				PRINTF("PUT %d: %s PAYLOAD: %s\r\n", count_get, service_urls[4], msg);
+				COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+					                  client_chunk_handler);
 
 
+			}
 		}
-    }
 
 #if 0
     if(etimer_expired(&et)) {
