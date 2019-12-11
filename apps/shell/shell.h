@@ -323,6 +323,26 @@ int shell_start_command(char *commandline, int commandline_len,
  */
 unsigned long shell_strtolong(const char *str, const char **retstr);
 
+/*****************************************************************************
+ Prototype    : str_split
+ Description  : str split
+ Input        : char * str    
+                char delim[]  
+                char* argv[]  
+                int argc_max  
+ Output       : None
+ Return Value : 
+ Calls        : 
+ Called By    : 
+ 
+  History        :
+  1.Date         : 2019/12/11
+    Author       : lanpinguo
+    Modification : Created function
+
+*****************************************************************************/
+int str_split(char * str,char delim[],char* argv[],int argc_max);
+
 unsigned long shell_time(void);
 void shell_set_time(unsigned long seconds);
 

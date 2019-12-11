@@ -40,7 +40,7 @@
 
 #include "contiki.h"
 #include "shell-memdebug.h"
-
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -48,75 +48,73 @@
 PROCESS(shell_poke_process, "poke");
 SHELL_COMMAND(poke_command,
 	      "poke",
-	      "poke <address> <byte>: write byte <byte> to address <address>",
+	      "poke <address> <bytes>: write 4 bytes <bytes> to address <address>",
 	      &shell_poke_process);
 PROCESS(shell_peek_process, "peek");
 SHELL_COMMAND(peek_command,
 	      "peek",
-	      "peek <address>: read a byte from address <address>",
+	      "peek <address>: read 4 bytes from address <address>",
 	      &shell_peek_process);
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(shell_poke_process, ev, data)
 {
-  uint8_t *address;
-  uint8_t byte;
-  const char *args, *next;
+	uint32_t *address;
+	uint32_t bytes;
+	char* argv[3];
+	int argc;
 
-  PROCESS_BEGIN();
+	PROCESS_BEGIN();
 
-  args = data;
+	if(data == NULL) {
+		shell_output_str(&poke_command, "usage 0", "");
+		PROCESS_EXIT();
+	}
 
-  if(args == NULL) {
-    shell_output_str(&poke_command, "usage 0", "");
-    PROCESS_EXIT();
-  }
+	argc = str_split((char*)data,(char*)" ",argv,3);
   
-  address = (uint8_t *)(uintptr_t)shell_strtolong(args, &next);
-  if(next == args) {
-    shell_output_str(&poke_command, "usage 1", "");
-    PROCESS_EXIT();
-  }
+	if(argc != 2) {
+		shell_output_str(&poke_command, "usage 1", "");
+		PROCESS_EXIT();
+	}
+	
+	address = (uint32_t *)strtoul((const char*)argv[0],NULL, 16);
 
-  args = next;
-  byte = shell_strtolong(args, &next);
-  if(next == args) {
-    shell_output_str(&poke_command, "usage 2", "");
-    PROCESS_EXIT();
-  }
+	bytes = strtoul((const char*)argv[1],NULL, 16);
 
-  printf("address %p byte 0x%02x\n", address, byte);
+	printf("address[%p] = 0x%08x\n", address, (unsigned int)bytes);
   
-  *address = byte;
-  
-  PROCESS_END();
+	(*((volatile unsigned long *)(address))) = bytes;
+
+	PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(shell_peek_process, ev, data)
 {
-  uint8_t *address;
-  const char *args, *next;
-  char buf[32];
+	uint32_t *address;
+	char* argv[3];
+	int argc;
+	char buf[32];
 
-  PROCESS_BEGIN();
+	PROCESS_BEGIN();
 
-  args = data;
-
-  if(args == NULL) {
-    shell_output_str(&peek_command, "usage 0", "");
-    PROCESS_EXIT();
-  }
+	if(data == NULL) {
+		shell_output_str(&peek_command, "usage 0", "");
+		PROCESS_EXIT();
+	}
+	argc = str_split((char*)data,(char*)" ",argv,3);
   
-  address = (uint8_t *)(uintptr_t)shell_strtolong(args, &next);
-  if(next == args) {
-    shell_output_str(&peek_command, "usage 1", "");
-    PROCESS_EXIT();
-  }
+	if(argc != 1) {
+		shell_output_str(&poke_command, "usage 1", "");
+		PROCESS_EXIT();
+	}
+	
+	address = (uint32_t *)(uintptr_t)strtoul((const char*)argv[0],NULL, 16);
 
-  snprintf(buf, sizeof(buf), "0x%02x", *address);
+	snprintf(buf, sizeof(buf), "[%p] = 0x%08x",address, (unsigned int)(*((volatile unsigned long *)(address))));
 
-  shell_output_str(&peek_command, buf, "");
-  
-  PROCESS_END();
+	shell_output_str(&peek_command, buf, "");
+
+	PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
 void
