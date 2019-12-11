@@ -114,7 +114,7 @@ uip_log(char *m)
 	}
 }
 
-
+#if 0
 /*---------------------------------------------------------------------------*/
 static void
 fade(unsigned char l)
@@ -134,6 +134,8 @@ fade(unsigned char l)
     }
   }
 }
+#endif
+
 /*---------------------------------------------------------------------------*/
 static void
 set_rf_params(void)
@@ -254,8 +256,6 @@ int rf_ext_driver_register(void)
 int
 main(void)
 {
-
-
 	nvic_init();
 
 	ioc_init();
@@ -272,7 +272,7 @@ main(void)
 	//leds_init();
 	//fade(LEDS_YELLOW);
 
-#if 1  
+#if 0  
 	REG(GPIO_B_BASE + GPIO_DIR) |= 0x0F; /* PC2~PC3 output*/
 	REG(GPIO_B_BASE + GPIO_AFSEL) = 0x0;
 	REG(GPIO_B_BASE + GPIO_DATA) = 0x0a;
@@ -281,8 +281,10 @@ main(void)
 	process_init();
 
 	watchdog_init();
-	button_sensor_init();
 
+#if PLATFORM_HAS_BUTTON
+	button_sensor_init();
+#endif
 	/*
 	* Character I/O Initialisation.
 	* When the UART receives a character it will call serial_line_input_byte to
@@ -356,7 +358,7 @@ main(void)
 
 	adc_init();
 
-	process_start(&sensors_process, NULL);
+	/*process_start(&sensors_process, NULL);*/
 
 	energest_init();
 	ENERGEST_ON(ENERGEST_TYPE_CPU);
