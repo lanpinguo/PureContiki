@@ -40,6 +40,17 @@
 #ifndef COAP_CLIENT_H_
 #define COAP_CLIENT_H_
 /*---------------------------------------------------------------------------*/
+
+typedef struct COAP_CLIENT_ARG_s
+{
+	int mod_id;
+	int coap_conf;
+	int coap_param;
+
+
+}COAP_CLIENT_ARG_t;
+
+
 /*---------------------------------------------------------------------------*/
 PROCESS_NAME(coap_client_process);
 /*---------------------------------------------------------------------------*/
