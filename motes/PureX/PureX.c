@@ -348,30 +348,75 @@ SHELL_COMMAND(coap_client_command,
 		"coap [enable|disable] [mode]: coap client debug ",
 		&dbg_coap_client_process);
 
+int str_split(char * str,char delim[],char* argv[],int argc_max)
+{
+	int argc = 0;
+	char *ap;
 
+	for (;((ap = strsep(&str, " \t")) != NULL) && (argc < argc_max); argc++)
+	{       
+		argv[argc] = ap;
+	}
+	return argc;
+}
 PROCESS_THREAD(dbg_coap_client_process, ev, data)
 {
-	const char *nextptr;
-	
+	//const char *nextptr;
+	char* argv[5];
+	int argc;
+	int success = 1;
 	static COAP_CLIENT_ARG_t coap_args;
 	
 	PROCESS_BEGIN();
 	
 	if(data != NULL) {
-	  coap_args.mod_id = shell_strtolong(data, &nextptr);
-	  if(nextptr != data) {
-	  	/*printf("%s\r\n",nextptr);*/
-		coap_args.coap_conf = shell_strtolong(nextptr, &nextptr);
-	  	
-		if(nextptr != NULL) {
-			coap_args.coap_param = shell_strtolong(nextptr, &nextptr);
-		}
-	  }
-	}
-	process_post(&coap_client_process, dbg_event, &coap_args);
+		argc = str_split((char*)data,(char*)" ",argv,5);
+		/*printf("\r\ncoap client cli [%d] \r\n",argc);	*/
 
-	printf("\r\ncoap client mode [%d] \r\n",coap_args.mod_id);	
+		if(strncmp(argv[0], "sw", 2) == 0) {
+			if(argc == 3){
+				coap_args.mod_id = COAP_CLIENT_SW;
+
+				coap_args.coap_conf = atoi(argv[1]);
+				
+				if(strncmp(argv[2], "on", 2) == 0) {
+					coap_args.coap_param = 1;
+				} 
+				else if(strncmp(argv[2], "off", 3) == 0) {
+					coap_args.coap_param = 0;
+				}
+				else{
+					goto ERROR;
+				}
+			}
+			else{
+				goto ERROR;
+			}
+			
+			
+		} 
+		else if(strncmp(argv[0], "res", 3) == 0) {
+			coap_args.mod_id = COAP_CLIENT_OWN;
+		}else{
+			goto ERROR;
+		}
+
+		/*post to coap client*/
+		process_post(&coap_client_process, dbg_event, &coap_args);
+
+	}
+	goto DONE;
 	
+ERROR:
+	success = 0;
+
+DONE:	
+	if(success){
+		printf("\r\nSuccessfully\r\n");/*dummp avoid compiler error*/
+	}
+	else{
+		printf("\r\nWrong param\r\n");
+	}
 	PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/

@@ -41,6 +41,14 @@
 #define COAP_CLIENT_H_
 /*---------------------------------------------------------------------------*/
 
+enum {
+	COAP_CLIENT_OWN = 1,
+	COAP_CLIENT_SW  ,
+		
+};
+
+
+
 typedef struct COAP_CLIENT_ARG_s
 {
 	int mod_id;

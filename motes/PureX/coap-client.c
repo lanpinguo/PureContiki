@@ -323,17 +323,20 @@ PROCESS_THREAD(coap_client_process, ev, data)
 
 		if(ev == dbg_event) {
 
+			if(data == NULL) {
+				continue;
+			}
 			p_coap_args = (COAP_CLIENT_ARG_t*)data;
 			printf("modid:%d,coap_conf:%d,coap_param:%d\r\n",p_coap_args->mod_id,p_coap_args->coap_conf,p_coap_args->coap_param);
 
-			if(p_coap_args->mod_id == 1){
+			if(p_coap_args->mod_id == COAP_CLIENT_OWN){
 				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
 				coap_set_header_uri_path(request, service_urls[0]);
 				PRINTF("GET %d: %s\r\n", count_get, service_urls[0]);
 				COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
 					                  client_chunk_handler);
 			}
-			else if (p_coap_args->mod_id == 2){
+			else if (p_coap_args->mod_id == COAP_CLIENT_SW){
 				char msg[64] = "";
 				coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
 				coap_set_header_uri_path(request, service_urls[4]);
