@@ -244,9 +244,9 @@
 #define SWITCH_NUM     	  (8+1) /* place led ctrl pin on index 0*/
 
 
-/** INDICATE_CTRL -> PD6 */
+/** INDICATE_CTRL -> PD0 */
 #define LED_CTRL_PORT     GPIO_D_NUM
-#define LED_CTRL_PIN      6
+#define LED_CTRL_PIN      0
 
 /** SWITCH0 -> PD3 */
 #define SWITCH0_PORT      GPIO_D_NUM
@@ -256,29 +256,29 @@
 #define SWITCH1_PORT      GPIO_D_NUM
 #define SWITCH1_PIN       1
 
-/** SWITCH2 -> PD0 */
-#define SWITCH2_PORT      GPIO_D_NUM
+/** SWITCH2 -> PB0 */
+#define SWITCH2_PORT      GPIO_B_NUM
 #define SWITCH2_PIN       0
 
-/** SWITCH3 -> PB0 */
+/** SWITCH3 -> PB1 */
 #define SWITCH3_PORT      GPIO_B_NUM
-#define SWITCH3_PIN       0
+#define SWITCH3_PIN       1
 
-/** SWITCH4 -> PB1 */
+/** SWITCH4 -> PB2 */
 #define SWITCH4_PORT      GPIO_B_NUM
-#define SWITCH4_PIN       1
+#define SWITCH4_PIN       2
 
-/** SWITCH5 -> PB2 */
+/** SWITCH5 -> PB3 */
 #define SWITCH5_PORT      GPIO_B_NUM
-#define SWITCH5_PIN       2
+#define SWITCH5_PIN       3
 
-/** SWITCH6 -> PB3 */
+/** SWITCH6 -> PB4 */
 #define SWITCH6_PORT      GPIO_B_NUM
-#define SWITCH6_PIN       3
+#define SWITCH6_PIN       4
 
-/** SWITCH7 -> PB4 */
+/** SWITCH7 -> PB5 */
 #define SWITCH7_PORT      GPIO_B_NUM
-#define SWITCH7_PIN       4
+#define SWITCH7_PIN       5
 
 
 /** @} */

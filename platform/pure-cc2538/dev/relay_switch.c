@@ -43,24 +43,25 @@
 #include "contiki.h"
 #include "reg.h"
 #include "dev/gpio.h"
+#include "dev/ioc.h"
 #include "dev/relay_switch.h"
 #include "stdio.h"
 
 
-#define SWITCH_GPIO_D_PIN_MASK   ((1<<LED_CTRL_PIN)|(1<<SWITCH0_PIN)|(1<<SWITCH1_PIN)|(1<<SWITCH2_PIN))
-#define SWITCH_GPIO_B_PIN_MASK   ((1<<SWITCH3_PIN)|(1<<SWITCH4_PIN)|(1<<SWITCH5_PIN)|(1<<SWITCH6_PIN)|(1<<SWITCH7_PIN))
+#define SWITCH_GPIO_D_PIN_MASK   ((1<<LED_CTRL_PIN)|(1<<SWITCH0_PIN)|(1<<SWITCH1_PIN))
+#define SWITCH_GPIO_B_PIN_MASK   ((1<<SWITCH2_PIN)|(1<<SWITCH3_PIN)|(1<<SWITCH4_PIN)|(1<<SWITCH5_PIN)|(1<<SWITCH6_PIN)|(1<<SWITCH7_PIN))
 
 
 RELAY_SWITCH_t relay_sw_table[SWITCH_NUM] = {
-{LED_CTRL_PORT,LED_CTRL_PIN},
-{SWITCH0_PORT,SWITCH0_PIN},
-{SWITCH1_PORT,SWITCH1_PIN},
-{SWITCH2_PORT,SWITCH2_PIN},
-{SWITCH3_PORT,SWITCH3_PIN},
-{SWITCH4_PORT,SWITCH4_PIN},
-{SWITCH5_PORT,SWITCH5_PIN},
-{SWITCH6_PORT,SWITCH6_PIN},
-{SWITCH7_PORT,SWITCH7_PIN}
+{GPIO_D_BASE,LED_CTRL_PORT,LED_CTRL_PIN},
+{GPIO_D_BASE,SWITCH0_PORT,SWITCH0_PIN},
+{GPIO_D_BASE,SWITCH1_PORT,SWITCH1_PIN},
+{GPIO_B_BASE,SWITCH2_PORT,SWITCH2_PIN},
+{GPIO_B_BASE,SWITCH3_PORT,SWITCH3_PIN},
+{GPIO_B_BASE,SWITCH4_PORT,SWITCH4_PIN},
+{GPIO_B_BASE,SWITCH5_PORT,SWITCH5_PIN},
+{GPIO_B_BASE,SWITCH6_PORT,SWITCH6_PIN},
+{GPIO_B_BASE,SWITCH7_PORT,SWITCH7_PIN}
 };
 
 
@@ -68,12 +69,26 @@ RELAY_SWITCH_t relay_sw_table[SWITCH_NUM] = {
 void
 relay_switch_init(void)
 {
-  /* Software controlled */
-  //GPIO_SOFTWARE_CONTROL(SWITCH0_PORT, SWITCH_GPIO_D_PIN_MASK);
-  //GPIO_SOFTWARE_CONTROL(SWITCH3_PORT, SWITCH_GPIO_B_PIN_MASK);
-  
-  GPIO_SET_OUTPUT(SWITCH0_PORT, SWITCH_GPIO_D_PIN_MASK);
-  GPIO_SET_OUTPUT(SWITCH3_PORT, SWITCH_GPIO_B_PIN_MASK);
+	int i;
+
+	
+	/* Software controlled */
+	GPIO_SOFTWARE_CONTROL(GPIO_D_BASE, SWITCH_GPIO_D_PIN_MASK);
+	GPIO_SOFTWARE_CONTROL(GPIO_B_BASE, SWITCH_GPIO_B_PIN_MASK);
+
+	GPIO_SET_OUTPUT(GPIO_D_BASE, SWITCH_GPIO_D_PIN_MASK);
+	GPIO_SET_OUTPUT(GPIO_B_BASE, SWITCH_GPIO_B_PIN_MASK);
+
+	for(i = 0 ; i < SWITCH_NUM; i++){
+	    ioc_set_over(relay_sw_table[i].port, relay_sw_table[i].pin, IOC_OVERRIDE_OE);
+	}
+
+	/*init to 0*/
+	GPIO_WRITE_PIN(GPIO_D_BASE, SWITCH_GPIO_D_PIN_MASK, ~SWITCH_GPIO_D_PIN_MASK);
+	GPIO_WRITE_PIN(GPIO_B_BASE, SWITCH_GPIO_B_PIN_MASK, ~SWITCH_GPIO_B_PIN_MASK);
+
+	printf("relay_switch_init done\r\n");
+
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
@@ -82,18 +97,20 @@ relay_switch_get(uint8_t sw)
 	if(sw > (SWITCH_NUM - 1)){
 		return 0;
 	}
-	return GPIO_READ_PIN(relay_sw_table[sw].port, relay_sw_table[sw].pin);
+	return GPIO_READ_PIN(relay_sw_table[sw].base,(1<<relay_sw_table[sw].pin));
 }
 /*---------------------------------------------------------------------------*/
 void
 relay_switch_set(uint8_t sw, uint8_t value)
 {
+	int port,pin;
 	if(sw > (SWITCH_NUM - 1)){
 		return ;
 	}
-	printf("relay = [sw:%d,value:%d,port:%d,pin:%04x]\r\n",
-			sw,value,relay_sw_table[sw].port,relay_sw_table[sw].pin);
-	GPIO_WRITE_PIN(relay_sw_table[sw].port, relay_sw_table[sw].pin, value);
+	port = relay_sw_table[sw].port;
+	pin = relay_sw_table[sw].pin;
+	printf("relay = [sw:%d,value:%d,port:%d,pin:%04x]\r\n",sw,value,port,pin);
+	GPIO_WRITE_PIN(relay_sw_table[sw].base,(1 << pin), (value > 0) ? (1 << pin) : 0);
 }
 /*---------------------------------------------------------------------------*/
 

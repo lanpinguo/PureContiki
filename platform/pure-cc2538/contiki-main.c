@@ -265,14 +265,12 @@ main(void)
 	rtimer_init();
 	gpio_init();
 
-#if PLATFORM_HAS_RELAY_SWITCH
-	relay_switch_init();
-#endif
 	//debug_led();
 	//leds_init();
 	//fade(LEDS_YELLOW);
 
 #if 0  
+	REG(GPIO_B_BASE + GPIO_DIR) |= 0x3F; /* PB0~PB5 output*/
 	REG(GPIO_B_BASE + GPIO_DIR) |= 0x0F; /* PC2~PC3 output*/
 	REG(GPIO_B_BASE + GPIO_AFSEL) = 0x0;
 	REG(GPIO_B_BASE + GPIO_DATA) = 0x0a;
@@ -371,13 +369,10 @@ main(void)
 	cc2538_rf_set_promiscous_mode(1);
 
 	//mac_sniffer_callback = usbeth_send;
+#if PLATFORM_HAS_RELAY_SWITCH
+	relay_switch_init();
+#endif
 
-#if 0
-	REG(GPIO_C_BASE + GPIO_DIR) |= 0x0F; /* PC2~PC3 output*/
-	REG(GPIO_C_BASE + GPIO_AFSEL) = 0x0;
-	REG(GPIO_C_BASE + GPIO_DATA) = 0x0F;
-	printf("\r\n2 GPIOC:%x",REG(GPIO_C_BASE + GPIO_DATA));
-#endif	
 	while(1) {
 		uint8_t r;
 		do {

@@ -48,6 +48,7 @@
 
 typedef struct RELAY_SWITCH_S
 {
+	uint32_t 	base;
 	uint8_t		port;
 	uint16_t 	pin;
 
