@@ -229,15 +229,15 @@
 /** \name Switch configuration
  *
  * Switches on the Pure-X are connected as follows:
- * - LED_CTRL -> PA2
+ * - LED_CTRL -> PD0
  * - SWITCH0 -> PD3
  * - SWITCH1 -> PD1
- * - SWITCH2 -> PD0
- * - SWITCH3 -> PB0
- * - SWITCH4 -> PB1
- * - SWITCH5 -> PB2
- * - SWITCH6 -> PB3
- * - SWITCH7 -> PB4
+ * - SWITCH2 -> PB0
+ * - SWITCH3 -> PB1
+ * - SWITCH4 -> PB2
+ * - SWITCH5 -> PB3
+ * - SWITCH6 -> PB4
+ * - SWITCH7 -> PB5
  * @{
  */
 
