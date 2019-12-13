@@ -62,7 +62,7 @@
 #include "contiki-net.h"
 #include "net/ip/uip.h"
 #include "net/rpl/rpl.h"
-
+#include "cfs/cfs.h"
 #include "net/netstack.h"
 #include "dev/button-sensor.h"
 #include <stdio.h>
@@ -126,19 +126,48 @@ SHELL_COMMAND(pure_command,
 
 PROCESS_THREAD(shell_debug_process, ev, data)
 {
-	//uip_ds6_nbr_t *nbr;
+	char* argv[5];
+	int argc;
 
 
-
-	//nbr = nbr_table_head(ds6_neighbors);
-
-
+	
 	PROCESS_BEGIN();
+	
+	if(data == NULL) {
+		PROCESS_EXIT(); 
+	}
+	argc = str_split((char*)data,(char*)" ",argv,5);
+	/*printf("\r\ncoap client cli [%d] \r\n",argc);	*/
+	(void)argc;
+	if(strncmp(argv[0], "test", 4) == 0) {
 
-	PROCESS_PAUSE();
+		process_start(&testcoffee_process,NULL);
+	
+	}
+	else if(strncmp(argv[0], "default", 7) == 0){
+		int wfd;
+		unsigned char buf[50] = "hello world";
+		int r;
 
-	/*set_global_address();*/
-	process_start(&testcoffee_process,NULL);
+		wfd = cfs_open("default.json", CFS_WRITE);
+		if(wfd < 0) {
+			printf("\r\nopen failed fd=[%d] \r\n",wfd);	
+			PROCESS_EXIT(); 
+		}
+
+		/* Write buffer. */
+		r = cfs_write(wfd, buf, sizeof(buf));
+		if(r < 0) {
+			printf("\r\nwrite failed fd=[%d] \r\n",wfd);	
+			PROCESS_EXIT(); 
+		}
+
+		cfs_close(wfd);
+
+	}
+
+
+
 
 
 	
