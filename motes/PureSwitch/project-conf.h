@@ -27,6 +27,6 @@
 #define __PROJECT_CONF_H__
 
 #define XMEM_ERASE_UNIT_SIZE 1024 /*1K*/
-
+#define COFFEE						1
 
 #endif /* __PROJECT_CONF_H__ */
