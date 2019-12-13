@@ -47,30 +47,31 @@
  * Resources to be activated need to be imported through the extern keyword.
  * The build system automatically compiles the resources in the corresponding sub-directory.
  */
-extern resource_t
-/*  res_hello, */
-/*  res_push, */
-/*  res_event, */
-/*  res_sub; */
-/*  res_dc_status_obs; */
-/*  res_dc_status, */
-	res_leds,
+/*extern resource_t  res_hello, */
+/*extern resource_t  res_push, */
+/*extern resource_t  res_event, */
+/*extern resource_t  res_sub; */
+/*extern resource_t  res_dc_status_obs; */
+/*extern resource_t  res_dc_status, */
+extern resource_t		res_leds;
 #if PLATFORM_HAS_RELAY_SWITCH
-	res_relay_switch,
+extern resource_t		res_relay_switch;
 #endif
 
 #ifdef CO2
-	res_dc_co2,
+extern resource_t		res_dc_co2;
 #endif
-	res_dc_status_obs,
-	res_dc_vdc,
-	res_dc_hwcfg;
+#ifdef DCDC
+extern resource_t 		res_dc_status_obs;
+extern resource_t 		res_dc_vdc;
+extern resource_t 		res_dc_hwcfg;
+#endif	
 
 
 /*---------------------------------------------------------------------------*/
 static void
 start_board_resources(void)
-	{
+{
 
 	rest_activate_resource(&res_leds, "lt");
 #if PLATFORM_HAS_RELAY_SWITCH
@@ -79,12 +80,18 @@ start_board_resources(void)
 #ifdef CO2
 	rest_activate_resource(&res_dc_co2, "dcdc/co2");
 #endif
+
+#ifdef DCDC
 	rest_activate_resource(&res_dc_status_obs, "dcdc/status");
 	/*  rest_activate_resource(&res_dc_status, "dcdc/status"); */
 	rest_activate_resource(&res_dc_vdc, "dcdc/vdc");
 	rest_activate_resource(&res_dc_hwcfg, "dcdc/hwcfg");
+#endif
 
-	}
+}
+
+
+
 /*---------------------------------------------------------------------------*/
 PROCESS(coap_server_process, "PureX CoAP Server");
 /*---------------------------------------------------------------------------*/

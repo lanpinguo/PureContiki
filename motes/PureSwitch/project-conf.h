@@ -26,7 +26,14 @@
 #ifndef __PROJECT_CONF_H__
 #define __PROJECT_CONF_H__
 
-#define XMEM_ERASE_UNIT_SIZE 1024 /*1K*/
-#define COFFEE						1
+#define XMEM_ERASE_UNIT_SIZE 			1024 /*1K*/
+#define COFFEE							1
+#define FLASH_CONF_FW_ADDR				(CC2538_DEV_FLASH_ADDR + 10*1024)
+#define FLASH_CONF_FW_SIZE 				(0x7f800 - 10*1024)
+
+#define COFFEE_CONF_START				CC2538_DEV_FLASH_ADDR
+#define COFFEE_CONF_SIZE        		(10*1024)
+#define COFFEE_CONF_MICRO_LOGS  		1
+#define COFFEE_CONF_APPEND_ONLY 		0
 
 #endif /* __PROJECT_CONF_H__ */

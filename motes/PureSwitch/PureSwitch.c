@@ -101,6 +101,7 @@ extern 	FUNC_DEBUG_PRINT dbg_print_ip;
 extern 	FUNC_DEBUG_PRINT dbg_print_log;
 extern  FUNC_DEBUG_PRINT dbg_print_er_coap_engine;
 extern  FUNC_DEBUG_PRINT dbg_print_er_coap_observe_client;
+extern  FUNC_DEBUG_PRINT dbg_print_coffee;
 process_event_t dbg_event;
 
 
@@ -137,6 +138,7 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 	PROCESS_PAUSE();
 
 	/*set_global_address();*/
+	process_start(&testcoffee_process,NULL);
 
 
 	
@@ -256,7 +258,12 @@ PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 			}
 			break;
 		case 9:
-			process_start(&testcoffee_process,NULL);
+			if(dbg_print_coffee){
+				dbg_print_coffee = NULL;
+			}
+			else{
+				dbg_print_coffee = printf;
+			}
 			break;
 		default:
 			break;

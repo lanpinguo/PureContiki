@@ -206,7 +206,7 @@ set_global_address(void)
 /*      PRINT6ADDR(&server_ipaddr); */
 }
 /*---------------------------------------------------------------------------*/
-
+#if 0
 static void
 generate_random_payload(int type, char *msg)
 {
@@ -216,6 +216,7 @@ generate_random_payload(int type, char *msg)
     snprintf((char *)msg, 64, "&VMX=%d&IMX=%d", (random_rand() % 25) + 1, (random_rand() % 6) + 1);
   }
 }
+#endif
 
 static void
 generate_relay_sw_config_payload(int index, int state, char *msg)
