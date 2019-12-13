@@ -42,14 +42,19 @@
  * \author
  *  Nicolas Tsiftes <nvt@sics.se>
  */
-
+#include "contiki.h"
 #include <limits.h>
 #include <string.h>
 
+FUNC_DEBUG_PRINT dbg_print_coffee = NULL;
+
 #define DEBUG 1
 #if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
+#define PRINTF(...) do{ \
+	if(dbg_print_coffee){ \
+		dbg_print_coffee(__VA_ARGS__); \
+	}\
+}while(0) 
 #else
 #define PRINTF(...)
 #endif
