@@ -109,7 +109,7 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
     PRINT6ADDR(ipaddr);
     PRINTF(" link addr ");
     PRINTLLADDR(lladdr);
-    PRINTF(" state %u\n", state);
+    PRINTF(" state %u\r\n", state);
     NEIGHBOR_STATE_CHANGED(nbr);
     return nbr;
   } else {
@@ -117,7 +117,7 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
     PRINT6ADDR(ipaddr);
     PRINTF(" link addr (%p) ", lladdr);
     PRINTLLADDR(lladdr);
-    PRINTF(" state %u\n", state);
+    PRINTF(" state %u\r\n", state);
     return NULL;
   }
 }
@@ -183,7 +183,7 @@ uip_ds6_nbr_dump(void)
   {
 	printf("\r\nNBR-%d:[",num);
 	uip_ipaddr_print(&nbr->ipaddr);
-	printf(" state : %d, isrouter : %d ]\r\n",nbr->state,nbr->isrouter);
+	printf(" state : %d, isrouter : %d ]\r\r\n",nbr->state,nbr->isrouter);
     num++;
   }
   return num;
@@ -265,7 +265,7 @@ uip_ds6_link_neighbor_callback(int status, int numtx)
       stimer_set(&nbr->reachable, UIP_ND6_REACHABLE_TIME / 1000);
       PRINTF("uip-ds6-neighbor : received a link layer ACK : ");
       PRINTLLADDR((uip_lladdr_t *)dest);
-      PRINTF(" is reachable.\n");
+      PRINTF(" is reachable.\r\n");
     }
   }
 #endif /* UIP_DS6_LL_NUD */
@@ -292,20 +292,20 @@ uip_ds6_neighbor_periodic(void)
         if(uip_ds6_defrt_lookup(&nbr->ipaddr) != NULL) {
           PRINTF("REACHABLE: defrt moving to DELAY (");
           PRINT6ADDR(&nbr->ipaddr);
-          PRINTF(")\n");
+          PRINTF(")\r\n");
           nbr->state = NBR_DELAY;
           stimer_set(&nbr->reachable, UIP_ND6_DELAY_FIRST_PROBE_TIME);
           nbr->nscount = 0;
         } else {
           PRINTF("REACHABLE: moving to STALE (");
           PRINT6ADDR(&nbr->ipaddr);
-          PRINTF(")\n");
+          PRINTF(")\r\n");
           nbr->state = NBR_STALE;
         }
 #else /* UIP_CONF_IPV6_RPL */
         PRINTF("REACHABLE: moving to STALE (");
         PRINT6ADDR(&nbr->ipaddr);
-        PRINTF(")\n");
+        PRINTF(")\r\n");
         nbr->state = NBR_STALE;
 #endif /* UIP_CONF_IPV6_RPL */
       }
@@ -315,7 +315,7 @@ uip_ds6_neighbor_periodic(void)
         uip_ds6_nbr_rm(nbr);
       } else if(stimer_expired(&nbr->sendns) && (uip_len == 0)) {
         nbr->nscount++;
-        PRINTF("NBR_INCOMPLETE: NS %u\n", nbr->nscount);
+        PRINTF("NBR_INCOMPLETE: NS %u\r\n", nbr->nscount);
         uip_nd6_ns_output(NULL, NULL, &nbr->ipaddr);
         stimer_set(&nbr->sendns, uip_ds6_if.retrans_timer / 1000);
       }
@@ -324,14 +324,14 @@ uip_ds6_neighbor_periodic(void)
       if(stimer_expired(&nbr->reachable)) {
         nbr->state = NBR_PROBE;
         nbr->nscount = 0;
-        PRINTF("DELAY: moving to PROBE\n");
+        PRINTF("DELAY: moving to PROBE\r\n");
         stimer_set(&nbr->sendns, 0);
       }
       break;
     case NBR_PROBE:
       if(nbr->nscount >= UIP_ND6_MAX_UNICAST_SOLICIT) {
         uip_ds6_defrt_t *locdefrt;
-        PRINTF("PROBE END\n");
+        PRINTF("PROBE END\r\n");
         if((locdefrt = uip_ds6_defrt_lookup(&nbr->ipaddr)) != NULL) {
           if (!locdefrt->isinfinite) {
             uip_ds6_defrt_rm(locdefrt);
@@ -340,7 +340,7 @@ uip_ds6_neighbor_periodic(void)
         uip_ds6_nbr_rm(nbr);
       } else if(stimer_expired(&nbr->sendns) && (uip_len == 0)) {
         nbr->nscount++;
-        PRINTF("PROBE: NS %u\n", nbr->nscount);
+        PRINTF("PROBE: NS %u\r\n", nbr->nscount);
         uip_nd6_ns_output(NULL, &nbr->ipaddr, &nbr->ipaddr);
         stimer_set(&nbr->sendns, uip_ds6_if.retrans_timer / 1000);
       }
