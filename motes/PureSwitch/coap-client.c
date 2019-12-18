@@ -329,13 +329,28 @@ PROCESS_THREAD(coap_client_process, ev, data)
 		}
 
 #if PLATFORM_HAS_BUTTON
-		if (ev == sensors_event && data == &button_sensor) {
+		if (ev == sensors_event ) {
 			PRINTF("Button Pressed \r\n");
-			coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
-			coap_set_header_uri_path(request, service_urls[0]);
-			PRINTF("GET: %s\r\n", service_urls[0]);
-			COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
-				                  client_chunk_handler);
+			if(data == &button_select_sensor){
+				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+				coap_set_header_uri_path(request, service_urls[0]);
+				PRINTF("GET: %s\r\n", service_urls[0]);
+				COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+									  client_chunk_handler);
+
+			}else if(data == &button_left_sensor){
+				static int state = 0;
+				char msg[64] = "";
+
+				state = ~state;
+				coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+				coap_set_header_uri_path(request, service_urls[4]);
+				generate_relay_sw_config_payload(3,state, msg);
+				coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
+				PRINTF("PUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
+				COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+									  client_chunk_handler);
+			}
 		}
 #endif
 
