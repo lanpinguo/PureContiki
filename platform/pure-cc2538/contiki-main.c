@@ -356,7 +356,7 @@ main(void)
 
 	adc_init();
 
-	/*process_start(&sensors_process, NULL);*/
+	process_start(&sensors_process, NULL);
 
 	energest_init();
 	ENERGEST_ON(ENERGEST_TYPE_CPU);

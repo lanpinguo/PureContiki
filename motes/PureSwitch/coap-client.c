@@ -28,6 +28,7 @@
  */
 
 #include "contiki.h"
+#include "contiki-lib.h"
 #include "contiki-net.h"
 #include "lib/random.h"
 #include "sys/ctimer.h"
@@ -51,6 +52,11 @@
 #if PLATFORM_HAS_LEDS
 #include "dev/leds.h"
 #endif
+
+#if PLATFORM_HAS_BUTTON
+#include "dev/button-sensor.h"
+#endif
+
 
 #define DEBUG 1
 #if DEBUG
@@ -321,6 +327,17 @@ PROCESS_THREAD(coap_client_process, ev, data)
 			printf("TCPIP_HANDLER\r\n");
 			tcpip_handler();
 		}
+
+#if PLATFORM_HAS_BUTTON
+		if (ev == sensors_event && data == &button_sensor) {
+			PRINTF("Button Pressed \r\n");
+			coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+			coap_set_header_uri_path(request, service_urls[0]);
+			PRINTF("GET: %s\r\n", service_urls[0]);
+			COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+				                  client_chunk_handler);
+		}
+#endif
 
 		if(ev == dbg_event) {
 
