@@ -45,6 +45,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#define BUTTON_CANCEL_PORT_BASE  GPIO_PORT_TO_BASE(BUTTON_CANCEL_PORT)
+#define BUTTON_CANCEL_PIN_MASK   GPIO_PIN_MASK(BUTTON_CANCEL_PIN)
+
 #define BUTTON_SELECT_PORT_BASE  GPIO_PORT_TO_BASE(BUTTON_SELECT_PORT)
 #define BUTTON_SELECT_PIN_MASK   GPIO_PIN_MASK(BUTTON_SELECT_PIN)
 
@@ -114,8 +117,37 @@ btn_callback(uint8_t port, uint8_t pin)
     sensors_changed(&button_up_sensor);
   } else if((port == BUTTON_DOWN_PORT) && (pin == BUTTON_DOWN_PIN)) {
     sensors_changed(&button_down_sensor);
+  } else if((port == BUTTON_CANCEL_PORT) && (pin == BUTTON_CANCEL_PIN)) {
+    sensors_changed(&button_cancel_sensor);
   }
 }
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Init function for the cancel button.
+ *
+ * Parameters are ignored. They have been included because the prototype is
+ * dictated by the core sensor api. The return value is also not required by
+ * the API but otherwise ignored.
+ *
+ * \param type ignored
+ * \param value ignored
+ * \return ignored
+ */
+static int
+config_cancel(int type, int value)
+{
+  config(BUTTON_CANCEL_PORT_BASE, BUTTON_CANCEL_PIN_MASK);
+
+  ioc_set_over(BUTTON_CANCEL_PORT, BUTTON_CANCEL_PIN, IOC_OVERRIDE_PUE);
+
+  NVIC_EnableIRQ(BUTTON_CANCEL_VECTOR);
+
+  gpio_register_callback(btn_callback, BUTTON_CANCEL_PORT, BUTTON_CANCEL_PIN);
+  return 1;
+}
+
+
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Init function for the select button.
@@ -243,6 +275,7 @@ button_sensor_init()
   timer_set(&debouncetimer, 0);
 }
 /*---------------------------------------------------------------------------*/
+SENSORS_SENSOR(button_cancel_sensor, BUTTON_SENSOR, NULL, config_cancel, NULL);
 SENSORS_SENSOR(button_select_sensor, BUTTON_SENSOR, NULL, config_select, NULL);
 SENSORS_SENSOR(button_left_sensor, BUTTON_SENSOR, NULL, config_left, NULL);
 SENSORS_SENSOR(button_right_sensor, BUTTON_SENSOR, NULL, config_right, NULL);

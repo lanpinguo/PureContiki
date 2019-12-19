@@ -129,6 +129,7 @@
 /** \name SmartRF Button configuration
  *
  * Buttons on the SmartRF06 are connected as follows:
+ * - BUTTON_CANCEL -> PA2
  * - BUTTON_SELECT -> PA3
  * - BUTTON_LEFT -> PC4
  * - BUTTON_RIGHT -> PC5
@@ -136,6 +137,12 @@
  * - BUTTON_DOWN -> PC7
  * @{
  */
+
+/** BUTTON_SELECT -> PA2 */
+#define BUTTON_CANCEL_PORT      GPIO_A_NUM
+#define BUTTON_CANCEL_PIN       2
+#define BUTTON_CANCEL_VECTOR    GPIO_A_IRQn
+
 /** BUTTON_SELECT -> PA3 */
 #define BUTTON_SELECT_PORT      GPIO_A_NUM
 #define BUTTON_SELECT_PIN       3
