@@ -79,15 +79,13 @@
 #undef LEDS_CONF_ALL
 
 #define LEDS_YELLOW             2 /**< LED2 (Yellow) -> PC1 */
-#define LEDS_GREEN              16 /**< LED3 (Green)  -> PC4 */
-#define LEDS_ORANGE             32 /**< LED4 (Orange) -> PC5 */
 
 #if USB_SERIAL_CONF_ENABLE | USB_ETH_CONF_ENABLE
 #define LEDS_CONF_ALL           14
-#define LEDS_RED                LEDS_ORANGE
+#define LEDS_RED                LEDS_YELLOW
 #else
 #define LEDS_CONF_ALL           51
-#define LEDS_RED                1 /**< LED1 (Red)    -> PC0 */
+#define LEDS_RED                1 /**< LED1 (Red)  -> PC0 */
 #endif
 
 /* Notify various examples that we have LEDs */
@@ -222,7 +220,7 @@
 /** @} */
 
 
-#define PLATFORM_HAS_RELAY_SWITCH     1
+#if PLATFORM_HAS_RELAY_SWITCH     
 
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -282,7 +280,7 @@
 
 
 /** @} */
-
+#endif
 
 
 /*---------------------------------------------------------------------------*/

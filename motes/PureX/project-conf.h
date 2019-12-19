@@ -28,6 +28,7 @@
 
 #define XMEM_ERASE_UNIT_SIZE 1024 /*1K*/
 
+#define PLATFORM_HAS_RELAY_SWITCH		1
 
 
 #endif /* __PROJECT_CONF_H__ */
