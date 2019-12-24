@@ -101,8 +101,7 @@
 #define SEND_TIME   (random_rand() % (SEND_INTERVAL))
 
 /* static struct uip_udp_conn *client_conn; */
-static uip_ipaddr_t server_ipaddr;
-static coap_observee_t *obs;
+static uip_ipaddr_t server_ipaddr[MAX_SERVER_NUM];
 static int count_notify = 0;
 
 /**************************************************************************/
@@ -182,6 +181,9 @@ set_global_address(void)
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 
+}
+
+/*---------------------------------------------------------------------------*/
 /* The choice of server address determines its 6LoWPAN header compression.
  * (Our address will be compressed Mode 3 since it is derived from our
  * link-local address)
@@ -196,21 +198,25 @@ set_global_address(void)
  *
  * Note the IPCMV6 checksum verification depends on the correct uncompressed addresses.
  */
+void
+set_remote_server_address(uint8_t server_id, uip_ipaddr_t *ipaddr)
+{
 
-#if 0
-/* Mode 1 - 64 bits inline */
-  uip_ip6addr(&server_ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
-#elif 1 
-/* Mode 2 - 16 bits inline */
-  uip_ip6addr(&server_ipaddr, 0xFE80, 0, 0, 0, 0x0212, 0x4b00, 0x1005, 0xfdf1);
-#else
-/* Mode 3 - derived from server link-local (MAC) address */
-  uip_ip6addr(&server_ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0x0250, 0xc2ff, 0xfea8, 0xcd1a); /* redbee-econotag */
-#endif
-/* Voravit Added */
-/*      PRINTF("VORAVIT CLIENT: SERVER IPv6 addresses: \r\n"); */
-/*      PRINT6ADDR(&server_ipaddr); */
+	if(server_id >= MAX_SERVER_NUM){
+		PRINTF("server id is invalid\r\n"); 
+		return;
+	}
+
+	
+	/*uip_ds6_addr_add(ipaddr, 0, ADDR_MANUAL);*/
+
+	memcpy(&server_ipaddr[server_id], ipaddr, sizeof(uip_ipaddr_t));
+
+	PRINTF("CLIENT: SERVER[%d] IPv6 addresses: \r\n",server_id); 
+	PRINT6ADDR(&server_ipaddr[server_id]);
 }
+
+
 /*---------------------------------------------------------------------------*/
 #if 0
 static void
@@ -270,27 +276,10 @@ notification_callback(coap_observee_t *obs, void *notification, coap_notificatio
     break;
   }
 }
+
+
 /*---------------------------------------------------------------------------*/
-/*
- * Toggle the observation of the remote resource
- */
-void
-toggle_observation(void)
-{
-  if(obs) {
-    printf("Stopping observation\r\n");
-    coap_obs_remove_observee(obs);
-    obs = NULL;
-  } else {
-    printf("Starting observation\r\n");
-    obs = coap_obs_request_registration(&server_ipaddr, REMOTE_PORT, service_urls[1], notification_callback, NULL);
-  }
-}
-/*---------------------------------------------------------------------------*/
-//static int count_get = 0;
-//static int count_put = 0;
 extern process_event_t dbg_event;
-//extern COAP_CLIENT_ARG_t coap_args;
 
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(coap_client_process, ev, data)
@@ -300,7 +289,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
    static int print = 0;
    #endif
  */
-	COAP_CLIENT_ARG_t* p_coap_args;
+	static COAP_CLIENT_ARG_t* p_coap_args = NULL;
 
 	PROCESS_BEGIN();
 
@@ -335,7 +324,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
 				coap_set_header_uri_path(request, service_urls[0]);
 				PRINTF("GET: %s\r\n", service_urls[0]);
-				COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
 									  client_chunk_handler);
 
 			}else if(data == &button_left_sensor){
@@ -348,7 +337,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				generate_relay_sw_config_payload(3,state, msg);
 				coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 				PRINTF("PUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
-				COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
 									  client_chunk_handler);
 			}
 		}
@@ -366,7 +355,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
 				coap_set_header_uri_path(request, service_urls[0]);
 				PRINTF("GET: %s\r\n", service_urls[0]);
-				COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+				COAP_BLOCKING_REQUEST(&server_ipaddr[p_coap_args->server_id], REMOTE_PORT, request,
 					                  client_chunk_handler);
 			}
 			else if (p_coap_args->mod_id == COAP_CLIENT_SW){
@@ -376,7 +365,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				generate_relay_sw_config_payload(p_coap_args->coap_conf,p_coap_args->coap_param, msg);
 				coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 				PRINTF("PUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
-				COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
+				COAP_BLOCKING_REQUEST(&server_ipaddr[p_coap_args->server_id], REMOTE_PORT, request,
 					                  client_chunk_handler);
 
 

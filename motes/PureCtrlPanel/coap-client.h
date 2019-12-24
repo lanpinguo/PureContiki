@@ -41,6 +41,8 @@
 #define COAP_CLIENT_H_
 /*---------------------------------------------------------------------------*/
 
+#define MAX_SERVER_NUM			10
+
 enum {
 	COAP_CLIENT_OWN = 1,
 	COAP_CLIENT_SW  ,
@@ -54,9 +56,13 @@ typedef struct COAP_CLIENT_ARG_s
 	int mod_id;
 	int coap_conf;
 	int coap_param;
+	int server_id;
 
 
 }COAP_CLIENT_ARG_t;
+
+
+void set_remote_server_address(uint8_t server_id, uip_ipaddr_t *ipaddr);
 
 
 /*---------------------------------------------------------------------------*/

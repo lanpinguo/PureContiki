@@ -326,9 +326,10 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 	if(data != NULL) {
 		argc = str_split((char*)data,(char*)" ",argv,5);
 		/*printf("\r\ncoap client cli [%d] \r\n",argc);	*/
-
+		coap_args.server_id = 0;
+	
 		if(strncmp(argv[0], "sw", 2) == 0) {
-			if(argc == 3){
+			if(argc == 3 || argc == 4){
 				coap_args.mod_id = COAP_CLIENT_SW;
 
 				coap_args.coap_conf = atoi(argv[1]);
@@ -342,6 +343,10 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 				else{
 					goto ERROR;
 				}
+
+				if(argc == 4){
+					coap_args.server_id = atoi(argv[3]);
+				}
 			}
 			else{
 				goto ERROR;
@@ -351,7 +356,32 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 		} 
 		else if(strncmp(argv[0], "res", 3) == 0) {
 			coap_args.mod_id = COAP_CLIENT_OWN;
-		}else{
+			if(argc == 2){
+				coap_args.server_id = atoi(argv[1]);
+			}
+		}
+		else if(strncmp(argv[0], "server", 6) == 0) {
+			int server_id = 0;
+			uip_ipaddr_t ipaddr;
+
+			
+			uip_ip6addr(&ipaddr, 0, 0, 0, 0, 0, 0, 0, 0);
+
+			if(argc == 3){
+				server_id = atoi(argv[1]);
+				sscanf( argv[2]
+						,"%02hhx%02hhx::%02hhx%02hhx:%02hhx%02hhx:%02hhx%02hhx:%02hhx%02hhx"
+						,&ipaddr.u8[0],&ipaddr.u8[1]
+						,&ipaddr.u8[8],&ipaddr.u8[9]
+						,&ipaddr.u8[10],&ipaddr.u8[11]
+						,&ipaddr.u8[12],&ipaddr.u8[13]
+						,&ipaddr.u8[14],&ipaddr.u8[15]);
+				set_remote_server_address(server_id, &ipaddr);
+
+			}
+			goto DONE;
+		}
+		else{
 			goto ERROR;
 		}
 
