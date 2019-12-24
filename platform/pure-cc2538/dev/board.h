@@ -81,10 +81,10 @@
 #define LEDS_YELLOW             2 /**< LED2 (Yellow) -> PC1 */
 
 #if USB_SERIAL_CONF_ENABLE | USB_ETH_CONF_ENABLE
-#define LEDS_CONF_ALL           14
+#define LEDS_CONF_ALL           LEDS_YELLOW
 #define LEDS_RED                LEDS_YELLOW
 #else
-#define LEDS_CONF_ALL           51
+#define LEDS_CONF_ALL           LEDS_YELLOW
 #define LEDS_RED                1 /**< LED1 (Red)  -> PC0 */
 #endif
 
