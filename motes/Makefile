@@ -15,16 +15,17 @@ export MAKE=make
 endif
 
 
-.PHONY:all clean PureSwitch
-all: PureSwitch 
+.PHONY:all clean PureSwitch PureCtrlPanel
 
+
+all: PureSwitch PureCtrlPanel
 
 
 PureSwitch:
 	$(MAKE) -C PureSwitch/ 
 
 PureCtrlPanel:
-	$(MAKE) -C libs/I2Cdev
+	$(MAKE) -C PureCtrlPanel/
 
 
 install:
@@ -32,6 +33,7 @@ install:
 
 clean:
 	$(MAKE) -C PureSwitch clean
+	$(MAKE) -C PureCtrlPanel clean
 
 
 
