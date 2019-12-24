@@ -304,6 +304,51 @@ PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 }
 
 
+void dump_config_file(void)
+{
+	int rfd,rc;
+	int i;
+	uint8_t *buf;
+
+
+
+	rfd = cfs_open("config", CFS_READ);
+	if(rfd < 0) {
+		printf("\r\nopen failed fd=[%d] \r\n",rfd);	
+		return;
+	}
+
+	buf = (void*)get_remote_server_address(0);
+
+	/* Read buffer. */
+	rc = cfs_read(rfd, buf, sizeof(uip_ipaddr_t) * MAX_SERVER_NUM);
+	if(rc < 0) {
+		printf("\r\nread failed fd=[%d] \r\n",rfd);	
+	}
+
+	printf("\r\n---------- SERVER LSIT -------------\r\n");	
+	for(i = 0 ; i < MAX_SERVER_NUM; i++){
+		
+		uint8_t *addr = buf + sizeof(uip_ipaddr_t) * i;
+		
+		printf("\r\n[%d] %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x ", 
+				i,
+				addr[0], addr[1],
+				addr[2], addr[3], 
+				addr[4], addr[5],
+				addr[6], addr[7], 
+				addr[8], addr[9], 
+				addr[10],addr[11], 
+				addr[12],addr[13], 
+				addr[14],addr[15]);
+
+	}
+	printf("\r\n---------- SERVER END -------------\r\n");	
+
+	cfs_close(rfd);
+
+}
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -352,6 +397,9 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 				goto ERROR;
 			}
 			
+			/*post to coap client*/
+			process_post(&coap_client_process, dbg_event, &coap_args);
+			
 			
 		} 
 		else if(strncmp(argv[0], "res", 3) == 0) {
@@ -359,6 +407,8 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 			if(argc == 2){
 				coap_args.server_id = atoi(argv[1]);
 			}
+			/*post to coap client*/
+			process_post(&coap_client_process, dbg_event, &coap_args);
 		}
 		else if(strncmp(argv[0], "server", 6) == 0) {
 			int server_id = 0;
@@ -381,12 +431,37 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 			}
 			goto DONE;
 		}
+		else if(strncmp(argv[0], "write", 6) == 0) {
+			int wfd;
+			int rc;
+			uint8_t *buf;
+
+			wfd = cfs_open("config", CFS_WRITE);
+			if(wfd < 0) {
+				printf("\r\nopen failed fd=[%d] \r\n",wfd);	
+				goto ERROR;
+			}
+
+			buf = (void*)get_remote_server_address(0);
+
+			/* Write buffer. */
+			rc = cfs_write(wfd, buf, sizeof(uip_ipaddr_t) * MAX_SERVER_NUM);
+			if(rc < 0) {
+				printf("\r\nwrite failed fd=[%d] \r\n",wfd);	
+				goto ERROR;
+			}
+
+			cfs_close(wfd);
+			
+
+		}
+		else if(strncmp(argv[0], "dump", 4) == 0) {
+			dump_config_file();
+		}
 		else{
 			goto ERROR;
 		}
 
-		/*post to coap client*/
-		process_post(&coap_client_process, dbg_event, &coap_args);
 
 	}
 	goto DONE;
@@ -411,7 +486,27 @@ shell_pure_init(void)
   shell_register_command(&coap_client_command);
 }
 
+void restore_config_from_file(){
+	int rfd,rc;
+	uint8_t *buf;
 
+	rfd = cfs_open("config", CFS_READ);
+	if(rfd < 0) {
+		printf("\r\nopen failed fd=[%d] \r\n",rfd);	
+		return;
+	}
+
+	buf = (void*)get_remote_server_address(0);
+
+	/* Read buffer. */
+	rc = cfs_read(rfd, buf, sizeof(uip_ipaddr_t) * MAX_SERVER_NUM);
+	if(rc < 0) {
+		printf("\r\nread failed fd=[%d] \r\n",rfd);	
+	}
+
+	cfs_close(rfd);
+
+}
 
 /*---------------------------------------------------------------------------*/
 /* We first declare our processes. */
@@ -419,21 +514,25 @@ PROCESS(pure_x_shell_process, "PureX Contiki shell");
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(pure_x_shell_process, ev, data)
 {
-  PROCESS_BEGIN();
-  serial_shell_init();
-  shell_blink_init();
-  shell_ps_init();
-  shell_reboot_init();
-  shell_text_init();
-  shell_time_init();
-  shell_memdebug_init();
-  shell_pure_init();
+	PROCESS_BEGIN();
+	serial_shell_init();
+	shell_blink_init();
+	shell_ps_init();
+	shell_reboot_init();
+	shell_text_init();
+	shell_time_init();
+	shell_memdebug_init();
+	shell_pure_init();
 #if COFFEE
-  shell_coffee_init();
-  shell_file_init();
+	shell_coffee_init();
+	shell_file_init();
 #endif
-  
-  PROCESS_END();
+
+	/*Restore config*/
+	restore_config_from_file();
+
+
+	PROCESS_END();
 }
 
 

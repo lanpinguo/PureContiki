@@ -62,8 +62,9 @@ typedef struct COAP_CLIENT_ARG_s
 }COAP_CLIENT_ARG_t;
 
 
-void set_remote_server_address(uint8_t server_id, uip_ipaddr_t *ipaddr);
+void set_remote_server_address(uint32_t server_id, uip_ipaddr_t *ipaddr);
 
+uip_ipaddr_t * get_remote_server_address(uint32_t server_id);
 
 /*---------------------------------------------------------------------------*/
 PROCESS_NAME(coap_client_process);

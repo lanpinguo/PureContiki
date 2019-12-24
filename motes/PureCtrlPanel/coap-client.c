@@ -199,7 +199,7 @@ set_global_address(void)
  * Note the IPCMV6 checksum verification depends on the correct uncompressed addresses.
  */
 void
-set_remote_server_address(uint8_t server_id, uip_ipaddr_t *ipaddr)
+set_remote_server_address(uint32_t server_id, uip_ipaddr_t *ipaddr)
 {
 
 	if(server_id >= MAX_SERVER_NUM){
@@ -216,6 +216,14 @@ set_remote_server_address(uint8_t server_id, uip_ipaddr_t *ipaddr)
 	PRINT6ADDR(&server_ipaddr[server_id]);
 }
 
+uip_ipaddr_t * get_remote_server_address(uint32_t server_id)
+{
+	if(server_id >= MAX_SERVER_NUM){
+		PRINTF("server id is invalid\r\n"); 
+		return;
+	}
+	return(&server_ipaddr[server_id]);
+}
 
 /*---------------------------------------------------------------------------*/
 #if 0
