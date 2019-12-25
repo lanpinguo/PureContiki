@@ -327,11 +327,11 @@ PROCESS_THREAD(coap_client_process, ev, data)
 
 #if PLATFORM_HAS_BUTTON
 		if (ev == sensors_event ) {
-			PRINTF("Button Pressed \r\n");
+			PRINTF("\r\nButton Pressed \r\n");
 			if(data == &button_select_sensor){
 				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
 				coap_set_header_uri_path(request, service_urls[0]);
-				PRINTF("GET: %s\r\n", service_urls[0]);
+				PRINTF("\r\nGET: %s\r\n", service_urls[0]);
 				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
 									  client_chunk_handler);
 
@@ -344,7 +344,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				coap_set_header_uri_path(request, service_urls[4]);
 				generate_relay_sw_config_payload(3,state, msg);
 				coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
-				PRINTF("PUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
+				PRINTF("\r\nPUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
 				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
 									  client_chunk_handler);
 			}
@@ -357,12 +357,17 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				continue;
 			}
 			p_coap_args = (COAP_CLIENT_ARG_t*)data;
-			printf("modid:%d,coap_conf:%d,coap_param:%d\r\n",p_coap_args->mod_id,p_coap_args->coap_conf,p_coap_args->coap_param);
+			printf("modid:%d,coap_conf:%d,coap_param:%d,server_id:%d\r\n"
+					,p_coap_args->mod_id
+					,p_coap_args->coap_conf
+					,p_coap_args->coap_param
+					,p_coap_args->server_id);
+			PRINT6ADDR(&server_ipaddr[p_coap_args->server_id]);
 
 			if(p_coap_args->mod_id == COAP_CLIENT_OWN){
 				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
 				coap_set_header_uri_path(request, service_urls[0]);
-				PRINTF("GET: %s\r\n", service_urls[0]);
+				PRINTF("\r\nGET: %s\r\n", service_urls[0]);
 				COAP_BLOCKING_REQUEST(&server_ipaddr[p_coap_args->server_id], REMOTE_PORT, request,
 					                  client_chunk_handler);
 			}
@@ -372,7 +377,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				coap_set_header_uri_path(request, service_urls[4]);
 				generate_relay_sw_config_payload(p_coap_args->coap_conf,p_coap_args->coap_param, msg);
 				coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
-				PRINTF("PUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
+				PRINTF("\r\nPUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
 				COAP_BLOCKING_REQUEST(&server_ipaddr[p_coap_args->server_id], REMOTE_PORT, request,
 					                  client_chunk_handler);
 
