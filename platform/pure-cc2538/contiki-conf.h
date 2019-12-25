@@ -475,6 +475,8 @@ typedef uint32_t rtimer_clock_t;
 #endif
 #define SICSLOWPAN_CONF_MAXAGE               8
 
+#define UIP_CONF_ND6_MAX_RTR_SOLICITATION_DELAY		5
+
 /* Define our IPv6 prefixes/contexts here */
 #define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS    1
 #ifndef SICSLOWPAN_CONF_ADDR_CONTEXT_0
