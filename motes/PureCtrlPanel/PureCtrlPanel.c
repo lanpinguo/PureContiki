@@ -488,7 +488,9 @@ shell_pure_init(void)
 
 void restore_config_from_file(){
 	int rfd,rc;
-	uint8_t *buf;
+	int i;
+	uip_ipaddr_t buf[MAX_SERVER_NUM];
+
 
 	rfd = cfs_open("config", CFS_READ);
 	if(rfd < 0) {
@@ -496,13 +498,17 @@ void restore_config_from_file(){
 		return;
 	}
 
-	buf = (void*)get_remote_server_address(0);
-
 	/* Read buffer. */
 	rc = cfs_read(rfd, buf, sizeof(uip_ipaddr_t) * MAX_SERVER_NUM);
 	if(rc < 0) {
 		printf("\r\nread failed fd=[%d] \r\n",rfd);	
 	}
+
+	for(i = 0 ; i < MAX_SERVER_NUM; i++){
+		set_remote_server_address(i,&buf[i]);
+	}
+
+
 
 	cfs_close(rfd);
 

@@ -201,18 +201,40 @@ set_global_address(void)
 void
 set_remote_server_address(uint32_t server_id, uip_ipaddr_t *ipaddr)
 {
+	uip_lladdr_t lladdr_aligned;
+	int sum = 0,i;
 
+	
 	if(server_id >= MAX_SERVER_NUM){
 		PRINTF("server id is invalid\r\n"); 
 		return;
 	}
 
+	if(ipaddr == NULL){
+		PRINTF("ipaddr is NULL\r\n"); 
+		return;
+	}
+
+	for(i = 0 ; i < sizeof(uip_ipaddr_t); i++){
+		sum += ipaddr->u8[i];
+	}
+
+	if(sum == 0){
+		PRINTF("ipaddr is valid\r\n"); 
+		return;
+	}
 	
 	/*uip_ds6_addr_add(ipaddr, 0, ADDR_MANUAL);*/
 
 	memcpy(&server_ipaddr[server_id], ipaddr, sizeof(uip_ipaddr_t));
 
-	PRINTF("CLIENT: SERVER[%d] IPv6 addresses: \r\n",server_id); 
+	memcpy(&lladdr_aligned,&(ipaddr->u8[8]),UIP_LLADDR_LEN);
+	lladdr_aligned.addr[0] ^= 0x02;
+	uip_ds6_nbr_add(ipaddr, &lladdr_aligned,
+		0, NBR_STALE, NBR_TABLE_REASON_UNDEFINED, NULL);
+
+
+	PRINTF("CLIENT: SERVER[%d] IPv6 addresses: \r\n",(int)server_id); 
 	PRINT6ADDR(&server_ipaddr[server_id]);
 }
 
@@ -220,7 +242,7 @@ uip_ipaddr_t * get_remote_server_address(uint32_t server_id)
 {
 	if(server_id >= MAX_SERVER_NUM){
 		PRINTF("server id is invalid\r\n"); 
-		return;
+		return NULL;
 	}
 	return(&server_ipaddr[server_id]);
 }
