@@ -349,27 +349,38 @@ PROCESS_THREAD(coap_client_process, ev, data)
 
 #if PLATFORM_HAS_BUTTON
 		if (ev == sensors_event ) {
+			static int state[6];
+			static char msg[64] = "";
+			
 			PRINTF("\r\nButton Pressed \r\n");
-			if(data == &button_select_sensor){
-				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
-				coap_set_header_uri_path(request, service_urls[0]);
-				PRINTF("\r\nGET: %s\r\n", service_urls[0]);
-				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
-									  client_chunk_handler);
 
+			coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+			coap_set_header_uri_path(request, service_urls[4]);
+			
+			if(data == &button_cancel_sensor){
+				state[0] = ~state[0];
+				generate_relay_sw_config_payload(1,state[0], msg);
+			}else if(data == &button_select_sensor){
+				state[1] = ~state[1];
+				generate_relay_sw_config_payload(2,state[1], msg);
 			}else if(data == &button_left_sensor){
-				static int state = 0;
-				char msg[64] = "";
-
-				state = ~state;
-				coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
-				coap_set_header_uri_path(request, service_urls[4]);
-				generate_relay_sw_config_payload(3,state, msg);
-				coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
-				PRINTF("\r\nPUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
-				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
-									  client_chunk_handler);
+				state[2] = ~state[2];
+				generate_relay_sw_config_payload(3,state[2], msg);
+			}else if(data == &button_right_sensor){
+				state[3] = ~state[3];
+				generate_relay_sw_config_payload(4,state[3], msg);
+			}else if(data == &button_up_sensor){
+				state[4] = ~state[4];
+				generate_relay_sw_config_payload(5,state[4], msg);
+			}else if(data == &button_down_sensor){
+				state[5] = ~state[5];
+				generate_relay_sw_config_payload(6,state[5], msg);
 			}
+			
+			coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
+			PRINTF("\r\nPUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
+			COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
+								  client_chunk_handler);
 		}
 #endif
 

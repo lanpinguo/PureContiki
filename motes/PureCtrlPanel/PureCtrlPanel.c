@@ -412,7 +412,7 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 		}
 		else if(strncmp(argv[0], "server", 6) == 0) {
 			int server_id = 0;
-			uip_ipaddr_t ipaddr;
+			static uip_ipaddr_t ipaddr;
 
 			
 			uip_ip6addr(&ipaddr, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -420,12 +420,14 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 			if(argc == 3){
 				server_id = atoi(argv[1]);
 				sscanf( argv[2]
-						,"%02hhx%02hhx::%02hhx%02hhx:%02hhx%02hhx:%02hhx%02hhx:%02hhx%02hhx"
+						,"%02x%02x::%02x%02x:%02x%02x:%02x%02x:%02x%02x"
 						,&ipaddr.u8[0],&ipaddr.u8[1]
 						,&ipaddr.u8[8],&ipaddr.u8[9]
 						,&ipaddr.u8[10],&ipaddr.u8[11]
 						,&ipaddr.u8[12],&ipaddr.u8[13]
 						,&ipaddr.u8[14],&ipaddr.u8[15]);
+				printf("\r\nserver:\r\n");
+				PRINT6ADDR(&ipaddr);
 				set_remote_server_address(server_id, &ipaddr);
 
 			}
