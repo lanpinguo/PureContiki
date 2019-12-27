@@ -6,8 +6,12 @@ endif
 
 CONTIKI_TARGET_DIRS = . dev
 
-
+ifdef PLATFORM_HAS_LEDS
+ifneq (0,${PLATFORM_HAS_LEDS})
 CONTIKI_TARGET_SOURCEFILES += leds.c leds-arch.c 
+endif
+endif
+
 ifdef PLATFORM_HAS_RELAY_SWITCH
 ifneq (0,${PLATFORM_HAS_RELAY_SWITCH})
   CONTIKI_TARGET_SOURCEFILES += relay_switch.c
@@ -23,7 +27,11 @@ ifneq (0,${PLATFORM_HAS_ADC_ALS})
 endif
 endif
 
-CONTIKI_TARGET_SOURCEFILES += button-sensor.c 
+ifdef PLATFORM_HAS_BUTTON
+ifneq (0,${PLATFORM_HAS_BUTTON})
+  CONTIKI_TARGET_SOURCEFILES += button-sensor.c 
+endif
+endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 

@@ -48,12 +48,15 @@
 #include <string.h>
 
 /** \brief Exports a global symbol to be used by the sensor API */
-SENSORS(&button_cancel_sensor,
+SENSORS(
+#if PLATFORM_HAS_BUTTON
+&button_cancel_sensor,
 &button_select_sensor, 
 &button_left_sensor, 
 &button_right_sensor,
 &button_up_sensor, 
 &button_down_sensor, 
+#endif
 #if PLATFORM_HAS_ADC_ALS
 &als_sensor,
 #endif

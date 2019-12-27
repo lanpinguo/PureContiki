@@ -66,6 +66,16 @@
 
 #define PLATFORM_HAS_LEDS       		1
 
+#define LEDS_YELLOW             2 /**< LED2 (Yellow) -> PC1 */
+#define LEDS_RED                1 /**< LED1 (Red)  -> PC0 */
+
+#define LEDS_CONF_ALL           LEDS_YELLOW
+
+
+
+
+#define PLATFORM_HAS_BUTTON     		0
+
 /*---------------------------------------------------------------------------*/
 /**
  * \name ADC configuration

@@ -70,23 +70,7 @@
  * LED1 shares the same pin with the USB pullup
  * @{
  */
-/*---------------------------------------------------------------------------*/
-/* Some files include leds.h before us, so we need to get rid of defaults in
- * leds.h before we provide correct definitions */
-#undef LEDS_GREEN
-#undef LEDS_YELLOW
-#undef LEDS_RED
-#undef LEDS_CONF_ALL
 
-#define LEDS_YELLOW             2 /**< LED2 (Yellow) -> PC1 */
-
-#if USB_SERIAL_CONF_ENABLE | USB_ETH_CONF_ENABLE
-#define LEDS_CONF_ALL           LEDS_YELLOW
-#define LEDS_RED                LEDS_YELLOW
-#else
-#define LEDS_CONF_ALL           LEDS_YELLOW
-#define LEDS_RED                1 /**< LED1 (Red)  -> PC0 */
-#endif
 
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -123,53 +107,6 @@
 #define UART1_RTS_PORT          GPIO_D_NUM
 #define UART1_RTS_PIN           3
 /** @} */
-/*---------------------------------------------------------------------------*/
-/** \name SmartRF Button configuration
- *
- * Buttons on the SmartRF06 are connected as follows:
- * - BUTTON_CANCEL -> PA2
- * - BUTTON_SELECT -> PA3
- * - BUTTON_LEFT -> PC4
- * - BUTTON_RIGHT -> PC5
- * - BUTTON_UP -> PC6
- * - BUTTON_DOWN -> PC7
- * @{
- */
-
-/** BUTTON_SELECT -> PA2 */
-#define BUTTON_CANCEL_PORT      GPIO_A_NUM
-#define BUTTON_CANCEL_PIN       2
-#define BUTTON_CANCEL_VECTOR    GPIO_A_IRQn
-
-/** BUTTON_SELECT -> PA3 */
-#define BUTTON_SELECT_PORT      GPIO_A_NUM
-#define BUTTON_SELECT_PIN       3
-#define BUTTON_SELECT_VECTOR    GPIO_A_IRQn
-
-/** BUTTON_LEFT -> PC4 */
-#define BUTTON_LEFT_PORT        GPIO_C_NUM
-#define BUTTON_LEFT_PIN         4
-#define BUTTON_LEFT_VECTOR      GPIO_C_IRQn
-
-/** BUTTON_RIGHT -> PC5 */
-#define BUTTON_RIGHT_PORT       GPIO_C_NUM
-#define BUTTON_RIGHT_PIN        5
-#define BUTTON_RIGHT_VECTOR     GPIO_C_IRQn
-
-/** BUTTON_UP -> PC6 */
-#define BUTTON_UP_PORT          GPIO_C_NUM
-#define BUTTON_UP_PIN           6
-#define BUTTON_UP_VECTOR        GPIO_C_IRQn
-
-/** BUTTON_DOWN -> PC7 */
-#define BUTTON_DOWN_PORT        GPIO_C_NUM
-#define BUTTON_DOWN_PIN         7
-#define BUTTON_DOWN_VECTOR      GPIO_C_IRQn
-
-/* Notify various examples that we have Buttons */
-#define PLATFORM_HAS_BUTTON     1
-/** @} */
-
 
 
 /*---------------------------------------------------------------------------*/
