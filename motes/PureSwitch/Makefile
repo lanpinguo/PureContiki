@@ -14,6 +14,7 @@ PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
 PROJECT_SOURCEFILES += coap-server.c coap-client.c test-coffee.c
 
+PLATFORM_HAS_RELAY_SWITCH=1
 
 
 APPS = serial-shell 

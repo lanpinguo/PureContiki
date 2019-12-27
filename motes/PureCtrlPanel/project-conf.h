@@ -36,6 +36,8 @@
 #define COFFEE_CONF_MICRO_LOGS  		1
 #define COFFEE_CONF_APPEND_ONLY 		0
 
-#define PLATFORM_HAS_RELAY_SWITCH		1
+#define PLATFORM_HAS_RELAY_SWITCH		0
+/* Notify that we have LEDs */
+#define PLATFORM_HAS_LEDS       		1
 
 #endif /* __PROJECT_CONF_H__ */

@@ -7,14 +7,14 @@ CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 REST_RESOURCES_DIR = ./resources
 
-REST_RESOURCES_FILES += res-leds.c res-relay-switch.c 
+REST_RESOURCES_FILES += res-leds.c  
 
 PROJECTDIRS += $(REST_RESOURCES_DIR)
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
 PROJECT_SOURCEFILES += coap-server.c coap-client.c test-coffee.c
 
-
+PLATFORM_HAS_RELAY_SWITCH=0
 
 APPS = serial-shell 
 #APPS += ping6

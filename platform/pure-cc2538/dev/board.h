@@ -88,8 +88,6 @@
 #define LEDS_RED                1 /**< LED1 (Red)  -> PC0 */
 #endif
 
-/* Notify various examples that we have LEDs */
-#define PLATFORM_HAS_LEDS       1
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name USB configuration
@@ -171,20 +169,9 @@
 /* Notify various examples that we have Buttons */
 #define PLATFORM_HAS_BUTTON     1
 /** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name ADC configuration
- *
- * These values configure which CC2538 pins and ADC channels to use for the ADC
- * inputs.
- *
- * ADC inputs can only be on port A.
- * @{
- */
-#define ADC_ALS_PWR_PORT        GPIO_A_NUM /**< ALS power GPIO control port */
-#define ADC_ALS_PWR_PIN         7 /**< ALS power GPIO control pin */
-#define ADC_ALS_OUT_PIN         6 /**< ALS output ADC input pin on port A */
-/** @} */
+
+
+
 /*---------------------------------------------------------------------------*/
 /**
  * \name SPI configuration
@@ -227,67 +214,6 @@
 /** @} */
 
 
-#if PLATFORM_HAS_RELAY_SWITCH     
-
-/** @} */
-/*---------------------------------------------------------------------------*/
-/** \name Switch configuration
- *
- * Switches on the Pure-X are connected as follows:
- * - LED_CTRL -> PD0
- * - SWITCH0 -> PD3
- * - SWITCH1 -> PD1
- * - SWITCH2 -> PB0
- * - SWITCH3 -> PB1
- * - SWITCH4 -> PB2
- * - SWITCH5 -> PB3
- * - SWITCH6 -> PB4
- * - SWITCH7 -> PB5
- * @{
- */
-
-#define SWITCH_NUM     	  (8+1) /* place led ctrl pin on index 0*/
-
-
-/** INDICATE_CTRL -> PD0 */
-#define LED_CTRL_PORT     GPIO_D_NUM
-#define LED_CTRL_PIN      0
-
-/** SWITCH0 -> PD3 */
-#define SWITCH0_PORT      GPIO_D_NUM
-#define SWITCH0_PIN       3
-
-/** SWITCH1 -> PD1 */
-#define SWITCH1_PORT      GPIO_D_NUM
-#define SWITCH1_PIN       1
-
-/** SWITCH2 -> PB0 */
-#define SWITCH2_PORT      GPIO_B_NUM
-#define SWITCH2_PIN       0
-
-/** SWITCH3 -> PB1 */
-#define SWITCH3_PORT      GPIO_B_NUM
-#define SWITCH3_PIN       1
-
-/** SWITCH4 -> PB2 */
-#define SWITCH4_PORT      GPIO_B_NUM
-#define SWITCH4_PIN       2
-
-/** SWITCH5 -> PB3 */
-#define SWITCH5_PORT      GPIO_B_NUM
-#define SWITCH5_PIN       3
-
-/** SWITCH6 -> PB4 */
-#define SWITCH6_PORT      GPIO_B_NUM
-#define SWITCH6_PIN       4
-
-/** SWITCH7 -> PB5 */
-#define SWITCH7_PORT      GPIO_B_NUM
-#define SWITCH7_PIN       5
-
-
-/** @} */
-#endif
 
 
 /*---------------------------------------------------------------------------*/
