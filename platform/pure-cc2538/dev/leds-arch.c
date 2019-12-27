@@ -44,13 +44,43 @@
 #include "reg.h"
 #include "dev/leds.h"
 #include "dev/gpio.h"
+#include "dev/ioc.h"
 
 #define LEDS_GPIO_PIN_MASK   LEDS_ALL
+
+typedef struct PLAT_LEDS_S
+{
+	uint8_t		port;
+	uint16_t 	pin;
+
+}PLAT_LEDS_t;
+
+#define LEDS_NUM 	(sizeof(leds_table)/sizeof(PLAT_LEDS_t))
+
+PLAT_LEDS_t leds_table[] = PLATFORM_LEDS_MAP;
+
+
+
+
 /*---------------------------------------------------------------------------*/
 void
 leds_arch_init(void)
 {
-  GPIO_SET_OUTPUT(GPIO_C_BASE, LEDS_GPIO_PIN_MASK);
+	int i;
+
+	
+
+	for(i = 0 ; i < LEDS_NUM; i++){
+		/* Software controlled */
+		GPIO_SOFTWARE_CONTROL(GPIO_PORT_TO_BASE(leds_table[i].port), (1<<leds_table[i].pin));
+		
+		GPIO_SET_OUTPUT(GPIO_PORT_TO_BASE(leds_table[i].port), (1<<leds_table[i].pin));
+	
+	    ioc_set_over(leds_table[i].port, leds_table[i].pin, IOC_OVERRIDE_OE);
+	}
+
+
+	printf("leds_arch_init done\r\n");
 }
 /*---------------------------------------------------------------------------*/
 unsigned char

@@ -95,5 +95,17 @@
 
 #define LEDS_CONF_ALL           LEDS_YELLOW
 
+#define PLATFORM_LEDS_MAP 		\
+{ \
+	/**                 PORT   PIN **/ \
+	/** LED0 -> PC1 */ {GPIO_C_NUM, 1}, \
+	/** LED1 -> PB0 */ {GPIO_B_NUM, 0}, \
+	/** LED2 -> PB1 */ {GPIO_B_NUM, 1}, \
+	/** LED3 -> PB2 */ {GPIO_B_NUM, 2}, \
+	/** LED4 -> PB3 */ {GPIO_B_NUM, 3}, \
+	/** LED5 -> PB4 */ {GPIO_B_NUM, 4}, \
+	/** LED6 -> PB5 */ {GPIO_B_NUM, 5}  \
+}
+
 
 #endif /* __PROJECT_CONF_H__ */

@@ -71,6 +71,11 @@
 
 #define LEDS_CONF_ALL           LEDS_YELLOW
 
+#define PLATFORM_LEDS_MAP 		\
+{ \
+	/**                 PORT   PIN **/ \
+	/** LED0 -> PD0 */ {GPIO_D_NUM, 0}, \
+}
 
 
 
