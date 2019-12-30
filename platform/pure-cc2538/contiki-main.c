@@ -292,7 +292,9 @@ main(void)
 	*/
 #if UART_CONF_ENABLE
 	uart_init(0);
+#if PLATFORM_HAS_UART_1
 	uart_init(1);
+#endif
 	uart_set_input(SERIAL_LINE_CONF_UART, serial_line_input_byte);
 #endif
 

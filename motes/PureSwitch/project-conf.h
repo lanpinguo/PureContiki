@@ -39,13 +39,25 @@
 
 /* ND and Routing */
 #ifndef UIP_CONF_ROUTER
-#define UIP_CONF_ROUTER                      1
+#define UIP_CONF_ROUTER                 1
 #endif
 
-#define UIP_CONF_ND6_SEND_RA                 1
-#define UIP_CONF_ND6_SEND_NS  				 1
-#define UIP_CONF_ND6_SEND_NA  				 1
-#define UIP_CONF_IP_FORWARD                  0
+#define UIP_CONF_ND6_SEND_RA            1
+#define UIP_CONF_ND6_SEND_NS  			1
+#define UIP_CONF_ND6_SEND_NA  			1
+#define UIP_CONF_IP_FORWARD             0
+
+
+
+#define PLATFORM_HAS_UART_1				1
+
+#define UART1_RX_PORT           		GPIO_B_NUM
+#define UART1_RX_PIN            		6
+
+#define UART1_TX_PORT           		GPIO_B_NUM
+#define UART1_TX_PIN            		7
+
+#define UART1_CONF_BAUD_RATE   			115200 /**< Default UART1 baud rate */
 
 
 /** @} */
