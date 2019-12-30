@@ -265,16 +265,13 @@ main(void)
 	rtimer_init();
 	gpio_init();
 
+#if PLATFORM_HAS_LEDS	
 	//debug_led();
-	//leds_init();
-	//fade(LEDS_YELLOW);
+	leds_init();
 
-#if 0  
-	REG(GPIO_B_BASE + GPIO_DIR) |= 0x3F; /* PB0~PB5 output*/
-	REG(GPIO_B_BASE + GPIO_DIR) |= 0x0F; /* PC2~PC3 output*/
-	REG(GPIO_B_BASE + GPIO_AFSEL) = 0x0;
-	REG(GPIO_B_BASE + GPIO_DATA) = 0x0a;
+	//fade(LEDS_YELLOW);
 #endif
+
 
 	process_init();
 

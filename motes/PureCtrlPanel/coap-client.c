@@ -112,26 +112,31 @@ static struct etimer et;
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
 char *service_urls[NUMBER_OF_URLS] =
 { ".well-known/core", "/dcdc/status", "/dcdc/vdc", "/dcdc/hwcfg","relay-sw" };
-/*
-   #if PLATFORM_HAS_BUTTON
-   static int uri_switch = 0;
-   #endif
- */
+
+
+static int btn_pressed = 0;
+static int btn_state[6];
+
 /* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
 void
 client_chunk_handler(void *response)
 {
-  const uint8_t *chunk;
+	const uint8_t *chunk;
 
-  int len = coap_get_payload(response, &chunk);
+	int len = coap_get_payload(response, &chunk);
 
 #if PLATFORM_HAS_LEDS
-  /* set red led when receiving a packet */
-  leds_on(LEDS_RED);
+	if(btn_state[btn_pressed]){
+		/* set led when receiving a packet */
+		leds_on((1<<(btn_pressed + 1)));
+	}
+	else{
+		leds_off((1<<(btn_pressed + 1)));
+	}
 #endif
 
-/*  printf("|%.*s", len, (char *)chunk); */
-  printf("RX(%d):%s\r\n", len, (char *)chunk);
+	/*  printf("|%.*s", len, (char *)chunk); */
+	printf("RX(%d):%s\r\n", len, (char *)chunk);
 }
 /**************************************************************************/
 
@@ -339,6 +344,10 @@ PROCESS_THREAD(coap_client_process, ev, data)
 
 	etimer_set(&et, GET_INTERVAL * CLOCK_SECOND);
 
+	/* Indicate that The Coap Client Init has Done */
+	leds_on(1);
+
+
 	while(1) {
 		PROCESS_YIELD();
 
@@ -349,34 +358,33 @@ PROCESS_THREAD(coap_client_process, ev, data)
 
 #if PLATFORM_HAS_BUTTON
 		if (ev == sensors_event ) {
-			static int state[6];
 			static char msg[64] = "";
 			
-			PRINTF("\r\nButton Pressed \r\n");
 
 			coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
 			coap_set_header_uri_path(request, service_urls[4]);
 			
 			if(data == &button_cancel_sensor){
-				state[0] = ~state[0];
-				generate_relay_sw_config_payload(1,state[0], msg);
+				btn_pressed = 0;
 			}else if(data == &button_select_sensor){
-				state[1] = ~state[1];
-				generate_relay_sw_config_payload(2,state[1], msg);
+				btn_pressed = 1;
 			}else if(data == &button_left_sensor){
-				state[2] = ~state[2];
-				generate_relay_sw_config_payload(3,state[2], msg);
+				btn_pressed = 2;
 			}else if(data == &button_right_sensor){
-				state[3] = ~state[3];
-				generate_relay_sw_config_payload(4,state[3], msg);
+				btn_pressed = 3;
 			}else if(data == &button_up_sensor){
-				state[4] = ~state[4];
-				generate_relay_sw_config_payload(5,state[4], msg);
+				btn_pressed = 4;
 			}else if(data == &button_down_sensor){
-				state[5] = ~state[5];
-				generate_relay_sw_config_payload(6,state[5], msg);
+				btn_pressed = 5;
+			}
+			else{
+				PRINTF("\r\nInvalid Button Pressed \r\n");
+				continue;
 			}
 			
+			PRINTF("\r\nButton[%d] Pressed \r\n",btn_pressed);
+			btn_state[btn_pressed] = ~btn_state[btn_pressed];
+			generate_relay_sw_config_payload(1,btn_state[btn_pressed], msg);
 			coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 			PRINTF("\r\nPUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
 			COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
@@ -418,118 +426,6 @@ PROCESS_THREAD(coap_client_process, ev, data)
 			}
 		}
 
-#if 0
-    if(etimer_expired(&et)) {
-      count_get++;
-
-/*---------------------------------------------------------------------------*/
-      if(count_get < 10) { /* we do normal GET 3 times for each resource */
-        /* TEST GET: looping through the 3 resources: status, vdc, hwcfg */
-        /* Also CoAP GET doesn't need to have a payload */
-        coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
-        if(count_get % 3 == 0) {
-          coap_set_header_uri_path(request, service_urls[0]);
-          PRINTF("GET %d: %s\r\n", count_get, service_urls[0]);
-        } else if(count_get % 3 == 1) {
-          coap_set_header_uri_path(request, service_urls[1]);
-          PRINTF("GET %d: %s\r\n", count_get, service_urls[1]);
-        } else if(count_get % 3 == 2) {
-          coap_set_header_uri_path(request, service_urls[2]);
-          PRINTF("GET %d: %s\r\n", count_get, service_urls[2]);
-        } else {
-          coap_set_header_uri_path(request, service_urls[3]);
-          PRINTF("GET %d: %s\r\n", count_get, service_urls[3]);
-        }
-
-#if PLATFORM_HAS_LEDS
-        /* set yellow led when sending packet */
-        leds_on(LEDS_YELLOW);
-#endif
-        COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
-                              client_chunk_handler);
-      } /* if (count_get < 10) */
-/*---------------------------------------------------------------------------*/
-      /* test PUT: vdc and hwcfg on odd and even packet */
-      /* every 10th timer we PUT a resource: vdc and hwcfg alternately */
-      if(count_get % 10 == 0) {
-        /* static char msg[64] = ""; */
-        char msg[64] = "";
-
-	/*---------------------------------------------------------------------------*/
-	/* We read CO2 sensor if it is enable */
-	#ifdef CO2
-       	  coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
-          coap_set_header_uri_path(request, "/dcdc/co2");
-          PRINTF("GET %d: %s\r\n", count_get, "/dcdc/co2");
-	  #if PLATFORM_HAS_LEDS
-            leds_on(LEDS_YELLOW);
-	  #endif
-            COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
-                              client_chunk_handler);
-	#endif
-	/*---------------------------------------------------------------------------*/
-
-        count_put++;
-        coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
-
-        if(count_put % 3 == 0) {
-          coap_set_header_uri_path(request, service_urls[3]);
-          generate_random_payload(3, msg);
-          coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
-          PRINTF("PUT %d: %s PAYLOAD: %s\r\n", count_get, service_urls[3], msg);
-        }else if(count_put % 3 == 1){
-          coap_set_header_uri_path(request, service_urls[4]);
-          generate_relay_sw_config_payload(4, msg);
-          coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
-          PRINTF("PUT %d: %s PAYLOAD: %s\r\n", count_get, service_urls[4], msg);
-		}else {
-          coap_set_header_uri_path(request, service_urls[2]);
-          generate_random_payload(2, msg);
-          coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
-          PRINTF("PUT %d: %s PAYLOAD: %s\r\n", count_get, service_urls[2], msg);
-        }
-
-#if PLATFORM_HAS_LEDS
-        /* set yellow led when sending packet */
-        leds_on(LEDS_YELLOW);
-#endif
-        COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
-                              client_chunk_handler);
-
-
-      }
-
-      /* after 2 more timeout we do GET to check the resource new value */
-      if((count_get > 10) && ((count_get - 2) % 10 == 0)) {
-        coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
-
-        if(count_put % 2 == 0) {
-          coap_set_header_uri_path(request, service_urls[3]);
-          PRINTF("GET %d: %s\r\n", count_get, service_urls[3]);
-        } else {
-          coap_set_header_uri_path(request, service_urls[2]);
-          PRINTF("GET %d: %s\r\n", count_get, service_urls[2]);
-        }
-
-#if PLATFORM_HAS_LEDS
-        /* set yellow led when sending packet */
-        leds_on(LEDS_YELLOW);
-#endif
-        COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request,
-                              client_chunk_handler);
-      }
-
-/*---------------------------------------------------------------------------*/
-
-      /* test GET with observe option when timer expires the 15th time */
-      if(count_get == 15) {
-        /* PRINTF("GET %d: OBSERVE: %s\r\n", count_get, service_urls[2]); */
-        toggle_observation();
-      }
-
-      etimer_reset(&et);
-    }
-#endif	
   } /* END_WHILE(1) */
 
   PROCESS_END();

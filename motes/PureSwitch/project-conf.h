@@ -37,6 +37,17 @@
 #define COFFEE_CONF_APPEND_ONLY 		0
 
 
+/* ND and Routing */
+#ifndef UIP_CONF_ROUTER
+#define UIP_CONF_ROUTER                      1
+#endif
+
+#define UIP_CONF_ND6_SEND_RA                 1
+#define UIP_CONF_ND6_SEND_NS  				 1
+#define UIP_CONF_ND6_SEND_NA  				 1
+#define UIP_CONF_IP_FORWARD                  0
+
+
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name Switch configuration

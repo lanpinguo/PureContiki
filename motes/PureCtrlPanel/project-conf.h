@@ -36,6 +36,19 @@
 #define COFFEE_CONF_MICRO_LOGS  		1
 #define COFFEE_CONF_APPEND_ONLY 		0
 
+
+/* ND and Routing */
+#ifndef UIP_CONF_ROUTER
+#define UIP_CONF_ROUTER                      0
+#endif
+
+#define UIP_CONF_ND6_SEND_RA                 1
+#define UIP_CONF_ND6_SEND_NS  				 1
+#define UIP_CONF_ND6_SEND_NA  				 1
+#define UIP_CONF_IP_FORWARD                  0
+
+
+
 #define PLATFORM_HAS_RELAY_SWITCH		0
 
 

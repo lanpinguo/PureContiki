@@ -85,14 +85,36 @@ leds_arch_init(void)
 /*---------------------------------------------------------------------------*/
 unsigned char
 leds_arch_get(void)
-{
-  return GPIO_READ_PIN(GPIO_C_BASE, LEDS_GPIO_PIN_MASK);
+{	
+	unsigned char value = 0;
+	unsigned long tmp,i;
+	
+	for(i = 0 ; i < LEDS_NUM; i++){
+		tmp = GPIO_READ_PIN(GPIO_PORT_TO_BASE(leds_table[i].port),(1<<leds_table[i].pin));
+		if(tmp > 0){
+			value <<= 1;
+		}
+		else{
+			value |= (1<<i);
+		}
+	}
+	
+
+	return value;
 }
 /*---------------------------------------------------------------------------*/
 void
 leds_arch_set(unsigned char leds)
 {
-  GPIO_WRITE_PIN(GPIO_C_BASE, LEDS_GPIO_PIN_MASK, leds);
+	int port,pin;
+	unsigned char value = 0;
+	unsigned long tmp,i;
+	
+	for(i = 0 ; i < LEDS_NUM; i++){
+		port = leds_table[i].port;
+		pin = leds_table[i].pin;
+		GPIO_WRITE_PIN(GPIO_PORT_TO_BASE(port),(1 << pin), ((leds & (1<<i)) > 0) ?  0 : (1 << pin));
+	}
 }
 /*---------------------------------------------------------------------------*/
 

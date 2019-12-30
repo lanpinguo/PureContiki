@@ -434,15 +434,6 @@ typedef uint32_t rtimer_clock_t;
 #define UIP_CONF_UDP_CHECKSUMS               1
 #define UIP_CONF_ICMP6                       1
 
-/* ND and Routing */
-#ifndef UIP_CONF_ROUTER
-#define UIP_CONF_ROUTER                      1
-#endif
-
-#define UIP_CONF_ND6_SEND_RA                 1
-#define UIP_CONF_ND6_SEND_NS  				 1
-#define UIP_CONF_ND6_SEND_NA  				 1
-#define UIP_CONF_IP_FORWARD                  0
 #define RPL_CONF_STATS                       1
 
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
