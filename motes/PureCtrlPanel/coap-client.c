@@ -384,7 +384,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 			
 			PRINTF("\r\nButton[%d] Pressed \r\n",btn_pressed);
 			btn_state[btn_pressed] = ~btn_state[btn_pressed];
-			generate_relay_sw_config_payload(1,btn_state[btn_pressed], msg);
+			generate_relay_sw_config_payload(btn_pressed + 1,btn_state[btn_pressed], msg);
 			coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 			PRINTF("\r\nPUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
 			COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
