@@ -57,8 +57,10 @@
 #define UART1_TX_PORT           		GPIO_B_NUM
 #define UART1_TX_PIN            		7
 
-#define UART1_CONF_BAUD_RATE   			115200 /**< Default UART1 baud rate */
+#define UART1_CONF_BAUD_RATE   			9600 
 
+extern int uart_line_input_byte(unsigned char c);
+#define UART1_LINE_INPUT_BYTE			uart_line_input_byte
 
 /** @} */
 /*---------------------------------------------------------------------------*/

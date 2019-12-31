@@ -292,10 +292,13 @@ main(void)
 	*/
 #if UART_CONF_ENABLE
 	uart_init(0);
+	uart_set_input(SERIAL_LINE_CONF_UART, serial_line_input_byte);
+	serial_line_init();
+#endif
+
 #if PLATFORM_HAS_UART_1
 	uart_init(1);
-#endif
-	uart_set_input(SERIAL_LINE_CONF_UART, serial_line_input_byte);
+	uart_set_input(1, UART1_LINE_INPUT_BYTE);
 #endif
 
 #if USB_SERIAL_CONF_ENABLE
@@ -307,7 +310,6 @@ main(void)
 	usb_cdc_eth_setup();
 #endif
 
-	serial_line_init();
 
 	INTERRUPTS_ENABLE();
 	//fade(LEDS_GREEN);

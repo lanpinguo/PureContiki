@@ -17,7 +17,7 @@ PROJECT_SOURCEFILES += coap-server.c coap-client.c test-coffee.c
 PLATFORM_HAS_RELAY_SWITCH=1
 PLATFORM_HAS_LEDS=1
 PLATFORM_HAS_BUTTON = 0
-
+PLATFORM_HAS_HCHO_SENSOR = 1
 
 APPS = serial-shell 
 #APPS += ping6

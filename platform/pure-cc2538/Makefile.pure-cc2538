@@ -18,6 +18,12 @@ ifneq (0,${PLATFORM_HAS_RELAY_SWITCH})
 endif
 endif
 
+ifdef PLATFORM_HAS_HCHO_SENSOR
+ifneq (0,${PLATFORM_HAS_HCHO_SENSOR})
+  CONTIKI_TARGET_SOURCEFILES += hcho-sensor.c
+endif
+endif
+
 CONTIKI_TARGET_SOURCEFILES += contiki-main.c
 CONTIKI_TARGET_SOURCEFILES += sensors.c smartrf-sensors.c
 
