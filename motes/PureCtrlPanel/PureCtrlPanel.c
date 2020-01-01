@@ -352,6 +352,38 @@ void dump_config_file(void)
 
 /*---------------------------------------------------------------------------*/
 
+int32_t ip_addr_parse(void * input, uip_ipaddr_t *ipaddr)
+{
+	int value[10];
+	int32_t rc;
+
+	
+	if(input == NULL || ipaddr == NULL){
+		return -1;
+	}
+
+	rc = sscanf( input
+			,"%02x%02x::%02x%02x:%02x%02x:%02x%02x:%02x%02x"
+			,&value[0],&value[1]
+			,&value[2],&value[3]
+			,&value[4],&value[5]
+			,&value[6],&value[7]
+			,&value[8],&value[9]);
+	
+			ipaddr->u8[0] = value[0] & 0xff;
+			ipaddr->u8[1] = value[1] & 0xff;
+			ipaddr->u8[8] = value[2] & 0xff;
+			ipaddr->u8[9] = value[3] & 0xff;
+			ipaddr->u8[10] = value[4] & 0xff;
+			ipaddr->u8[11] = value[5] & 0xff;
+			ipaddr->u8[12] = value[6] & 0xff;
+			ipaddr->u8[13] = value[7] & 0xff;
+			ipaddr->u8[14] = value[8] & 0xff;
+			ipaddr->u8[15] = value[9] & 0xff;
+
+	return rc;
+}
+
 PROCESS(dbg_coap_client_process, "debug coap client");
 SHELL_COMMAND(coap_client_command,
 		"coap",
@@ -419,13 +451,7 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 
 			if(argc == 3){
 				server_id = atoi(argv[1]);
-				sscanf( argv[2]
-						,"%02x%02x::%02x%02x:%02x%02x:%02x%02x:%02x%02x"
-						,&ipaddr.u8[0],&ipaddr.u8[1]
-						,&ipaddr.u8[8],&ipaddr.u8[9]
-						,&ipaddr.u8[10],&ipaddr.u8[11]
-						,&ipaddr.u8[12],&ipaddr.u8[13]
-						,&ipaddr.u8[14],&ipaddr.u8[15]);
+				ip_addr_parse(argv[2],&ipaddr);
 				printf("\r\nserver:\r\n");
 				PRINT6ADDR(&ipaddr);
 				set_remote_server_address(server_id, &ipaddr);

@@ -266,10 +266,10 @@ generate_random_payload(int type, char *msg)
 #endif
 
 static void
-generate_relay_sw_config_payload(int index, int state, char *msg)
+generate_relay_sw_config_payload(int mask, int state, char *msg)
 {
    /* relay-sw */
-	snprintf((char *)msg, 64, "&index=%d&mode=%s", index, state == 0 ? "off":"on");
+	snprintf((char *)msg, 64, "&state=%d&mask=%d", mask, state);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -359,17 +359,20 @@ PROCESS_THREAD(coap_client_process, ev, data)
 #if PLATFORM_HAS_BUTTON
 		if (ev == sensors_event ) {
 			static char msg[64] = "";
-			
+			static int mask,state;
 
 			coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
 			coap_set_header_uri_path(request, service_urls[4]);
 			
 			if(data == &button_cancel_sensor){
 				btn_pressed = 0;
+				mask = (1<< 0) ;
 			}else if(data == &button_select_sensor){
 				btn_pressed = 1;
+				mask = (1<<1) | (1<<2) | (1<< 3) | (1<<4) ;
 			}else if(data == &button_left_sensor){
 				btn_pressed = 2;
+				mask = (1<< 5) | (1<<6) | (1<<7);
 			}else if(data == &button_right_sensor){
 				btn_pressed = 3;
 			}else if(data == &button_up_sensor){
@@ -381,10 +384,15 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				PRINTF("\r\nInvalid Button Pressed \r\n");
 				continue;
 			}
+
+			if(mask == 0){
+				continue;
+			}
 			
 			PRINTF("\r\nButton[%d] Pressed \r\n",btn_pressed);
 			btn_state[btn_pressed] = ~btn_state[btn_pressed];
-			generate_relay_sw_config_payload(btn_pressed + 1,btn_state[btn_pressed], msg);
+			state = btn_state[btn_pressed] > 0 ? ~mask : mask;
+			generate_relay_sw_config_payload(mask,state,msg);
 			coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 			PRINTF("\r\nPUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
 			COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
