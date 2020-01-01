@@ -85,33 +85,31 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer,
                      uint16_t preferred_size, int32_t *offset)
 {
 	coap_packet_t *const coap_req = (coap_packet_t *)request;
+	int i;
 	size_t len = 0;
-	const char *index = NULL;
-	const char *mode = NULL;
-	uint8_t sw_index = 0;
-	uint8_t sw_state = 0;
+	const char *state = NULL;
+	const char *mask = NULL;
+	uint32_t sw_mask = 0;
+	uint32_t sw_state = 0;
 	int success = 1;
 
 	PRINTF("relay-sw PUT (%s %u) : %s\r\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid,coap_req->payload);
-	if((len = REST.get_post_variable(request, "index", &index))) {
-		sw_index = atoi(index);
+	if((len = REST.get_post_variable(request, "state", &state))) {
+		sw_state = atoi(state);
 	} else {
 		success = 0;
 	}
 
-	if(success && (len = REST.get_post_variable(request, "mode", &mode))) {
-		if(strncmp(mode, "on", len) == 0) {
-			sw_state = 1;
-		} 
-		else if(strncmp(mode, "off", len) == 0) {
-			sw_state = 0;
-		} else {
-			success = 0;
-		}
+	if(success && (len = REST.get_post_variable(request, "mask", &mask))) {
+		sw_mask = atoi(mask);
 	}
 
-	printf("Put Relay-sw[%d] : %s\r\n",sw_index,mode);
-	relay_switch_set(sw_index,sw_state);
+	for(i = 0; i < sizeof(sw_state) * 8; i++){
+		if(sw_mask & (1 << i)){
+			printf("set Relay-SW[%d] : %s\r\n",i,(sw_state & sw_mask) > 0 ? "on" : "off");
+			relay_switch_set(i,(sw_state & sw_mask));
+		}
+	}
 	if(!success) {
 		REST.set_response_status(response, REST.status.BAD_REQUEST);
 	}
