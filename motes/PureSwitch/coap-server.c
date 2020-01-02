@@ -38,6 +38,11 @@
 #include "contiki-net.h"
 #include "rest-engine.h"
 
+#if PLATFORM_HAS_LEDS
+#include "dev/leds.h"
+#endif
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -106,21 +111,24 @@ PROCESS(coap_server_process, "PureX CoAP Server");
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(coap_server_process, ev, data)
 {
-  PROCESS_BEGIN();
+	PROCESS_BEGIN();
 
-  printf("PureX CoAP Server\r\n");
+	printf("PureX CoAP Server\r\n");
 
-  /* Initialize the REST engine. */
-  rest_init_engine();
+	/* Initialize the REST engine. */
+	rest_init_engine();
 
-  start_board_resources();
+	start_board_resources();
 
-  /* Define application-specific events here. */
-  while(1) {
-    PROCESS_WAIT_EVENT();
-  }
+	/* enable show switch state */
+	leds_on(1);
 
-  PROCESS_END();
+	/* Define application-specific events here. */
+	while(1) {
+		PROCESS_WAIT_EVENT();
+	}
+
+	PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
 /**
