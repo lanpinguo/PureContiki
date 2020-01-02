@@ -486,6 +486,11 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 		else if(strncmp(argv[0], "dump", 4) == 0) {
 			dump_config_file();
 		}
+		else if(strncmp(argv[0], "state", 5) == 0) {
+			coap_args.mod_id = COAP_CLIENT_SW_ST;
+			/*post to coap client*/
+			process_post(&coap_client_process, dbg_event, &coap_args);
+		}
 		else{
 			goto ERROR;
 		}

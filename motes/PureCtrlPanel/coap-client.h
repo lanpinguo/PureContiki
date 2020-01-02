@@ -46,6 +46,7 @@
 enum {
 	COAP_CLIENT_OWN = 1,
 	COAP_CLIENT_SW  ,
+	COAP_CLIENT_SW_ST  , /* Relay switch state */
 		
 };
 

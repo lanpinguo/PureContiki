@@ -138,6 +138,42 @@ client_chunk_handler(void *response)
 	/*  printf("|%.*s", len, (char *)chunk); */
 	printf("RX(%d):%s\r\n", len, (char *)chunk);
 }
+
+/* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
+void
+client_relay_state_chunk_handler(void *response)
+{
+	const uint8_t *chunk;
+	const char *state = NULL;
+	const char *mask = NULL;
+	uint32_t sw_mask = 0;
+	uint32_t sw_state = 0;
+
+	int len = coap_get_payload(response, &chunk);
+
+#if PLATFORM_HAS_LEDS
+	if(btn_state[btn_pressed]){
+		/* set led when receiving a packet */
+		leds_on((1<<(btn_pressed + 1)));
+	}
+	else{
+		leds_off((1<<(btn_pressed + 1)));
+	}
+#endif
+
+	if((len = REST.get_post_variable((char *)chunk, "state", &state)) > 0) {
+		sw_state = strtoul(state, NULL, 16);
+	} 
+
+	if((len = REST.get_post_variable((char *)chunk, "mask", &mask))> 0) {
+		sw_mask = strtoul(mask, NULL, 16);
+	}
+	printf("state=%lx,mask=%lx\r\n", sw_state,sw_mask);
+
+	/*  printf("|%.*s", len, (char *)chunk); */
+	printf("RX(%d):%s\r\n", len, (char *)chunk);
+}
+
 /**************************************************************************/
 
 /*---------------------------------------------------------------------------*/
@@ -419,6 +455,15 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				PRINTF("\r\nGET: %s\r\n", service_urls[0]);
 				COAP_BLOCKING_REQUEST(&server_ipaddr[p_coap_args->server_id], REMOTE_PORT, request,
 					                  client_chunk_handler);
+			}
+			else if (p_coap_args->mod_id == COAP_CLIENT_SW_ST){
+				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+				coap_set_header_uri_path(request, service_urls[4]);
+				PRINTF("\r\nGET: %s\r\n", service_urls[4]);
+				COAP_BLOCKING_REQUEST(&server_ipaddr[p_coap_args->server_id], REMOTE_PORT, request,
+					                  client_relay_state_chunk_handler);
+
+
 			}
 			else if (p_coap_args->mod_id == COAP_CLIENT_SW){
 				char msg[64] = "";
