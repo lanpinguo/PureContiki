@@ -52,7 +52,8 @@
 int
 uart_line_input_byte(unsigned char c)
 {
-  return 1;
+	printf("%c ",c);
+	return 1;
 }
 
 
@@ -62,24 +63,24 @@ static int
 value(int type)
 {
 
-  return 0;
+	return 0;
 }
 /*---------------------------------------------------------------------------*/
 static int
 configure(int type, int value)
 {
-  switch(type) {
-  case SENSORS_HW_INIT:
+	switch(type) {
+		case SENSORS_HW_INIT:
 
-    break;
-  }
-  return 0;
+		break;
+	}
+	return 0;
 }
 /*---------------------------------------------------------------------------*/
 static int
 status(int type)
 {
-  return 1;
+	return 1;
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(hcho_sensor, HCHO_SENSOR, value, configure, status);

@@ -57,25 +57,27 @@
 static void
 res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
+	uint32_t state = 0;
+	uint32_t mask = 0;
 
 
-  /* a request comes from a remote host */
-  if(request != NULL) {
+	/* a request comes from a remote host */
+	if(request != NULL) {
+		coap_packet_t *const coap_req = (coap_packet_t *)request;
 
+		PRINTF("relay-sw  GET (%s %u)\r\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 
-    coap_packet_t *const coap_req = (coap_packet_t *)request;
+		relay_switch_get_all(&state, &mask);
 
-    PRINTF("relay-sw  GET (%s %u)\r\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
+		/* Code 2.05 CONTENT is default. */
+		REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+		/* REST.set_header_max_age(response, 30); */
+		REST.set_response_payload(
+			response,
+			buffer,
+			snprintf((char *)buffer, MAX_COAP_PAYLOAD, "&state=%lx&mask=%lx", state,mask));
 
-	/* Code 2.05 CONTENT is default. */
-	REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-	/* REST.set_header_max_age(response, 30); */
-	REST.set_response_payload(
-		response,
-		buffer,
-		snprintf((char *)buffer, MAX_COAP_PAYLOAD, "relay-sw state: 0x%04x", 0x55AA));
-
-  } 
+	} 
 }
 
 

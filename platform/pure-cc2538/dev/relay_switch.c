@@ -79,11 +79,52 @@ relay_switch_init(void)
 uint8_t
 relay_switch_get(uint8_t sw)
 {
+	uint32_t val;
+
+	
 	if(sw > (SWITCH_NUM - 1)){
 		return 0;
 	}
-	return GPIO_READ_PIN(GPIO_PORT_TO_BASE(relay_sw_table[sw].port),(1<<relay_sw_table[sw].pin));
+
+
+	val = GPIO_READ_PIN(GPIO_PORT_TO_BASE(relay_sw_table[sw].port),(1<<relay_sw_table[sw].pin));
+
+	return (val > 0) ? 1 : 0;	
 }
+
+int32_t
+relay_switch_get_all(uint32_t *state, uint32_t *mask)
+{
+	uint32_t val;
+	int i;
+
+	
+	if(state == NULL || mask == NULL){
+		return -1;
+	}
+
+	/*clean first*/
+	*state = 0;
+	*mask = 0;
+
+	
+	for(i = 0 ; i < SWITCH_NUM; i++){
+		val = GPIO_READ_PIN(
+				GPIO_PORT_TO_BASE(relay_sw_table[i].port),
+				(1<<relay_sw_table[i].pin));
+		if(val > 0){
+			*state |= (1<<i);
+		}else{
+			*state <<= 1;
+		}
+		*mask |= (1<<i);
+	}
+
+
+	return 0;	
+}
+
+
 /*---------------------------------------------------------------------------*/
 void
 relay_switch_set(uint8_t sw, uint8_t value)

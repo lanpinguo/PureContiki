@@ -57,6 +57,7 @@ typedef struct RELAY_SWITCH_S
 void relay_switch_init(void);
 uint8_t relay_switch_get(uint8_t sw);
 void relay_switch_set(uint8_t sw, uint8_t value);
+int32_t relay_switch_get_all(uint32_t *state, uint32_t *mask);
 
 #endif /* RELAY_SWITCH_H_ */
 
