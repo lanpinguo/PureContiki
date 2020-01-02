@@ -161,11 +161,13 @@ client_relay_state_chunk_handler(void *response)
 	}
 #endif
 
-	if((len = REST.get_post_variable((char *)chunk, "state", &state)) > 0) {
+	len = REST.get_post_variable((char *)chunk, "state", &state);
+	if(len > 0) {
 		sw_state = strtoul(state, NULL, 16);
 	} 
 
-	if((len = REST.get_post_variable((char *)chunk, "mask", &mask))> 0) {
+	len = REST.get_post_variable((char *)chunk, "mask", &mask);
+	if(len > 0) {
 		sw_mask = strtoul(mask, NULL, 16);
 	}
 	printf("state=%lx,mask=%lx\r\n", sw_state,sw_mask);
@@ -305,7 +307,7 @@ static void
 generate_relay_sw_config_payload(int mask, int state, char *msg)
 {
    /* relay-sw */
-	snprintf((char *)msg, 64, "&state=%d&mask=%d", mask, state);
+	snprintf((char *)msg, 64, "&state=%d&mask=%d", state,mask);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -472,9 +474,12 @@ PROCESS_THREAD(coap_client_process, ev, data)
 			}
 			else if (p_coap_args->mod_id == COAP_CLIENT_SW){
 				char msg[64] = "";
+				static int mask,state;
 				coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
 				coap_set_header_uri_path(request, service_urls[4]);
-				generate_relay_sw_config_payload(p_coap_args->coap_conf,p_coap_args->coap_param, msg);
+				state = (p_coap_args->coap_param > 0) ? (1<<p_coap_args->coap_conf):0;
+				mask = (1<<p_coap_args->coap_conf);
+				generate_relay_sw_config_payload(mask,state,msg);
 				coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 				PRINTF("\r\nPUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
 				COAP_BLOCKING_REQUEST(&server_ipaddr[p_coap_args->server_id], REMOTE_PORT, request,
