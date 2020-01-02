@@ -7,7 +7,7 @@ CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 REST_RESOURCES_DIR = ./resources
 
-REST_RESOURCES_FILES += res-leds.c res-relay-switch.c 
+REST_RESOURCES_FILES += res-leds.c res-relay-switch.c res-hcho.c
 
 PROJECTDIRS += $(REST_RESOURCES_DIR)
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)

@@ -108,10 +108,10 @@ static int count_notify = 0;
 static struct etimer et;
 
 /* Example URIs that can be queried. */
-#define NUMBER_OF_URLS 5
+#define NUMBER_OF_URLS 6
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
 char *service_urls[NUMBER_OF_URLS] =
-{ ".well-known/core", "/dcdc/status", "/dcdc/vdc", "/dcdc/hwcfg","relay-sw" };
+{ ".well-known/core", "/dcdc/status", "/dcdc/vdc", "/dcdc/hwcfg","relay-sw","hcho" };
 
 
 static int btn_pressed = 0;
@@ -462,8 +462,13 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				PRINTF("\r\nGET: %s\r\n", service_urls[4]);
 				COAP_BLOCKING_REQUEST(&server_ipaddr[p_coap_args->server_id], REMOTE_PORT, request,
 					                  client_relay_state_chunk_handler);
-
-
+			}
+			else if (p_coap_args->mod_id == COAP_CLIENT_HCHO){
+				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+				coap_set_header_uri_path(request, service_urls[5]);
+				PRINTF("\r\nGET: %s\r\n", service_urls[5]);
+				COAP_BLOCKING_REQUEST(&server_ipaddr[p_coap_args->server_id], REMOTE_PORT, request,
+					                  client_chunk_handler);
 			}
 			else if (p_coap_args->mod_id == COAP_CLIENT_SW){
 				char msg[64] = "";

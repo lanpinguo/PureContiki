@@ -403,7 +403,7 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 	shell_file_init();
 #endif
 
-	hcho_sensor_init();  
+	hcho_sensor_init(1);  
 	PROCESS_END();
 }
 

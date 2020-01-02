@@ -58,6 +58,11 @@ extern resource_t		res_leds;
 extern resource_t		res_relay_switch;
 #endif
 
+#if PLATFORM_HAS_HCHO_SENSOR
+extern resource_t		res_hcho;
+#endif
+
+
 #ifdef CO2
 extern resource_t		res_dc_co2;
 #endif
@@ -79,6 +84,10 @@ start_board_resources(void)
 #endif
 #ifdef CO2
 	rest_activate_resource(&res_dc_co2, "dcdc/co2");
+#endif
+
+#if PLATFORM_HAS_HCHO_SENSOR
+	rest_activate_resource(&res_hcho,"hcho");
 #endif
 
 #ifdef DCDC

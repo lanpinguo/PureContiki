@@ -491,6 +491,11 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 			/*post to coap client*/
 			process_post(&coap_client_process, dbg_event, &coap_args);
 		}
+		else if(strncmp(argv[0], "hcho", 4) == 0) {
+			coap_args.mod_id = COAP_CLIENT_HCHO;
+			/*post to coap client*/
+			process_post(&coap_client_process, dbg_event, &coap_args);
+		}
 		else{
 			goto ERROR;
 		}

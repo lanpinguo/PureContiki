@@ -61,6 +61,7 @@
 static struct ringbuf rxbuf;
 static uint8_t rxbuf_data[BUFSIZE];
 static struct etimer et;
+static int32_t hcho_ppb;
 
 
 
@@ -124,7 +125,6 @@ PROCESS_THREAD(hcho_data_process, ev, data)
 {
 	static char buf[BUFSIZE];
 	static int ptr;
-	int32_t hcho_ppb;
 
 	
 	PROCESS_BEGIN();
@@ -154,7 +154,9 @@ PROCESS_THREAD(hcho_data_process, ev, data)
 #endif
 					if(is_valid((uint8_t *)buf,ptr)){
 		                hcho_ppb = buf[4] * 256 + buf[5];
+#if DEBUG				
 		                printf("HCHO(ppb) : %ld " ,hcho_ppb);
+#endif
 					}
 					
 					ptr = 0;
@@ -182,8 +184,7 @@ PROCESS_THREAD(hcho_data_process, ev, data)
 static int
 value(int type)
 {
-
-	return 0;
+	return hcho_ppb;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -207,12 +208,12 @@ SENSORS_SENSOR(hcho_sensor, HCHO_SENSOR, value, configure, status);
 
 
 void
-hcho_sensor_init(void)
+hcho_sensor_init(int port)
 {
 	ringbuf_init(&rxbuf, rxbuf_data, sizeof(rxbuf_data));
 	process_start(&hcho_data_process, NULL);
-	uart_init(1);
-	uart_set_input(1, uart_line_input_byte);
+	uart_init(port);
+	uart_set_input(port, uart_line_input_byte);
 }
 
 
