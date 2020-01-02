@@ -114,10 +114,9 @@ relay_switch_get_all(uint32_t *state, uint32_t *mask)
 				(1<<relay_sw_table[i].pin));
 		if(val > 0){
 			*state |= (1<<i);
-		}else{
-			*state <<= 1;
 		}
 		*mask |= (1<<i);
+		/*printf("[%d] = %x, state = %x\r\n",i,val,*state);*/
 	}
 
 
