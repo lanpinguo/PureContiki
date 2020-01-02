@@ -244,7 +244,7 @@ coap_merge_multi_option(char **dst, size_t *dst_len, uint8_t *option,
   }
 }
 /*---------------------------------------------------------------------------*/
-static int
+int
 coap_get_variable(const char *buffer, size_t length, const char *name,
                   const char **output)
 {

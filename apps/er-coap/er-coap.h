@@ -187,6 +187,9 @@ void coap_send_message(uip_ipaddr_t *addr, uint16_t port, uint8_t *data,
 coap_status_t coap_parse_message(void *request, uint8_t *data,
                                  uint16_t data_len);
 
+int coap_get_variable(const char *buffer, size_t length, const char *name,
+                  const char **output);
+
 int coap_get_query_variable(void *packet, const char *name,
                             const char **output);
 int coap_get_post_variable(void *packet, const char *name,

@@ -148,8 +148,8 @@ client_relay_state_chunk_handler(void *response)
 	const char *mask = NULL;
 	uint32_t sw_mask = 0;
 	uint32_t sw_state = 0;
-
-	int len = coap_get_payload(response, &chunk);
+	int len;
+	int total_len = coap_get_payload(response, &chunk);
 
 #if PLATFORM_HAS_LEDS
 	if(btn_state[btn_pressed]){
@@ -161,19 +161,19 @@ client_relay_state_chunk_handler(void *response)
 	}
 #endif
 
-	len = REST.get_post_variable((char *)chunk, "state", &state);
+	len = coap_get_variable((char *)chunk,total_len, "state", &state);
 	if(len > 0) {
 		sw_state = strtoul(state, NULL, 16);
 	} 
 
-	len = REST.get_post_variable((char *)chunk, "mask", &mask);
+	len = coap_get_variable((char *)chunk,total_len, "mask", &mask);
 	if(len > 0) {
 		sw_mask = strtoul(mask, NULL, 16);
 	}
 	printf("state=%lx,mask=%lx\r\n", sw_state,sw_mask);
 
 	/*  printf("|%.*s", len, (char *)chunk); */
-	printf("RX(%d):%s\r\n", len, (char *)chunk);
+	printf("RX(%d):%s\r\n", total_len, (char *)chunk);
 }
 
 /**************************************************************************/
