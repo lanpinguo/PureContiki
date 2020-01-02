@@ -296,10 +296,6 @@ main(void)
 	serial_line_init();
 #endif
 
-#if PLATFORM_HAS_UART_1
-	uart_init(1);
-	uart_set_input(1, UART1_LINE_INPUT_BYTE);
-#endif
 
 #if USB_SERIAL_CONF_ENABLE
 	usb_serial_init();

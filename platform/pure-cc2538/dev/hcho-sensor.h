@@ -55,6 +55,7 @@
 
 extern const struct sensors_sensor hcho_sensor;
 int uart_line_input_byte(unsigned char c);
+void hcho_sensor_init(void);
 
 #endif /* HCHO_SENSOR_H_ */
 

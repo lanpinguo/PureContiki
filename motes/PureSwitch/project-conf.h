@@ -59,8 +59,6 @@
 
 #define UART1_CONF_BAUD_RATE   			9600 
 
-extern int uart_line_input_byte(unsigned char c);
-#define UART1_LINE_INPUT_BYTE			uart_line_input_byte
 
 /** @} */
 /*---------------------------------------------------------------------------*/

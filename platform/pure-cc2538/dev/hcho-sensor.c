@@ -37,25 +37,145 @@
  *  Driver for the SmartRF06EB ALS
  */
 #include "contiki.h"
+#include "ringbuf.h"
 #include "sys/clock.h"
+#include "sys/ctimer.h"
 #include "dev/ioc.h"
 #include "dev/gpio.h"
 #include "dev/adc.h"
+#include "dev/uart.h"
 #include "dev/hcho-sensor.h"
 
 #include <stdint.h>
+#include <stdio.h>
+
+#define DEBUG 0
+#if DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 
 
+#define BUFSIZE	 20
+static struct ringbuf rxbuf;
+static uint8_t rxbuf_data[BUFSIZE];
+static struct etimer et;
+
+
+
+PROCESS(hcho_data_process, "HCHO Sensor Driver");
 
 
 /*---------------------------------------------------------------------------*/
 int
 uart_line_input_byte(unsigned char c)
 {
-	printf("%c ",c);
+	static uint8_t overflow = 0; /* Buffer overflow: ignore until END */
+
+
+
+	PRINTF("(%02x)",c);
+
+
+	if(!overflow) {
+		/* Add character */
+		if(ringbuf_put(&rxbuf, c) == 0) {
+			/* Buffer overflow: ignore the rest of the line */
+			overflow = 1;
+		}
+	} else {
+		/* Buffer overflowed:
+		* Only (try to) add terminator characters, otherwise skip */
+		if(ringbuf_put(&rxbuf, c) != 0) {
+			overflow = 0;
+		}
+	}
+
+	/* Wake up consumer process */
+	process_poll(&hcho_data_process);
 	return 1;
 }
 
+
+
+int32_t is_valid(uint8_t *data,int32_t length)
+{
+	int32_t i = 0;
+	uint8_t checksum = 0;
+
+	for(i = 1; i < length -1 ; i++){
+		checksum += data[i];
+	}
+	
+	checksum = (~(checksum) + 1);
+        
+    if (checksum != data[length - 1]){
+        return 0;
+	}
+    else{
+        return 1;
+	}
+
+}
+
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(hcho_data_process, ev, data)
+{
+	static char buf[BUFSIZE];
+	static int ptr;
+	int32_t hcho_ppb;
+
+	
+	PROCESS_BEGIN();
+
+	ptr = 0;
+
+	while(1) 
+	{
+		/* Fill application buffer until newline or empty */
+		int c = ringbuf_get(&rxbuf);
+		if(c == -1) {
+			if(ptr == 0){
+				/* Buffer empty, wait for poll */
+				PROCESS_YIELD();
+			}
+			else{
+				etimer_set(&et, CLOCK_SECOND / 5);
+				PROCESS_YIELD();
+				if(etimer_expired(&et)) {
+
+#if DEBUG				
+					static int i;
+					for(i = 0; i < ptr; i++){
+						printf("%02x ",buf[i]);
+					}
+					printf("\r\n");
+#endif
+					if(is_valid((uint8_t *)buf,ptr)){
+		                hcho_ppb = buf[4] * 256 + buf[5];
+		                printf("HCHO(ppb) : %ld " ,hcho_ppb);
+					}
+					
+					ptr = 0;
+				}
+				else{
+				}
+			}
+			continue;
+		} 
+		else {
+			if(ptr < BUFSIZE-1) {
+				buf[ptr++] = (uint8_t)c;
+			} 
+			else {
+				/* Ignore character (wait for EOL) */
+			}
+		}
+	}
+
+	PROCESS_END();
+}
 
 
 /*---------------------------------------------------------------------------*/
@@ -84,5 +204,16 @@ status(int type)
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(hcho_sensor, HCHO_SENSOR, value, configure, status);
+
+
+void
+hcho_sensor_init(void)
+{
+	ringbuf_init(&rxbuf, rxbuf_data, sizeof(rxbuf_data));
+	process_start(&hcho_data_process, NULL);
+	uart_init(1);
+	uart_set_input(1, uart_line_input_byte);
+}
+
 
 /** @} */
