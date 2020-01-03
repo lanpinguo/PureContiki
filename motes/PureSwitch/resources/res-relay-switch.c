@@ -115,6 +115,16 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer,
 	if(!success) {
 		REST.set_response_status(response, REST.status.BAD_REQUEST);
 	}
+	else{
+		relay_switch_get_all(&sw_state, &sw_mask);
+		/* Code 2.05 CONTENT is default. */
+		REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+		/* REST.set_header_max_age(response, 30); */
+		REST.set_response_payload(
+			response,
+			buffer,
+			snprintf((char *)buffer, MAX_COAP_PAYLOAD, "&state=%lx&mask=%lx", sw_state,sw_mask));
+	}
 }
 /*---------------------------------------------------------------------------*/
 /*

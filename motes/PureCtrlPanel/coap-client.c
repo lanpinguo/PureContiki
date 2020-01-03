@@ -100,6 +100,10 @@
 #define SEND_INTERVAL   (PERIOD * CLOCK_SECOND)
 #define SEND_TIME   (random_rand() % (SEND_INTERVAL))
 
+/*---------------------------------------------------------------------------*/
+extern process_event_t dbg_event;
+
+
 /* static struct uip_udp_conn *client_conn; */
 static uip_ipaddr_t server_ipaddr[MAX_SERVER_NUM];
 static int count_notify = 0;
@@ -114,8 +118,36 @@ char *service_urls[NUMBER_OF_URLS] =
 { ".well-known/core", "/dcdc/status", "/dcdc/vdc", "/dcdc/hwcfg","relay-sw","hcho" };
 
 
-static int btn_pressed = 0;
-static int btn_state[6];
+#define NUM_OF_BTN		6
+typedef struct BTN_FUNC_CONFIG_S
+{
+	uint8_t 	valid;
+	uint8_t 	btn_index;
+	uint8_t 	led;
+	int8_t 		server_id;
+	uint32_t 	sw_mask;
+	uint32_t 	sw_state;
+
+}BTN_FUNC_CONFIG_t;
+
+static uint8_t btn_pressed = 0;
+static uint8_t btn_state[NUM_OF_BTN] = {0};
+static uint8_t sync_done = 0;
+
+#define BTN_0_SW 	(1<<2)
+#define BTN_1_SW 	((1<<0) | (1<<1) | (1<<2) | (1<< 3) | (1<<4) )
+#define BTN_2_SW 	((1<<5) | (1<<6) | (1<< 7))
+#define BTN_3_SW 	(1<<3)
+
+static BTN_FUNC_CONFIG_t btn_ins[NUM_OF_BTN] ={
+	/* valid  btn_index  led      server_id  sw_mask  sw_state */
+	{   1,       0,      (1<<1),     0,      BTN_0_SW,    0  },
+	{   1,       1,      (1<<2),     0,      BTN_1_SW,    0  },
+	{   1,       2,      (1<<3),     0,      BTN_2_SW,    0  },
+	{   1,       3,      (1<<4),     0,      BTN_3_SW,    0  },
+
+};
+
 
 /* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
 void
@@ -148,18 +180,10 @@ client_relay_state_chunk_handler(void *response)
 	const char *mask = NULL;
 	uint32_t sw_mask = 0;
 	uint32_t sw_state = 0;
-	int len;
+	
+	int len,i;
 	int total_len = coap_get_payload(response, &chunk);
 
-#if PLATFORM_HAS_LEDS
-	if(btn_state[btn_pressed]){
-		/* set led when receiving a packet */
-		leds_on((1<<(btn_pressed + 1)));
-	}
-	else{
-		leds_off((1<<(btn_pressed + 1)));
-	}
-#endif
 
 	len = coap_get_variable((char *)chunk,total_len, "state", &state);
 	if(len > 0) {
@@ -172,6 +196,26 @@ client_relay_state_chunk_handler(void *response)
 	}
 	printf("state=%lx,mask=%lx\r\n", sw_state,sw_mask);
 
+	for(i = 0; i < NUM_OF_BTN; i++){
+		if(!btn_ins[i].valid){
+			continue;
+		}
+#if PLATFORM_HAS_LEDS
+		if((sw_state & btn_ins[i].sw_mask){
+			/* set led when receiving a packet */
+			leds_on(btn_ins[i].led);
+			btn_ins[i].sw_state = 1;
+		}
+		else{
+			leds_off(btn_ins[i].led);
+			btn_ins[i].sw_state = 0;
+		}
+#endif
+
+
+	}
+
+	sync_done = 1;
 	/*  printf("|%.*s", len, (char *)chunk); */
 	printf("RX(%d):%s\r\n", total_len, (char *)chunk);
 }
@@ -351,8 +395,6 @@ notification_callback(coap_observee_t *obs, void *notification, coap_notificatio
 }
 
 
-/*---------------------------------------------------------------------------*/
-extern process_event_t dbg_event;
 
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(coap_client_process, ev, data)
@@ -380,7 +422,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 	/* receives all CoAP messages */
 	coap_init_engine();
 
-	etimer_set(&et, GET_INTERVAL * CLOCK_SECOND);
+	etimer_set(&et, 3 * CLOCK_SECOND);
 
 	/* Indicate that The Coap Client Init has Done */
 	leds_on(1);
@@ -389,6 +431,17 @@ PROCESS_THREAD(coap_client_process, ev, data)
 	while(1) {
 		PROCESS_YIELD();
 
+		if(etimer_expired(&et)) {
+			if(sync_done == 0){
+				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+				coap_set_header_uri_path(request, service_urls[4]);
+				PRINTF("\r\nGET: %s\r\n", service_urls[4]);
+				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
+					                  client_relay_state_chunk_handler);
+				etimer_reset(&et);
+
+			}
+		}
 		if(ev == tcpip_event) {
 			printf("TCPIP_HANDLER\r\n");
 			tcpip_handler();
@@ -401,16 +454,14 @@ PROCESS_THREAD(coap_client_process, ev, data)
 
 			coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
 			coap_set_header_uri_path(request, service_urls[4]);
-			
+			mask = 0;
+			state = 0;
 			if(data == &button_cancel_sensor){
 				btn_pressed = 0;
-				mask = (1<< 0) ;
 			}else if(data == &button_select_sensor){
 				btn_pressed = 1;
-				mask = (1<<1) | (1<<2) | (1<< 3) | (1<<4) ;
 			}else if(data == &button_left_sensor){
 				btn_pressed = 2;
-				mask = (1<< 5) | (1<<6) | (1<<7);
 			}else if(data == &button_right_sensor){
 				btn_pressed = 3;
 			}else if(data == &button_up_sensor){
@@ -423,18 +474,18 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				continue;
 			}
 
-			if(mask == 0){
+			if(btn_ins[btn_pressed].valid == 0){
 				continue;
 			}
 			
 			PRINTF("\r\nButton[%d] Pressed \r\n",btn_pressed);
-			btn_state[btn_pressed] = ~btn_state[btn_pressed];
-			state = btn_state[btn_pressed] > 0 ? ~mask : mask;
+			mask = btn_ins[btn_pressed].sw_mask;
+			state = btn_ins[btn_pressed].sw_state == 0 ? mask : ~mask;
 			generate_relay_sw_config_payload(mask,state,msg);
 			coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 			PRINTF("\r\nPUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
 			COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
-								  client_chunk_handler);
+								  client_relay_state_chunk_handler);
 		}
 #endif
 
