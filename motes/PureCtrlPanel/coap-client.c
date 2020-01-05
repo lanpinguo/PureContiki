@@ -145,6 +145,7 @@ static uint8_t btn_pressed = 0;
 #define BTN_2_SW 	((1<<5) | (1<<6) | (1<< 7))
 #define BTN_3_SW 	(1<<0)
 #define BTN_4_SW 	((1 << 0) | (1 << 1) | (1 << 2))
+#define BTN_5_SW 	((1 << 0) | (1 << 1))
 
 static BTN_FUNC_CONFIG_t btn_ins[NUM_OF_BTN] ={
 	/* valid  sync_done  btn_index  led      server_id  sw_mask  sw_state   rest_handler*/
@@ -153,6 +154,7 @@ static BTN_FUNC_CONFIG_t btn_ins[NUM_OF_BTN] ={
 	{   1,      0,         2,      (1<<3),     0,      BTN_2_SW,    0  , btn_2_state_handler},
 	{   1,      0,         3,      (1<<4),     1,      BTN_3_SW,    0  , btn_3_state_handler},
 	{   1,      0,         4,      (1<<5),     2,      BTN_4_SW,    0  , btn_4_state_handler},
+	{	1,		0,		   4,	   (1<<6),	   2,	   BTN_5_SW,	0  , btn_5_state_handler},
 
 };
 
@@ -296,35 +298,35 @@ void
 btn_1_state_handler( void *response)
 {
 	btn_relay_state_common_handler(1,response);
-	btn_handler_in_same_server(0,response);
+	btn_handler_in_same_server(1,response);
 }
 
 void
 btn_2_state_handler( void *response)
 {
 	btn_relay_state_common_handler(2,response);
-	btn_handler_in_same_server(0,response);
+	btn_handler_in_same_server(2,response);
 }
 
 void
 btn_3_state_handler( void *response)
 {
 	btn_relay_state_common_handler(3,response);
-	btn_handler_in_same_server(0,response);
+	btn_handler_in_same_server(3,response);
 }
 
 void
 btn_4_state_handler( void *response)
 {
 	btn_relay_state_common_handler(4,response);
-	btn_handler_in_same_server(0,response);
+	btn_handler_in_same_server(4,response);
 }
 
 void
 btn_5_state_handler( void *response)
 {
 	btn_relay_state_common_handler(5,response);
-	btn_handler_in_same_server(0,response);
+	btn_handler_in_same_server(5,response);
 }
 
 /*---------------------------------------------------------------------------*/
