@@ -103,6 +103,12 @@
 /*---------------------------------------------------------------------------*/
 extern process_event_t dbg_event;
 
+void btn_0_state_handler( void *response);
+void btn_1_state_handler( void *response);
+void btn_2_state_handler( void *response);
+void btn_3_state_handler( void *response);
+void btn_4_state_handler( void *response);
+void btn_5_state_handler( void *response);
 
 /* static struct uip_udp_conn *client_conn; */
 static uip_ipaddr_t server_ipaddr[MAX_SERVER_NUM];
@@ -122,29 +128,31 @@ char *service_urls[NUMBER_OF_URLS] =
 typedef struct BTN_FUNC_CONFIG_S
 {
 	uint8_t 	valid;
+	uint8_t  	sync_done;
 	uint8_t 	btn_index;
 	uint8_t 	led;
 	int8_t 		server_id;
 	uint32_t 	sw_mask;
 	uint32_t 	sw_state;
+	blocking_response_handler rest_handler;
 
 }BTN_FUNC_CONFIG_t;
 
 static uint8_t btn_pressed = 0;
-static uint8_t btn_state[NUM_OF_BTN] = {0};
-static uint8_t sync_done = 0;
 
 #define BTN_0_SW 	(1<<2)
 #define BTN_1_SW 	((1<<0) | (1<<1) | (1<<2) | (1<< 3) | (1<<4) )
 #define BTN_2_SW 	((1<<5) | (1<<6) | (1<< 7))
-#define BTN_3_SW 	(1<<3)
+#define BTN_3_SW 	(1<<0)
+#define BTN_4_SW 	((1 << 0) | (1 << 1) | (1 << 2))
 
 static BTN_FUNC_CONFIG_t btn_ins[NUM_OF_BTN] ={
-	/* valid  btn_index  led      server_id  sw_mask  sw_state */
-	{   1,       0,      (1<<1),     0,      BTN_0_SW,    0  },
-	{   1,       1,      (1<<2),     0,      BTN_1_SW,    0  },
-	{   1,       2,      (1<<3),     0,      BTN_2_SW,    0  },
-	{   1,       3,      (1<<4),     0,      BTN_3_SW,    0  },
+	/* valid  sync_done  btn_index  led      server_id  sw_mask  sw_state   rest_handler*/
+	{   1,      0,         0,      (1<<1),     0,      BTN_0_SW,    0  , btn_0_state_handler},
+	{   1,      0,         1,      (1<<2),     0,      BTN_1_SW,    0  , btn_1_state_handler},
+	{   1,      0,         2,      (1<<3),     0,      BTN_2_SW,    0  , btn_2_state_handler},
+	{   1,      0,         3,      (1<<4),     1,      BTN_3_SW,    0  , btn_3_state_handler},
+	{   1,      0,         4,      (1<<5),     2,      BTN_4_SW,    0  , btn_4_state_handler},
 
 };
 
@@ -156,16 +164,6 @@ client_chunk_handler(void *response)
 	const uint8_t *chunk;
 
 	int len = coap_get_payload(response, &chunk);
-
-#if PLATFORM_HAS_LEDS
-	if(btn_state[btn_pressed]){
-		/* set led when receiving a packet */
-		leds_on((1<<(btn_pressed + 1)));
-	}
-	else{
-		leds_off((1<<(btn_pressed + 1)));
-	}
-#endif
 
 	/*  printf("|%.*s", len, (char *)chunk); */
 	printf("RX(%d):%s\r\n", len, (char *)chunk);
@@ -201,7 +199,7 @@ client_relay_state_chunk_handler(void *response)
 			continue;
 		}
 #if PLATFORM_HAS_LEDS
-		if((sw_state & btn_ins[i].sw_mask){
+		if((sw_state & btn_ins[i].sw_mask)){
 			/* set led when receiving a packet */
 			leds_on(btn_ins[i].led);
 			btn_ins[i].sw_state = 1;
@@ -212,15 +210,122 @@ client_relay_state_chunk_handler(void *response)
 		}
 #endif
 
+		btn_ins[i].sync_done = 1;
 
 	}
 
-	sync_done = 1;
 	/*  printf("|%.*s", len, (char *)chunk); */
 	printf("RX(%d):%s\r\n", total_len, (char *)chunk);
 }
 
 /**************************************************************************/
+
+/* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
+void
+btn_relay_state_common_handler(uint32_t btn_index, void *response)
+{
+	const uint8_t *chunk;
+	const char *state = NULL;
+	const char *mask = NULL;
+	uint32_t sw_mask = 0;
+	uint32_t sw_state = 0;
+	
+	int len;
+	int total_len = coap_get_payload(response, &chunk);
+
+
+	len = coap_get_variable((char *)chunk,total_len, "state", &state);
+	if(len > 0) {
+		sw_state = strtoul(state, NULL, 16);
+	} 
+
+	len = coap_get_variable((char *)chunk,total_len, "mask", &mask);
+	if(len > 0) {
+		sw_mask = strtoul(mask, NULL, 16);
+	}
+	printf("state=%lx,mask=%lx\r\n", sw_state,sw_mask);
+
+	if(!btn_ins[btn_index].valid){
+		return;
+	}
+#if PLATFORM_HAS_LEDS
+	if((sw_state & btn_ins[btn_index].sw_mask) == btn_ins[btn_index].sw_mask){
+		/* set led when receiving a packet */
+		leds_on(btn_ins[btn_index].led);
+		btn_ins[btn_index].sw_state = 1;
+	}
+	else{
+		leds_off(btn_ins[btn_index].led);
+		btn_ins[btn_index].sw_state = 0;
+	}
+#endif
+
+	btn_ins[btn_index].sync_done = 1;
+	/*  printf("|%.*s", len, (char *)chunk); */
+	printf("RX(%d):%s\r\n", total_len, (char *)chunk);
+}
+
+
+void btn_handler_in_same_server(uint32_t btn_index, void *response)
+{
+	int i;
+	int same_server = 0;
+
+	same_server = btn_ins[btn_index].server_id;
+
+	for(i = btn_index + 1 ; i < NUM_OF_BTN; i++){
+		if(btn_ins[i].valid == 0){
+			continue;
+		}
+		
+		if(same_server == btn_ins[i].server_id){
+			btn_relay_state_common_handler(i,response);
+		}
+	}
+
+}
+
+void
+btn_0_state_handler( void *response)
+{
+	btn_relay_state_common_handler(0,response);
+	btn_handler_in_same_server(0,response);
+}
+
+void
+btn_1_state_handler( void *response)
+{
+	btn_relay_state_common_handler(1,response);
+	btn_handler_in_same_server(0,response);
+}
+
+void
+btn_2_state_handler( void *response)
+{
+	btn_relay_state_common_handler(2,response);
+	btn_handler_in_same_server(0,response);
+}
+
+void
+btn_3_state_handler( void *response)
+{
+	btn_relay_state_common_handler(3,response);
+	btn_handler_in_same_server(0,response);
+}
+
+void
+btn_4_state_handler( void *response)
+{
+	btn_relay_state_common_handler(4,response);
+	btn_handler_in_same_server(0,response);
+}
+
+void
+btn_5_state_handler( void *response)
+{
+	btn_relay_state_common_handler(5,response);
+	btn_handler_in_same_server(0,response);
+}
 
 /*---------------------------------------------------------------------------*/
 PROCESS(coap_client_process, "CoAP client process");
@@ -399,13 +504,12 @@ notification_callback(coap_observee_t *obs, void *notification, coap_notificatio
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(coap_client_process, ev, data)
 {
-/*
-   #if WITH_COMPOWER
-   static int print = 0;
-   #endif
- */
 	static COAP_CLIENT_ARG_t* p_coap_args = NULL;
+	static uint8_t sync_done = 1;
+	static uint8_t i = 0;
 
+
+	
 	PROCESS_BEGIN();
 
 	PROCESS_PAUSE();
@@ -432,16 +536,27 @@ PROCESS_THREAD(coap_client_process, ev, data)
 		PROCESS_YIELD();
 
 		if(etimer_expired(&et)) {
-			if(sync_done == 0){
-				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
-				coap_set_header_uri_path(request, service_urls[4]);
-				PRINTF("\r\nGET: %s\r\n", service_urls[4]);
-				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
-					                  client_relay_state_chunk_handler);
-				etimer_reset(&et);
+			for(i = 0; i < NUM_OF_BTN; i++ ){
 
+				if(btn_ins[i].valid == 0){
+					continue;
+				}
+				if(btn_ins[i].sync_done == 0){
+					coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+					coap_set_header_uri_path(request, service_urls[4]);
+					PRINTF("\r\nGET: %s\r\n", service_urls[4]);
+					sync_done = 0;
+					COAP_BLOCKING_REQUEST(&server_ipaddr[btn_ins[i].server_id], REMOTE_PORT, request,
+						                  btn_ins[i].rest_handler);
+				}
+			}
+
+			if(sync_done == 0){
+				etimer_reset(&et);
 			}
 		}
+
+		
 		if(ev == tcpip_event) {
 			printf("TCPIP_HANDLER\r\n");
 			tcpip_handler();
@@ -484,8 +599,8 @@ PROCESS_THREAD(coap_client_process, ev, data)
 			generate_relay_sw_config_payload(mask,state,msg);
 			coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 			PRINTF("\r\nPUT: %s PAYLOAD: %s\r\n", service_urls[4], msg);
-			COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
-								  client_relay_state_chunk_handler);
+			COAP_BLOCKING_REQUEST(&server_ipaddr[btn_ins[btn_pressed].server_id], REMOTE_PORT, request,
+								  btn_ins[btn_pressed].rest_handler);
 		}
 #endif
 
