@@ -15,10 +15,10 @@ export MAKE=make
 endif
 
 
-.PHONY:all clean PureSwitch PureCtrlPanel
+.PHONY:all clean PureSwitch PureCtrlPanel PureBdrAgent
 
 
-all: PureSwitch PureCtrlPanel
+all: PureSwitch PureCtrlPanel PureBdrAgent
 
 
 PureSwitch:
@@ -27,6 +27,9 @@ PureSwitch:
 PureCtrlPanel:
 	$(MAKE) -C PureCtrlPanel/
 
+PureBdrAgent:
+	$(MAKE) -C PureBdrAgent/
+
 
 install:
 	$(INSTALL) -m 755 $(PROG) $(DESTDIR)/usr/local/bin/
@@ -34,6 +37,7 @@ install:
 clean:
 	$(MAKE) -C PureSwitch clean
 	$(MAKE) -C PureCtrlPanel clean
+	$(MAKE) -C PureBdrAgent clean
 
 
 
