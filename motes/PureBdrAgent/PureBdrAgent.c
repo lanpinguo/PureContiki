@@ -79,10 +79,10 @@
 #include "lib/random.h"
 #include "i2c.h"
 
-#include <cdc-eth.h>
-#include "cdc.h"
-#include <usb-api.h>
-#include "usb-core.h"
+//#include <cdc-eth.h>
+//#include "cdc.h"
+//#include <usb-api.h>
+//#include "usb-core.h"
 #include "shell-memdebug.h"
 #include "coap-server.h"
 #include "coap-client.h"

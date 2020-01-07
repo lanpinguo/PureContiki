@@ -73,6 +73,10 @@ const struct configuration_st {
   struct usb_st_interface_descriptor data;
   struct usb_st_endpoint_descriptor ep_in;
   struct usb_st_endpoint_descriptor ep_out;
+
+  struct usb_st_bos_descriptor bos;
+  struct usb_st_ext_cap_descriptor dev_ext_cap;
+  struct usb_st_ss_cap_descriptor dev_ss_cap;
 } configuration_block =
   {
     /* Configuration */
@@ -157,11 +161,37 @@ const struct configuration_st {
       0x02,
       USB_EP3_SIZE,
       0
+    },
+    {
+      sizeof(configuration_block.bos),
+      USB_DT_BOS,
+      (sizeof(configuration_block.bos) + sizeof(configuration_block.dev_ext_cap) \
+      + sizeof(configuration_block.dev_ss_cap)),
+      2,
+    },
+    {
+      sizeof(configuration_block.dev_ext_cap),
+      USB_DT_DEVICE_CAPABILITY,
+      USB_CAP_TYPE_EXT,
+      USB_LPM_SUPPORT,
+    },
+    {
+      sizeof(configuration_block.dev_ss_cap),
+      USB_DT_DEVICE_CAPABILITY,
+      USB_SS_CAP_TYPE,
+      0,
+      0x000e,
+      USB_LOW_SPEED_OPERATION,
+      1,
+      0x0065
     }
 
   };
 
 const struct usb_st_configuration_descriptor const *configuration_head =
 (struct usb_st_configuration_descriptor const *)&configuration_block;
+
+const struct usb_st_bos_descriptor  *bos_head =
+(struct usb_st_bos_descriptor const*)&configuration_block.bos;
 
 /** @} */
