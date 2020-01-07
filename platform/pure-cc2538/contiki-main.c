@@ -69,7 +69,10 @@
 #include "ieee-addr.h"
 #include "lpm.h"
 
+#if USB_ETH_CONF_ENABLE
 #include <cdc-eth.h>
+#endif
+
 #include <contikimac.h>
 
 #if PLATFORM_HAS_RELAY_SWITCH

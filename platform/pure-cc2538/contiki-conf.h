@@ -524,15 +524,6 @@ typedef uint32_t rtimer_clock_t;
 #define FLASH_OTA_BOOT_MANAGER 	1
 #endif
 
-#define USB_ETH_CONF_ENABLE     1
-#define NXP_SNIFFER_MODE        1
-
-#define DATA_IN 0x84
-#define DATA_OUT 0x02
-#define INTERRUPT_IN 0x83
-#define DATA_IN_PKT_SIZE_MAX    (USB_EP4_SIZE)
-#define INT_IN_PKT_SIZE_MAX     (USB_EP3_SIZE)
-#define DATA_OUT_PKT_SIZE_MAX   (USB_EP2_SIZE)
 
 
 #define SHELL_CONF_PROMPT

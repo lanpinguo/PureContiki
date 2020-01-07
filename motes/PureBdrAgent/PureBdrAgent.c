@@ -586,9 +586,7 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 /* The AUTOSTART_PROCESSES() definition specifices what processes to
    start when this module is loaded. We put both our processes
    there. */
-AUTOSTART_PROCESSES(&pure_x_shell_process,\
-	&coap_server_process, \
-	&coap_client_process);
+AUTOSTART_PROCESSES(&pure_x_shell_process);
 
 
 
