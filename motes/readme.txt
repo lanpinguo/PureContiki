@@ -7,3 +7,5 @@ coap server 2 fe80::0212:4b00:1940:c0e3
 2\
 tunslip6 -v5 -s /dev/ttyACM0 fd00::1/64
 
+3\
+wget -6 "http://[fd00::212:4b00:1005:fdf3]/"
