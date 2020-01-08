@@ -66,6 +66,7 @@
 #include "net/ip/uip-debug.h"
 
 #if DEBUG
+#undef PRINTF
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)

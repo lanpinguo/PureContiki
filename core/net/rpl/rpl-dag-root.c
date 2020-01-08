@@ -38,7 +38,7 @@
 
 #include <string.h>
 
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_FULL
 #include "net/ip/uip-debug.h"
 
 #define RPL_DAG_GRACE_PERIOD (CLOCK_SECOND * 20 * 1)
@@ -159,7 +159,7 @@ set_global_address(void)
     if(uip_ds6_if.addr_list[i].isused &&
        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
       uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
-      printf("\r\r\n");
+      printf("\r\n");
     }
   }
 

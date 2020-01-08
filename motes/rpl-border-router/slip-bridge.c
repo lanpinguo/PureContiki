@@ -49,6 +49,14 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 
+#if DEBUG
+#undef PRINTF
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+
+
 void set_prefix_64(uip_ipaddr_t *);
 
 static uip_ipaddr_t last_sender;
