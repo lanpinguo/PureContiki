@@ -5,5 +5,5 @@ coap server 1 fe80::0212:4b00:18f1:d9d2
 coap server 2 fe80::0212:4b00:1940:c0e3
 
 2\
-tunslip6 -s /dev/ttyACM0 fd00::1/64
+tunslip6 -v5 -s /dev/ttyACM0 fd00::1/64
 

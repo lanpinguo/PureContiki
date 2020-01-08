@@ -112,7 +112,7 @@ output(void)
     PRINT6ADDR(&UIP_IP_BUF->destipaddr);
     PRINTF("\n");
   } else {
- //   PRINTF("SUT: %u\n", uip_len);
+    PRINTF("SUT: %u\n", uip_len);
     slip_send();
   }
   return 0;
