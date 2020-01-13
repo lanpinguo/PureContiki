@@ -49,12 +49,6 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 
-#if DEBUG
-#undef PRINTF
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
 
 
 void set_prefix_64(uip_ipaddr_t *);
@@ -64,9 +58,9 @@ static uip_ipaddr_t last_sender;
 static void
 slip_input_callback(void)
 {
-  PRINTF("SIN: %u\n", uip_len);
+  PRINTF("SIN: %u\r\n", uip_len);
   if(uip_buf[0] == '!') {
-    PRINTF("Got configuration message of type %c\n", uip_buf[1]);
+    PRINTF("Got configuration message of type %c\r\n", uip_buf[1]);
     uip_clear_buf();
     if(uip_buf[1] == 'P') {
       uip_ipaddr_t prefix;
@@ -75,11 +69,11 @@ slip_input_callback(void)
       memcpy(&prefix, &uip_buf[2], 8);
       PRINTF("Setting prefix ");
       PRINT6ADDR(&prefix);
-      PRINTF("\n");
+      PRINTF("\r\n");
       set_prefix_64(&prefix);
     }
   } else if (uip_buf[0] == '?') {
-    PRINTF("Got request message of type %c\n", uip_buf[1]);
+    PRINTF("Got request message of type %c\r\n", uip_buf[1]);
     if(uip_buf[1] == 'M') {
       char* hexchar = "0123456789abcdef";
       int j;
@@ -118,9 +112,9 @@ output(void)
     PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
     PRINTF(" dst=");
     PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-    PRINTF("\n");
+    PRINTF("\r\n");
   } else {
-    PRINTF("SUT: %u\n", uip_len);
+    PRINTF("SUT: %u\r\n", uip_len);
     slip_send();
   }
   return 0;

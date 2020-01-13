@@ -62,6 +62,9 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 
+#define PRINT6ADDR_LOCAL(addr) printf(" %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x ", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
+
+
 /* A configurable function called after every RPL parent switch */
 #ifdef RPL_CALLBACK_PARENT_SWITCH
 void RPL_CALLBACK_PARENT_SWITCH(rpl_parent_t *old, rpl_parent_t *new);
@@ -99,12 +102,13 @@ rpl_print_neighbor_list(void)
     rpl_parent_t *p = nbr_table_head(rpl_parents);
     clock_time_t clock_now = clock_time();
 
-    PRINTF("RPL: MOP %u OCP %u rank %u dioint %u, nbr count %u\r\n",
+    printf("RPL: MOP %u OCP %u rank %u dioint %u, nbr count %u\r\n",
         default_instance->mop, default_instance->of->ocp, curr_rank, curr_dio_interval, uip_ds6_nbr_num());
     while(p != NULL) {
       const struct link_stats *stats = rpl_get_parent_link_stats(p);
-      PRINTF("RPL: nbr %3u %5u, %5u => %5u -- %2u %c%c (last tx %u min ago)\r\n",
-          rpl_get_parent_ipaddr(p)->u8[15],
+      printf("RPL:");
+      PRINT6ADDR_LOCAL(rpl_get_parent_ipaddr(p));
+      printf(" rank=%5u, %5u => %5u -- %2u %c%c (last tx %u min ago)\r\n",
           p->rank,
           rpl_get_parent_link_metric(p),
           rpl_rank_via_parent(p),
@@ -115,7 +119,7 @@ rpl_print_neighbor_list(void)
       );
       p = nbr_table_next(rpl_parents, p);
     }
-    PRINTF("RPL: end of list\r\n");
+    printf("RPL: end of list\r\n");
   }
 }
 /*---------------------------------------------------------------------------*/
