@@ -97,13 +97,13 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer,
 
 	PRINTF("relay-sw PUT (%s %u) : %s\r\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid,coap_req->payload);
 	if((len = REST.get_post_variable(request, "state", &state))) {
-		sw_state = atoi(state);
+		sw_state = strtoul(state, NULL, 16);
 	} else {
 		success = 0;
 	}
 
 	if(success && (len = REST.get_post_variable(request, "mask", &mask))) {
-		sw_mask = atoi(mask);
+		sw_mask = strtoul(mask, NULL, 16);
 	}
 
 	for(i = 0; i < sizeof(sw_state) * 8; i++){

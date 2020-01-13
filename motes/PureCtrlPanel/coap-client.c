@@ -455,10 +455,10 @@ generate_random_payload(int type, char *msg)
 #endif
 
 static void
-generate_relay_sw_config_payload(int mask, int state, char *msg)
+generate_relay_sw_config_payload(uint32_t mask, uint32_t state, char *msg)
 {
    /* relay-sw */
-	snprintf((char *)msg, 64, "&state=%d&mask=%d", state,mask);
+	snprintf((char *)msg, 64, "&state=%lx&mask=%lx", state,mask);
 }
 
 /*----------------------------------------------------------------------------*/
