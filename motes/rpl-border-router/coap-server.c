@@ -67,6 +67,8 @@ const char *coap_server_supported_msg = "Supported:";
 
 
 extern resource_t		res_device_sw;
+extern resource_t		res_nbr;
+
 
 
 #ifdef DCDC
@@ -81,6 +83,7 @@ static void
 start_board_resources(void)
 {
 
+	rest_activate_resource(&res_nbr,"nbr");
 	rest_activate_resource(&res_device_sw,"sw");
 
 #ifdef DCDC
