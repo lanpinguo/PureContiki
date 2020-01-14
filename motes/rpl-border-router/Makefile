@@ -12,6 +12,18 @@ CONTIKI=../..
 SMALL=1
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
+
+
+REST_RESOURCES_DIR = ./resources
+
+REST_RESOURCES_FILES += res-device.c
+
+PROJECTDIRS += $(REST_RESOURCES_DIR)
+
+PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
+
+PROJECT_SOURCEFILES += coap-server.c
+
 PROJECT_SOURCEFILES += slip-bridge.c
 
 #Simple built-in webserver is the default.
@@ -30,7 +42,7 @@ ifeq ($(MAKE_WITH_NON_STORING),1)
 CFLAGS += -DWITH_NON_STORING=1
 endif
 
-WITH_WEBSERVER=2
+WITH_WEBSERVER=0
 ifeq ($(WITH_WEBSERVER),1)
 CFLAGS += -DUIP_CONF_TCP=1
 CFLAGS += -DWEBSERVER=1
@@ -42,6 +54,8 @@ CFLAGS += -DWEBSERVER=2
 endif
 
 APPS += serial-shell 
+APPS += er-coap
+APPS += rest-engine
 
 
 ifeq ($(PREFIX),)

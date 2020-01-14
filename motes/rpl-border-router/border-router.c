@@ -60,6 +60,7 @@
 #include "lib/memb.h"
 #include "lib/random.h"
 #include "shell-memdebug.h"
+#include "coap-server.h"
 
 
 #define DEBUG DEBUG_FULL
@@ -205,7 +206,7 @@ PROCESS(border_router_process, "Border router process");
 
 #if WEBSERVER==0
 /* No webserver */
-AUTOSTART_PROCESSES(&border_router_process);
+AUTOSTART_PROCESSES(&border_router_process,&coap_server_process);
 #elif WEBSERVER>1
 /* Use an external webserver application */
 #include "webserver-nogui.h"
