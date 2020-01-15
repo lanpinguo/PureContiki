@@ -352,7 +352,7 @@ void dump_config_file(void)
 
 /*---------------------------------------------------------------------------*/
 
-int32_t ip_addr_parse(void * input, uip_ipaddr_t *ipaddr)
+static int32_t ip_addr_parse(void * input, uip_ipaddr_t *ipaddr)
 {
 	int value[10];
 	int32_t rc;
