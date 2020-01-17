@@ -305,7 +305,26 @@ PROCESS_THREAD(coap_client_process, ev, data)
 		}
 
 		if(ev == nbr_chg_event) {
+			uip_ds6_nbr_t *nbr = NULL;
+			uip_ipaddr_t *ip_addr = NULL;
+
 			printf("nbr_chg_event occur \r\n");
+			if(data == NULL) {
+				continue;
+			}
+			
+			ip_addr = ( uip_ipaddr_t *)data;
+			nbr = uip_ds6_nbr_lookup(ip_addr);
+
+			if(nbr){
+				printf("nbr_add: \r\n");
+				PRINT6ADDR(ip_addr);
+			}
+			else{
+				printf("nbr_rm: \r\n");
+				PRINT6ADDR(ip_addr);
+			}
+			
 			continue;
 		}
 

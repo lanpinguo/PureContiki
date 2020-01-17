@@ -71,6 +71,7 @@ void LINK_NEIGHBOR_CALLBACK(const linkaddr_t *addr, int status, int numtx);
 
 #ifdef UIP_CONF_DS6_NBR_CHG_NOTIFY
 process_event_t nbr_chg_event;
+static uip_ipaddr_t chg_ipaddr;
 #endif /* UIP_CONF_DS6_NBR_CHG_NOTIFY */
 
 
@@ -117,8 +118,9 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
     PRINTF(" state %u\r\n", state);
     NEIGHBOR_STATE_CHANGED(nbr);
 #ifdef UIP_CONF_DS6_NBR_CHG_NOTIFY
+	memcpy(&chg_ipaddr,&nbr->ipaddr,sizeof(uip_ipaddr_t));
 	/*broadcast to all process */
-	process_post(PROCESS_BROADCAST, nbr_chg_event, nbr);
+	process_post(PROCESS_BROADCAST, nbr_chg_event, &chg_ipaddr);
 #endif /* UIP_CONF_DS6_NBR_CHG_NOTIFY */
 	
     return nbr;
@@ -136,6 +138,7 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
 int
 uip_ds6_nbr_rm(uip_ds6_nbr_t *nbr)
 {
+  int ret;
   if(nbr != NULL) {
 #if UIP_CONF_IPV6_QUEUE_PKT
     uip_packetqueue_free(&nbr->packethandle);
@@ -143,11 +146,17 @@ uip_ds6_nbr_rm(uip_ds6_nbr_t *nbr)
     NEIGHBOR_STATE_CHANGED(nbr);
 
 #ifdef UIP_CONF_DS6_NBR_CHG_NOTIFY
+	memcpy(&chg_ipaddr,&nbr->ipaddr,sizeof(uip_ipaddr_t));
+#endif
+
+	ret = nbr_table_remove(ds6_neighbors, nbr);
+
+#ifdef UIP_CONF_DS6_NBR_CHG_NOTIFY
 	/*broadcast to all process */
 	process_post(PROCESS_BROADCAST, nbr_chg_event, nbr);
 #endif /* UIP_CONF_DS6_NBR_CHG_NOTIFY */
 
-    return nbr_table_remove(ds6_neighbors, nbr);
+    return ret;
   }
   return 0;
 }
