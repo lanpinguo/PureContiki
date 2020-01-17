@@ -35,6 +35,9 @@
 #include "net/ip/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ip/uip-udp-packet.h"
+#include "net/ip/uip-debug.h"
+
+
 #ifdef WITH_COMPOWER
 #include "powertrace.h"
 #endif
@@ -49,26 +52,8 @@
 #include "er-coap-observe-client.h"
 #include "coap-client.h"
 
-#if PLATFORM_HAS_LEDS
-#include "dev/leds.h"
-#endif
+#define MAX_PAYLOAD_LEN 	64
 
-#if PLATFORM_HAS_BUTTON
-#include "dev/button-sensor.h"
-#endif
-
-
-#define DEBUG 1
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
-#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]", (lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3], (lladdr)->addr[4], (lladdr)->addr[5])
-#else
-#define PRINTF(...)
-#define PRINT6ADDR(addr)
-#define PRINTLLADDR(addr)
-#endif
 
 /* FIXME: This server address is hard-coded for Cooja and link-local for unconnected border router. */
 /* #define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xfe80, 0, 0, 0, 0x0212, 0x7402, 0x0002, 0x0202)      / * cooja2 * / */
@@ -113,10 +98,10 @@ static uip_ipaddr_t server_ipaddr[MAX_SERVER_NUM] = {
 /**************************************************************************/
 
 /* Example URIs that can be queried. */
-#define NUMBER_OF_URLS 6
+#define NUMBER_OF_URLS 2
 /* leading and ending slashes only for demo purposes, get cropped automatically when setting the Uri-Path */
 char *service_urls[NUMBER_OF_URLS] =
-{ ".well-known/core", "/dcdc/status", "/dcdc/vdc", "/dcdc/hwcfg","relay-sw","hcho" };
+{ ".well-known/core", "/nbr" };
 
 
 
@@ -133,9 +118,20 @@ client_chunk_handler(void *response)
 	printf("RX(%d):%s\r\n", len, (char *)chunk);
 }
 
+
+
 /**************************************************************************/
 
 
+static void
+generate_nbr_notify_payload(  uip_ipaddr_t *ipaddr, int opt, char *msg)
+{
+	int len;
+	
+	len = snprintf((char *)(msg), MAX_PAYLOAD_LEN, "&ip=");
+	len += uip_ipaddr2str(ipaddr,msg,MAX_PAYLOAD_LEN - len);
+	snprintf((char *)(msg + len), MAX_PAYLOAD_LEN - len, "&opt=%d", opt);
+}
 
 
 
@@ -292,7 +288,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 
 
 	/* Indicate that The Coap Client Init has Done */
-	leds_on(1);
+	//leds_on(1);
 
 
 	while(1) {
@@ -305,8 +301,12 @@ PROCESS_THREAD(coap_client_process, ev, data)
 		}
 
 		if(ev == nbr_chg_event) {
-			uip_ds6_nbr_t *nbr = NULL;
-			uip_ipaddr_t *ip_addr = NULL;
+			static char msg[64] = "";
+			static uip_ds6_nbr_t *nbr = NULL;
+			static uip_ipaddr_t *ip_addr = NULL;
+
+			coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
+			coap_set_header_uri_path(request, service_urls[1]);
 
 			printf("nbr_chg_event occur \r\n");
 			if(data == NULL) {
@@ -316,14 +316,23 @@ PROCESS_THREAD(coap_client_process, ev, data)
 			ip_addr = ( uip_ipaddr_t *)data;
 			nbr = uip_ds6_nbr_lookup(ip_addr);
 
+
+
 			if(nbr){
-				printf("nbr_add: \r\n");
-				PRINT6ADDR(ip_addr);
+				generate_nbr_notify_payload(ip_addr,1,msg);
+				//printf("nbr_add: \r\n");
+				//PRINT6ADDR(ip_addr);
 			}
 			else{
-				printf("nbr_rm: \r\n");
-				PRINT6ADDR(ip_addr);
+				//printf("nbr_rm: \r\n");
+				//PRINT6ADDR(ip_addr);
+				generate_nbr_notify_payload(ip_addr,0,msg);
 			}
+			
+			PRINTF("\r\nPOST: %s PAYLOAD: %s\r\n", service_urls[1], msg);
+			coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
+			COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
+					                  client_chunk_handler);
 			
 			continue;
 		}
