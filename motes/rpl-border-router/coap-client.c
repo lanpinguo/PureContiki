@@ -89,6 +89,8 @@
 extern process_event_t dbg_event;
 extern process_event_t nbr_chg_event;
 
+static struct etimer et;
+static uint8_t sync_done = 0;
 
 /* static struct uip_udp_conn *client_conn; */
 static uip_ipaddr_t server_ipaddr[MAX_SERVER_NUM] = {
@@ -118,7 +120,18 @@ client_chunk_handler(void *response)
 	printf("RX(%d):%s\r\n", len, (char *)chunk);
 }
 
+/* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
+void
+client_sync_chunk_handler(void *response)
+{
+	const uint8_t *chunk;
 
+	int len = coap_get_payload(response, &chunk);
+
+	/*  printf("|%.*s", len, (char *)chunk); */
+	sync_done = 1;
+	printf("RX(%d):%s\r\n", len, (char *)chunk);
+}
 
 /**************************************************************************/
 
@@ -267,6 +280,7 @@ generate_random_payload(int type, char *msg)
 PROCESS_THREAD(coap_client_process, ev, data)
 {
 	static COAP_CLIENT_ARG_t* p_coap_args = NULL;
+	static coap_packet_t request[1];      /* This way the packet can be treated as pointer as usual. */
 
 
 	
@@ -281,11 +295,11 @@ PROCESS_THREAD(coap_client_process, ev, data)
 	print_local_addresses();
 
 	/**************************************************************************/
-	static coap_packet_t request[1];      /* This way the packet can be treated as pointer as usual. */
 
 	/* receives all CoAP messages */
 	coap_init_engine();
 
+	etimer_set(&et, 3 * CLOCK_SECOND);
 
 	/* Indicate that The Coap Client Init has Done */
 	//leds_on(1);
@@ -300,7 +314,20 @@ PROCESS_THREAD(coap_client_process, ev, data)
 			tcpip_handler();
 		}
 
-		if(ev == nbr_chg_event) {
+
+		if(etimer_expired(&et)) {
+
+			if(sync_done == 0){
+				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+				coap_set_header_uri_path(request, service_urls[1]);
+				PRINTF("\r\nGET: %s\r\n", service_urls[1]);
+				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
+					                  client_sync_chunk_handler);
+				etimer_reset(&et);
+			}
+		}
+
+		if(ev == nbr_chg_event && sync_done != 0) {
 			static char msg[64] = "";
 			static uip_ds6_nbr_t *nbr = NULL;
 			static uip_ipaddr_t *ip_addr = NULL;

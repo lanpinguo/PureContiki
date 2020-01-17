@@ -348,9 +348,10 @@ DONE:
 
 void shell_pure_init(void)
 {
-  shell_register_command(&list_neighbor_command);
-  shell_register_command(&dbg_sw_command);
-  shell_register_command(&coap_client_command);
+	dbg_event = process_alloc_event();
+	shell_register_command(&list_neighbor_command);
+	shell_register_command(&dbg_sw_command);
+	shell_register_command(&coap_client_command);
   
 }
 

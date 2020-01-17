@@ -83,6 +83,11 @@ uip_ds6_neighbors_init(void)
 {
   link_stats_init();
   nbr_table_register(ds6_neighbors, (nbr_table_callback *)uip_ds6_nbr_rm);
+  
+#ifdef UIP_CONF_DS6_NBR_CHG_NOTIFY
+  nbr_chg_event = process_alloc_event();
+#endif /* UIP_CONF_DS6_NBR_CHG_NOTIFY */
+
 }
 /*---------------------------------------------------------------------------*/
 uip_ds6_nbr_t *
