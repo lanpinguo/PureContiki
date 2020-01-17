@@ -41,7 +41,7 @@
 #define COAP_CLIENT_H_
 /*---------------------------------------------------------------------------*/
 
-#define MAX_SERVER_NUM			10
+#define MAX_SERVER_NUM			2
 
 enum {
 	COAP_CLIENT_OWN = 1,

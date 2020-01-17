@@ -80,6 +80,10 @@ typedef struct uip_ds6_nbr {
 #endif                          /*UIP_CONF_QUEUE_PKT */
 } uip_ds6_nbr_t;
 
+#ifdef UIP_CONF_DS6_NBR_CHG_NOTIFY
+extern process_event_t nbr_chg_event;
+#endif /* UIP_CONF_DS6_NBR_CHG_NOTIFY */
+
 void uip_ds6_neighbors_init(void);
 
 /** \brief Neighbor Cache basic routines */

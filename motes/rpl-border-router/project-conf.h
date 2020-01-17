@@ -64,6 +64,8 @@
 #define WEBSERVER_CONF_CFS_CONNS 2
 #endif
 
+#define UIP_CONF_DS6_NBR_CHG_NOTIFY		1
+
 /*---------------------------------------------------------------------------*/
 /** \name Button configuration*/
 

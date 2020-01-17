@@ -69,6 +69,11 @@ void LINK_NEIGHBOR_CALLBACK(const linkaddr_t *addr, int status, int numtx);
 #define LINK_NEIGHBOR_CALLBACK(addr, status, numtx)
 #endif /* UIP_CONF_DS6_LINK_NEIGHBOR_CALLBACK */
 
+#ifdef UIP_CONF_DS6_NBR_CHG_NOTIFY
+process_event_t nbr_chg_event;
+#endif /* UIP_CONF_DS6_NBR_CHG_NOTIFY */
+
+
 NBR_TABLE_GLOBAL(uip_ds6_nbr_t, ds6_neighbors);
 
 /*---------------------------------------------------------------------------*/
@@ -111,6 +116,11 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
     PRINTLLADDR(lladdr);
     PRINTF(" state %u\r\n", state);
     NEIGHBOR_STATE_CHANGED(nbr);
+#ifdef UIP_CONF_DS6_NBR_CHG_NOTIFY
+	/*broadcast to all process */
+	process_post(PROCESS_BROADCAST, nbr_chg_event, nbr);
+#endif /* UIP_CONF_DS6_NBR_CHG_NOTIFY */
+	
     return nbr;
   } else {
     PRINTF("uip_ds6_nbr_add drop ip addr ");
@@ -131,6 +141,12 @@ uip_ds6_nbr_rm(uip_ds6_nbr_t *nbr)
     uip_packetqueue_free(&nbr->packethandle);
 #endif /* UIP_CONF_IPV6_QUEUE_PKT */
     NEIGHBOR_STATE_CHANGED(nbr);
+
+#ifdef UIP_CONF_DS6_NBR_CHG_NOTIFY
+	/*broadcast to all process */
+	process_post(PROCESS_BROADCAST, nbr_chg_event, nbr);
+#endif /* UIP_CONF_DS6_NBR_CHG_NOTIFY */
+
     return nbr_table_remove(ds6_neighbors, nbr);
   }
   return 0;
