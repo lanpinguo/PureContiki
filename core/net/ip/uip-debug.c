@@ -161,7 +161,7 @@ uip_ipaddr2str(const uip_ipaddr_t *addr, char* buf, int len_max)
 #endif /* NETSTACK_CONF_WITH_IPV6 */
   if(addr == NULL) {
     printf("(NULL IP addr)");
-    return;
+    return 0;
   }
 #if NETSTACK_CONF_WITH_IPV6
   if(ip64_addr_is_ipv4_mapped_addr(addr)) {
@@ -179,26 +179,26 @@ uip_ipaddr2str(const uip_ipaddr_t *addr, char* buf, int len_max)
      *
      * [1] https://tools.ietf.org/html/rfc4291#page-4
      */
-    len = sprintf(buf,len_max,"::FFFF:%u.%u.%u.%u", addr->u8[12], addr->u8[13], addr->u8[14], addr->u8[15]);
+    len = snprintf(buf,len_max,"::FFFF:%u.%u.%u.%u", addr->u8[12], addr->u8[13], addr->u8[14], addr->u8[15]);
   } else {
     for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
       a = (addr->u8[i] << 8) + addr->u8[i + 1];
       if(a == 0 && f >= 0) {
         if(f++ == 0) {
-          len += sprintf(buf + len,len_max - len,"::");
+          len += snprintf(buf + len,len_max - len,"::");
         }
       } else {
         if(f > 0) {
           f = -1;
         } else if(i > 0) {
-          len += sprintf(buf + len,len_max - len,":");
+          len += snprintf(buf + len,len_max - len,":");
         }
-        len += sprintf(buf + len,len_max - len,"%x", a);
+        len += snprintf(buf + len,len_max - len,"%x", a);
       }
 	}
   }
 #else /* NETSTACK_CONF_WITH_IPV6 */
-  len += sprintf(buf + len,"%u.%u.%u.%u", addr->u8[0], addr->u8[1], addr->u8[2], addr->u8[3]);
+  len += snprintf(buf + len,"%u.%u.%u.%u", addr->u8[0], addr->u8[1], addr->u8[2], addr->u8[3]);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
   return len;

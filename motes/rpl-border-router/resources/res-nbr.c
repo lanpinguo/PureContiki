@@ -41,15 +41,19 @@
 #include "net/ipv6/uip-ds6.h"
 #include "rest-engine.h"
 #include "er-coap.h"
-
+#include "res_common_cfg.h"
 #include "sys/clock.h"
 #include "coap-server.h"
+#include "net/ip/uip-debug.h"
 
 #include <string.h>
 
 
 #define IPV6ADDR_FORMAT "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x"
 #define IPV6ADDR(addr) ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15]
+
+static uip_ds6_nbr_t *nbr = NULL;
+
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -61,23 +65,33 @@ res_get_handler_nbr(void *request, void *response, uint8_t *buffer,
   REST.get_header_accept(request, &accept);
 
   if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-	uip_ds6_nbr_t *nbr;
-	int num;
+    int len = 0;
+
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%s", CONTIKI_VERSION_STRING);
+    //len = snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%s", CONTIKI_VERSION_STRING);
   
 
-	num = 0;
-	for(nbr = nbr_table_head(ds6_neighbors);
-	  nbr != NULL;
-	  nbr = nbr_table_next(ds6_neighbors, nbr))
-	{
-		printf("\r\nNBR-%d:[",num);
-		num = snprintf((char *)(buffer + num), REST_MAX_CHUNK_SIZE - num,IPV6ADDR_FORMAT, IPV6ADDR(&nbr->ipaddr));
-	}
+    if(nbr == NULL){
+      nbr = nbr_table_head(ds6_neighbors);
+    }
+    else
+    {
+      nbr = nbr_table_next(ds6_neighbors, nbr);
+    }
 
-    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+    len = snprintf((char *)(buffer + len), REST_MAX_CHUNK_SIZE - len, "&nbr=");
+    if(nbr == NULL){
+      len += snprintf((char *)(buffer + len), REST_MAX_CHUNK_SIZE - len, "NULL");
+    }else
+    {
+      uip_ipaddr_t *ipaddr = &nbr->ipaddr;
+      len += uip_ipaddr2str(ipaddr,(char*)(buffer + len),REST_MAX_CHUNK_SIZE - len);
+    }
+    
+    printf("%s\r\n",buffer);
+    REST.set_response_payload(response, (uint8_t *)buffer, len);
   } else {
+
     REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
     REST.set_response_payload(response, coap_server_supported_msg,
                               strlen(coap_server_supported_msg));
@@ -85,7 +99,7 @@ res_get_handler_nbr(void *request, void *response, uint8_t *buffer,
 }
 /*---------------------------------------------------------------------------*/
 RESOURCE(res_nbr,
-         "title=\"nbr list\";rt=\"text\"",
+         "title=\"nbr next\";rt=\"text\"",
          res_get_handler_nbr,
          NULL,
          NULL,

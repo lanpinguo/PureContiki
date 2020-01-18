@@ -142,7 +142,7 @@ generate_nbr_notify_payload(  uip_ipaddr_t *ipaddr, int opt, char *msg)
 	int len;
 	
 	len = snprintf((char *)(msg), MAX_PAYLOAD_LEN, "&ip=");
-	len += uip_ipaddr2str(ipaddr,msg,MAX_PAYLOAD_LEN - len);
+	len += uip_ipaddr2str(ipaddr,msg + len,MAX_PAYLOAD_LEN - len);
 	snprintf((char *)(msg + len), MAX_PAYLOAD_LEN - len, "&opt=%d", opt);
 }
 

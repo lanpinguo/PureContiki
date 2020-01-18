@@ -28,13 +28,8 @@
 
 #define XMEM_ERASE_UNIT_SIZE 1024 /*1K*/
 
-#define MAX_COAP_PAYLOAD 64 + 1       /* +1 for the terminating zero, which is not transmitted */
+#define MAX_COAP_PAYLOAD (64 + 1)       /* +1 for the terminating zero, which is not transmitted */
 
-#define DEBUG 1
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+#include "net/ip/uip-debug.h"
 
 #endif /* __RES_COMMON_CFG_H__ */
