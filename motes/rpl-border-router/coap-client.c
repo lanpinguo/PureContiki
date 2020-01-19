@@ -91,6 +91,7 @@ extern process_event_t nbr_chg_event;
 
 static struct etimer et;
 static uint8_t sync_done = 0;
+static uint8_t ageing = 0;
 
 /* static struct uip_udp_conn *client_conn; */
 static uip_ipaddr_t server_ipaddr[MAX_SERVER_NUM] = {
@@ -116,6 +117,7 @@ client_chunk_handler(void *response)
 
 	int len = coap_get_payload(response, &chunk);
 
+	sync_done = 1;
 	/*  printf("|%.*s", len, (char *)chunk); */
 	printf("RX(%d):%s\r\n", len, (char *)chunk);
 }
@@ -323,8 +325,15 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				PRINTF("\r\nGET: %s\r\n", service_urls[1]);
 				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
 					                  client_sync_chunk_handler);
-				etimer_reset(&et);
 			}
+			else{
+				/* The live time of sync state is 5 minutes*/
+				if(++ageing > 100){
+					sync_done = 0;
+					ageing = 0;
+				}
+			}
+			etimer_reset(&et);
 		}
 
 		if(ev == nbr_chg_event && sync_done != 0) {
