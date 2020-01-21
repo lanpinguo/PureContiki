@@ -122,18 +122,6 @@ client_chunk_handler(void *response)
 	printf("RX(%d):%s\r\n", len, (char *)chunk);
 }
 
-/* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
-void
-client_sync_chunk_handler(void *response)
-{
-	const uint8_t *chunk;
-
-	int len = coap_get_payload(response, &chunk);
-
-	/*  printf("|%.*s", len, (char *)chunk); */
-	sync_done = 1;
-	printf("RX(%d):%s\r\n", len, (char *)chunk);
-}
 
 /**************************************************************************/
 
@@ -188,13 +176,12 @@ print_local_addresses(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
-set_global_address(void)
+set_global_address(  uip_ipaddr_t *ipaddr)
 {
-  uip_ipaddr_t ipaddr;
 
-  uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
-  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+  uip_ip6addr(ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+  uip_ds6_set_addr_iid(ipaddr, &uip_lladdr);
+  uip_ds6_addr_add(ipaddr, 0, ADDR_AUTOCONF);
 
 }
 
@@ -283,6 +270,10 @@ PROCESS_THREAD(coap_client_process, ev, data)
 {
 	static COAP_CLIENT_ARG_t* p_coap_args = NULL;
 	static coap_packet_t request[1];      /* This way the packet can be treated as pointer as usual. */
+	static char msg[64] = "";
+	static uip_ds6_nbr_t *nbr = NULL;
+	static uip_ipaddr_t *ip_addr = NULL;
+	static uip_ipaddr_t global_ip_addr;
 
 
 	
@@ -290,7 +281,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 
 	PROCESS_PAUSE();
 
-	set_global_address();
+	set_global_address(&global_ip_addr);
 
 	PRINTF("CoAP client process started\r\n");
 
@@ -320,11 +311,15 @@ PROCESS_THREAD(coap_client_process, ev, data)
 		if(etimer_expired(&et)) {
 
 			if(sync_done == 0){
-				coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+				coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
 				coap_set_header_uri_path(request, service_urls[1]);
-				PRINTF("\r\nGET: %s\r\n", service_urls[1]);
+				generate_nbr_notify_payload(&global_ip_addr,2,msg);
+			
+				PRINTF("\r\nPOST: %s PAYLOAD: %s\r\n", service_urls[1], msg);
+				coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
-					                  client_sync_chunk_handler);
+										client_chunk_handler);
+
 			}
 			else{
 				/* The live time of sync state is 5 minutes*/
@@ -337,9 +332,6 @@ PROCESS_THREAD(coap_client_process, ev, data)
 		}
 
 		if(ev == nbr_chg_event && sync_done != 0) {
-			static char msg[64] = "";
-			static uip_ds6_nbr_t *nbr = NULL;
-			static uip_ipaddr_t *ip_addr = NULL;
 
 			coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
 			coap_set_header_uri_path(request, service_urls[1]);
