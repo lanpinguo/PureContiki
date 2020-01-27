@@ -144,8 +144,8 @@ static uint8_t btn_pressed = 0;
 #define BTN_1_SW 	((1<<0) | (1<<1) | (1<<2) | (1<< 3) | (1<<4) )
 #define BTN_2_SW 	((1<<5) | (1<<6) | (1<< 7))
 #define BTN_3_SW 	(1<<0)
-#define BTN_4_SW 	((1 << 0) | (1 << 1) | (1 << 2))
-#define BTN_5_SW 	((1 << 0) | (1 << 1))
+#define BTN_4_SW 	((1 << 0) | (1 << 1) | (1 << 2) | (1 << 3))
+#define BTN_5_SW 	((1 << 1) | (1 << 2))
 
 static BTN_FUNC_CONFIG_t btn_ins[NUM_OF_BTN] ={
 	/* valid  sync_done  btn_index  led      server_id  sw_mask  sw_state   rest_handler*/
