@@ -91,8 +91,12 @@
 
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
+#include "relay_switch.h"
 
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
+#define RELAY_SW_ACTIVE_TIME	(60 * 60 * 6) /* 6 hours */
+#define RELAY_SW_DEACTIVE_TIME	(60 * 60 * 18) /* 18 hours */
+
 
 extern 	FUNC_DEBUG_PRINT dbg_print_csma;
 extern 	FUNC_DEBUG_PRINT dbg_print_rest_engine;
@@ -102,8 +106,11 @@ extern 	FUNC_DEBUG_PRINT dbg_print_log;
 extern  FUNC_DEBUG_PRINT dbg_print_er_coap_engine;
 extern  FUNC_DEBUG_PRINT dbg_print_er_coap_observe_client;
 extern  FUNC_DEBUG_PRINT dbg_print_coffee;
-process_event_t dbg_event;
 
+
+process_event_t dbg_event;
+static struct etimer et;
+static uint32_t sw_on_flag = 0;
 
 PROCESS_NAME(testcoffee_process);
 
@@ -382,6 +389,33 @@ shell_pure_init(void)
 }
 
 
+#define BTN_4_SW 	((1 << 0) | (1 << 1) | (1 << 2) | (1 << 3))
+
+void sw_ctrl(uint32_t active)
+{
+	int i;
+	uint32_t sw_mask = 0;
+	uint32_t sw_state = 0;
+
+	
+	if(active){
+		sw_mask = BTN_4_SW;
+		sw_state = BTN_4_SW;
+	}else{
+		sw_mask = BTN_4_SW;
+		sw_state = ~BTN_4_SW;
+	}
+	
+	for(i = 0; i < sizeof(sw_state) * 8; i++){
+		if(sw_mask & (1 << i)){
+			printf("set Relay-SW[%d] : %s\r\n",i,(sw_state & sw_mask) > 0 ? "on" : "off");
+			relay_switch_set(i,(sw_state & sw_mask));
+		}
+	}
+
+
+
+}
 
 /*---------------------------------------------------------------------------*/
 /* We first declare our processes. */
@@ -404,6 +438,35 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 #endif
 
 	hcho_sensor_init(1);  
+
+	etimer_set(&et, RELAY_SW_ACTIVE_TIME * CLOCK_SECOND);
+
+
+	while(1){
+		PROCESS_YIELD();
+
+		if(etimer_expired(&et)) {
+
+			if(sw_on_flag){
+				etimer_set(&et, RELAY_SW_DEACTIVE_TIME * CLOCK_SECOND);
+				sw_on_flag = 0;
+			}
+			else{
+				etimer_set(&et, RELAY_SW_ACTIVE_TIME * CLOCK_SECOND);
+				sw_on_flag = 1;
+			}
+
+			sw_ctrl(sw_on_flag);
+			printf("sw_on_flag : %ld\r\n",sw_on_flag);
+
+
+		
+		}
+
+		
+  }
+
+
 	PROCESS_END();
 }
 
