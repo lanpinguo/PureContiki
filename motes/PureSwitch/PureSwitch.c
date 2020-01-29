@@ -389,7 +389,7 @@ shell_pure_init(void)
 }
 
 
-#define BTN_4_SW 	((1 << 0) | (1 << 1) | (1 << 2) | (1 << 3))
+#define BTN_4_SW 	((1 << 0) | (1 << 2) | (1 << 3))
 
 void sw_ctrl(uint32_t active)
 {
