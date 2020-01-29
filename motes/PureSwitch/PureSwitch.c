@@ -110,7 +110,7 @@ extern  FUNC_DEBUG_PRINT dbg_print_coffee;
 
 process_event_t dbg_event;
 static struct etimer et;
-static uint32_t sw_on_flag = 0;
+static uint32_t sw_on_flag = 1;
 
 PROCESS_NAME(testcoffee_process);
 
@@ -440,6 +440,7 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 	hcho_sensor_init(1);  
 
 	etimer_set(&et, RELAY_SW_ACTIVE_TIME * CLOCK_SECOND);
+	sw_ctrl(sw_on_flag);
 
 
 	while(1){
