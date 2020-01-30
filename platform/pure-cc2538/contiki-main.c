@@ -361,6 +361,12 @@ main(void)
 	energest_init();
 	ENERGEST_ON(ENERGEST_TYPE_CPU);
 
+	//mac_sniffer_callback = usbeth_send;
+#if PLATFORM_HAS_RELAY_SWITCH
+		relay_switch_init();
+#endif
+
+
 	autostart_start(autostart_processes);
 
 	watchdog_start();
@@ -368,10 +374,6 @@ main(void)
 
 	cc2538_rf_set_promiscous_mode(1);
 
-	//mac_sniffer_callback = usbeth_send;
-#if PLATFORM_HAS_RELAY_SWITCH
-	relay_switch_init();
-#endif
 
 	while(1) {
 		uint8_t r;
