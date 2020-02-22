@@ -462,7 +462,7 @@ static int
 off(void)
 {
   PRINTF("RF: Off\r\n");
-#if 0
+
   /* Wait for ongoing TX to complete (e.g. this could be an outgoing ACK) */
   while(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
 
@@ -478,7 +478,7 @@ off(void)
   rf_flags &= ~RX_ACTIVE;
 
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
-#endif  
+
   return 1;
 }
 /*---------------------------------------------------------------------------*/
