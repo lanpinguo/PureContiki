@@ -202,7 +202,7 @@ void debug_led(void)
 int cc2592_init(void)
 {
   PRINTF("\r\ncc2592 init\r\n");
-  REG(GPIO_C_BASE + GPIO_DIR) |= (CC2592_PA_EN_PIN | CC2592_LNA_EN_PIN);
+  /*REG(GPIO_C_BASE + GPIO_DIR) |= (CC2592_PA_EN_PIN | CC2592_LNA_EN_PIN);*/
   REG(GPIO_D_BASE + GPIO_DIR) |= CC2592_HGM_PIN; 
   return 0;
 }
@@ -244,16 +244,9 @@ int cc2592_off(void)
 
 int rf_ext_driver_register(void)
 {
-  struct radio_extender_driver rf_ctrl =
-  {
-    .extender_init = cc2592_init,
-    .extender_rx_enable = cc2592_rx_enable,
-    .extender_tx_enable = cc2592_tx_enable,
-    .extender_hgm_enable = cc2592_hgm_enable,
-    .extender_off = cc2592_off
-  };
-
-  return cc2538_rf_ext_ctrl_register(&rf_ctrl);
+    cc2592_init();
+    cc2592_hgm_enable();
+	return 0;
 }
  
 int
