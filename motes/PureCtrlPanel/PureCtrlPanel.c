@@ -94,14 +94,6 @@
 
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 
-extern 	FUNC_DEBUG_PRINT dbg_print_csma;
-extern 	FUNC_DEBUG_PRINT dbg_print_rest_engine;
-extern 	FUNC_DEBUG_PRINT dbg_print_er_coap;
-extern 	FUNC_DEBUG_PRINT dbg_print_ip;
-extern 	FUNC_DEBUG_PRINT dbg_print_log;
-extern  FUNC_DEBUG_PRINT dbg_print_er_coap_engine;
-extern  FUNC_DEBUG_PRINT dbg_print_er_coap_observe_client;
-extern  FUNC_DEBUG_PRINT dbg_print_coffee;
 process_event_t dbg_event;
 
 
@@ -109,6 +101,7 @@ PROCESS_NAME(testcoffee_process);
 
 
 /*---------------------------------------------------------------------------*/
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -210,96 +203,80 @@ SHELL_COMMAND(dbg_sw_command,
 
 PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 {
-	static int mod_id;
-	const char *nextptr;
+	static char* argv[5];
+	static int argc;
+	static int enable = 0;
+	static int mod_start = 0;
+	static int mod_end = 0;
+	static int line_start = 0;
+	static int line_end = 0;
 	
 	
 	PROCESS_BEGIN();
 	
 	if(data != NULL) {
-	  mod_id = shell_strtolong(data, &nextptr);
-	  if(nextptr != data) {
-	  }
-	}
-	switch(mod_id){
-		case 1:
-			if(dbg_print_net){
-				dbg_print_net = NULL;
+		argc = str_split((char*)data,(char*)" ",argv,5);
+		/*printf("\r\ncoap client cli [%d] \r\n",argc);	*/
+
+		if(strncmp(argv[0], "line", 2) == 0) {
+			if(argc == 2){
+				sscanf(argv[1],"%d-%d",&line_start,&line_end);
+				enable = -1;
+				mod_start = -1;
+				mod_end = -1;
+				/*line_start = -1;*/
+				/*line_end = -1;*/
 			}
 			else{
-				dbg_print_net = printf;
+				goto ERROR;
 			}
-			break;
-		case 2:
-			if(dbg_print_csma){
-				dbg_print_csma = NULL;
-			}
-			else{
-				dbg_print_csma = printf;
-			}
-			break;
-		case 3:
-			if(dbg_print_ip){
-				(dbg_print_ip) = NULL;
-			}
-			else{
-				(dbg_print_ip) = printf;
-			}
-			break;
-		case 4:
-			if((dbg_print_log)){
-				dbg_print_log = NULL;
+			
+			
+		} 
+		else if(strncmp(argv[0], "mod", 3) == 0) {
+			if(argc == 2){
+				sscanf(argv[1],"%d-%d",&mod_start,&mod_end);
+				enable = -1;
+				/*mod_start = -1;*/
+				/*mod_end = -1;*/
+				line_start = -1;
+				line_end = -1;
 			}
 			else{
-				dbg_print_log = printf;
+				goto ERROR;
 			}
-			break;
-		case 5:
-			if(dbg_print_rest_engine){
-				dbg_print_rest_engine = NULL;
-			}
-			else{
-				dbg_print_rest_engine = printf;
-			}
-			break;
-		case 6:
-			if(dbg_print_er_coap){
-				dbg_print_er_coap = NULL;
-			}
-			else{
-				dbg_print_er_coap = printf;
-			}
-			break;
-		case 7:
-			if(dbg_print_er_coap_engine){
-				dbg_print_er_coap_engine = NULL;
-			}
-			else{
-				dbg_print_er_coap_engine = printf;
-			}
-			break;
-		case 8:
-			if(dbg_print_er_coap_observe_client){
-				dbg_print_er_coap_observe_client = NULL;
-			}
-			else{
-				dbg_print_er_coap_observe_client = printf;
-			}
-			break;
-		case 9:
-			if(dbg_print_coffee){
-				dbg_print_coffee = NULL;
-			}
-			else{
-				dbg_print_coffee = printf;
-			}
-			break;
-		default:
-			break;
+		}
+		else if(strncmp(argv[0], "enable", 3) == 0) {
+				enable = 1;
+				mod_start = -1;
+				mod_end = -1;
+				line_start = -1;
+				line_end = -1;
+		}
+		else if(strncmp(argv[0], "disable", 3) == 0) {
+				enable = 0;
+				mod_start = -1;
+				mod_end = -1;
+				line_start = -1;
+				line_end = -1;
+		}
+		else{
+			goto ERROR;
+		}
+
+
 	}
 
-	printf("\r\ntoggle module [%d] debug switch\r\n",mod_id);	
+	trace_print_filter_set(enable,mod_start,mod_end,line_start,line_end);
+	goto DONE;
 	
+ERROR:
+	printf("\r\nParameter Error !!\r\n");	
+    PROCESS_EXIT();
+DONE:	
+	printf("\r\ntoggle module debug switch\r\n"
+			"{enable:%d,mod_start:%d,mod_end:%d,line_start:%d,line_end:%d}\r\n",
+			enable,mod_start,mod_end,line_start,line_end);	
 	PROCESS_END();
 }
 

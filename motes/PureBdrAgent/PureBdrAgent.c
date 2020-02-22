@@ -223,12 +223,6 @@ PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 	}
 	switch(mod_id){
 		case 1:
-			if(dbg_print_net){
-				dbg_print_net = NULL;
-			}
-			else{
-				dbg_print_net = printf;
-			}
 			break;
 		case 2:
 			if(dbg_print_csma){

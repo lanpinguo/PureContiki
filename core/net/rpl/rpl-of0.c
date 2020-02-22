@@ -48,6 +48,7 @@
 #include "net/link-stats.h"
 
 #define DEBUG DEBUG_FULL
+#define MODULE_ID CONTIKI_MOD_RPL_OF0
 #include "net/ip/uip-debug.h"
 
 /* Constants from RFC6552. We use the default values. */

@@ -376,7 +376,7 @@ typedef uint32_t rtimer_clock_t;
 #define CC2538_RF_CONF_WITH_CC2592			1
 
 #ifndef CC2538_RF_CONF_CHANNEL
-#define CC2538_RF_CONF_CHANNEL              26
+#define CC2538_RF_CONF_CHANNEL              20
 #endif /* CC2538_RF_CONF_CHANNEL */
 
 #ifndef CC2538_RF_CONF_AUTOACK

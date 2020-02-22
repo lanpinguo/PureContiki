@@ -55,6 +55,7 @@
 #include <string.h>
 
 #define DEBUG DEBUG_FULL
+#define MODULE_ID CONTIKI_MOD_TCP
 #include "net/ip/uip-debug.h"
 
 #if UIP_LOGGING

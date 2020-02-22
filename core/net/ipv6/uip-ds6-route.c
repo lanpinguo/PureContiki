@@ -88,6 +88,7 @@ LIST(notificationlist);
 
 #undef DEBUG
 #define DEBUG DEBUG_FULL
+#define MODULE_ID CONTIKI_MOD_DS6_ROUTE
 #include "net/ip/uip-debug.h"
 
 /*---------------------------------------------------------------------------*/

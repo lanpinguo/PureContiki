@@ -75,7 +75,7 @@
 
 
 #define DEBUG DEBUG_FULL
-
+#define MODULE_ID CONTIKI_MOD_SICS
 #include "net/ip/uip-debug.h"
 
 #if DEBUG

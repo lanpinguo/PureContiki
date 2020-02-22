@@ -45,15 +45,39 @@
 #include "net/ip/uip.h"
 #include "net/linkaddr.h"
 #include <stdio.h>
+typedef enum{
+	CONTIKI_MOD_NONE ,		
+	CONTIKI_MOD_RF ,
+	CONTIKI_MOD_RF_RX,
+	CONTIKI_MOD_RF_TX,
+	CONTIKI_MOD_MAC ,		
+	CONTIKI_MOD_LINK ,		
+	CONTIKI_MOD_ND6,
+	CONTIKI_MOD_DS6_ROUTE ,		
+	CONTIKI_MOD_RPL,
+	CONTIKI_MOD_RPL_OF0,
+	CONTIKI_MOD_RPL_ICMP6,
+	CONTIKI_MOD_RPL_DAG,
+	CONTIKI_MOD_RPL_DAG_ROOT,
+	CONTIKI_MOD_DS6_NBR,
+	CONTIKI_MOD_SICS,
+	CONTIKI_MOD_NET ,		
+	CONTIKI_MOD_IP6,
+	CONTIKI_MOD_TCP,
+	CONTIKI_MOD_SLIP_BRG,
+}CONTIKI_MOD_ID_e;
+	
+typedef int (*TRACE_DEBUG_FILTER)(int mod, int line);
 
 void net_debug_lladdr_print(const uip_lladdr_t *addr);
+int trace_dbg_print(int mod, int level, const char * format,...);
+int trace_print_filter_set(int enable,int mod_start,int mod_end,int line_start, int line__end);
 
 #define DEBUG_NONE      0
 #define DEBUG_PRINT     1
 #define DEBUG_ANNOTATE  2
 #define DEBUG_FULL      DEBUG_ANNOTATE | DEBUG_PRINT
 
-extern FUNC_DEBUG_PRINT dbg_print_net;
 
 
 /* PRINTA will always print if the debug routines are called directly */
@@ -61,22 +85,14 @@ extern FUNC_DEBUG_PRINT dbg_print_net;
 #include <avr/pgmspace.h>
 #define PRINTA(FORMAT,args...) printf_P(PSTR(FORMAT),##args)
 #else
-#define PRINTA(...) do{ \
-	if(dbg_print_net){ \
-		dbg_print_net(__VA_ARGS__); \
-	}\
-}while(0) 
+#define PRINTA(...) trace_dbg_print(MODULE_ID,__LINE__,__VA_ARGS__)
 #endif
 
 #if (DEBUG) & DEBUG_ANNOTATE
 #ifdef __AVR__
 #define ANNOTATE(FORMAT,args...) printf_P(PSTR(FORMAT),##args)
 #else
-#define ANNOTATE(...) do{ \
-	if(dbg_print_net){ \
-		dbg_print_net(__VA_ARGS__); \
-	}\
-}while(0) 
+#define ANNOTATE(...) trace_dbg_print(MODULE_ID,__LINE__,__VA_ARGS__)
 #endif
 #else
 #define ANNOTATE(...)
@@ -86,12 +102,7 @@ extern FUNC_DEBUG_PRINT dbg_print_net;
 #ifdef __AVR__
 #define PRINTF(FORMAT,args...) printf_P(PSTR(FORMAT),##args)
 #else
-#define PRINTF(...) do{ \
-	if(dbg_print_net){ \
-		dbg_print_net(__VA_ARGS__); \
-	}\
-}while(0) 
-
+#define PRINTF(...) trace_dbg_print(MODULE_ID,__LINE__,__VA_ARGS__)
 #endif
 #define PRINTLLADDR(lladdr) net_debug_lladdr_print(lladdr)
 #else

@@ -60,7 +60,7 @@
 #include <string.h>
 
 #define DEBUG DEBUG_FULL
-
+#define MODULE_ID CONTIKI_MOD_RPL_ICMP6
 #include "net/ip/uip-debug.h"
 
 /*---------------------------------------------------------------------------*/

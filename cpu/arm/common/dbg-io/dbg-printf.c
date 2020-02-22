@@ -28,3 +28,11 @@ printf(const char *fmt, ...)
 }
 
 
+int
+vprintf(const char *fmt, va_list ap)
+{
+  int res;
+  res = format_str_v(&ctxt, fmt, ap);
+  return res;
+}
+

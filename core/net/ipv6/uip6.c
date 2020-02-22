@@ -96,6 +96,7 @@
 /*---------------------------------------------------------------------------*/
 
 #define DEBUG DEBUG_FULL
+#define MODULE_ID CONTIKI_MOD_IP6
 #include "net/ip/uip-debug.h"
 
 #if UIP_LOGGING == 1

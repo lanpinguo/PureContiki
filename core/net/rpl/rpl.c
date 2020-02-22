@@ -51,6 +51,7 @@
 #include "net/ipv6/multicast/uip-mcast6.h"
 
 #define DEBUG DEBUG_FULL
+#define MODULE_ID CONTIKI_MOD_RPL
 #include "net/ip/uip-debug.h"
 
 #include <limits.h>

@@ -36,7 +36,7 @@
  *         Niclas Finne <nfi@sics.se>
  *         Joakim Eriksson <joakime@sics.se>
  */
-
+#define MODULE_ID CONTIKI_MOD_NONE
 #include "net/ip/uip-debug.h"
 #include "net/ip/ip64-addr.h"
 

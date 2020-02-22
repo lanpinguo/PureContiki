@@ -53,6 +53,7 @@
 #include "net/ipv6/uip-ds6-nbr.h"
 
 #define DEBUG DEBUG_FULL
+#define MODULE_ID CONTIKI_MOD_DS6_NBR
 #include "net/ip/uip-debug.h"
 
 #ifdef UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED

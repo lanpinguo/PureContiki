@@ -39,6 +39,7 @@
 #include <string.h>
 
 #define DEBUG DEBUG_FULL
+#define MODULE_ID CONTIKI_MOD_RPL_DAG_ROOT
 #include "net/ip/uip-debug.h"
 
 #define RPL_DAG_GRACE_PERIOD (CLOCK_SECOND * 20 * 1)

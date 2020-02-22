@@ -74,20 +74,11 @@
 #define UDMA_RX_SIZE_THRESHOLD 3
 /*---------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#define DEBUG 0
-#if DEBUG
-#define DEBUG_RX 1
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+#define DEBUG DEBUG_FULL
+#define MODULE_ID CONTIKI_MOD_RF
+#include "net/net-debug.h"
 
-#if DEBUG_RX
-#define PRINTF_RX(...) printf(__VA_ARGS__)
-#else
-#define PRINTF_RX(...)
-#endif
+#define PRINTF_RX(...) PRINTF(__VA_ARGS__)
 
 
 /*---------------------------------------------------------------------------*/
