@@ -100,8 +100,11 @@
 
 
 process_event_t dbg_event;
+
+/*
 static struct etimer et;
 static uint32_t sw_on_flag = 1;
+*/
 
 PROCESS_NAME(testcoffee_process);
 
