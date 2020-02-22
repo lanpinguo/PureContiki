@@ -439,6 +439,7 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 
 	hcho_sensor_init(1);  
 
+#if 0
 	etimer_set(&et, RELAY_SW_ACTIVE_TIME * CLOCK_SECOND);
 	sw_ctrl(sw_on_flag);
 
@@ -466,7 +467,7 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 
 		
   }
-
+#endif
 
 	PROCESS_END();
 }
