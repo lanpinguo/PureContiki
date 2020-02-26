@@ -107,6 +107,9 @@ static uint32_t sw_on_flag = 1;
 */
 
 PROCESS_NAME(testcoffee_process);
+#if MAC_USING_TSCH
+PROCESS_NAME(node_process);
+#endif
 
 
 
@@ -457,8 +460,11 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 /* The AUTOSTART_PROCESSES() definition specifices what processes to
    start when this module is loaded. We put both our processes
    there. */
-AUTOSTART_PROCESSES(&pure_x_shell_process,\
-	&coap_server_process, \
+AUTOSTART_PROCESSES(&pure_x_shell_process,
+#if MAC_USING_TSCH
+	&node_process,
+#endif
+	&coap_server_process, 
 	&coap_client_process);
 
 

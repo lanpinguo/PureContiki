@@ -78,7 +78,9 @@ int trace_print_filter_set(int enable,int mod_start,int mod_end,int line_start, 
 #define DEBUG_ANNOTATE  2
 #define DEBUG_FULL      DEBUG_ANNOTATE | DEBUG_PRINT
 
-
+#ifndef MODULE_ID
+#define MODULE_ID	CONTIKI_MOD_NONE	
+#endif
 
 /* PRINTA will always print if the debug routines are called directly */
 #ifdef __AVR__

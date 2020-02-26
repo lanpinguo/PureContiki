@@ -12,7 +12,7 @@ REST_RESOURCES_FILES += res-leds.c res-relay-switch.c res-hcho.c
 PROJECTDIRS += $(REST_RESOURCES_DIR)
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
-PROJECT_SOURCEFILES += coap-server.c coap-client.c test-coffee.c
+PROJECT_SOURCEFILES += coap-server.c coap-client.c test-coffee.c 
 
 PLATFORM_HAS_RELAY_SWITCH=1
 PLATFORM_HAS_LEDS=1
@@ -23,6 +23,30 @@ APPS = serial-shell
 #APPS += ping6
 APPS += er-coap
 APPS += rest-engine
+
+#TSCH CONFIG
+MAKE_WITH_ORCHESTRA ?= 0 # force Orchestra from command line
+MAKE_WITH_SECURITY ?= 0 # force Security from command line
+USING_TSCH ?= 0 # force TSCH Selection from command line
+
+ifeq ($(USING_TSCH),1)
+
+PROJECT_SOURCEFILES +=  tsch_node.c
+
+APPS += orchestra
+MODULES += core/net/mac/tsch
+CFLAGS += -DMAC_USING_TSCH
+
+ifeq ($(MAKE_WITH_ORCHESTRA),1)
+CFLAGS += -DWITH_ORCHESTRA=1
+endif
+
+ifeq ($(MAKE_WITH_SECURITY),1)
+CFLAGS += -DWITH_SECURITY=1
+endif
+
+endif
+
 
 
 COFFEE_FILES = 4

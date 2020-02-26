@@ -15,10 +15,10 @@ export MAKE=make
 endif
 
 
-.PHONY:all clean PureSwitch PureCtrlPanel PureBdrAgent border-router
+.PHONY:all clean PureSwitch PureCtrlPanel border-router
 
 
-all: PureSwitch PureCtrlPanel PureBdrAgent border-router
+all: PureSwitch PureCtrlPanel 
 
 
 PureSwitch:
@@ -39,8 +39,8 @@ install:
 clean:
 	$(MAKE) -C PureSwitch clean
 	$(MAKE) -C PureCtrlPanel clean
-	$(MAKE) -C PureBdrAgent clean
-	$(MAKE) -C rpl-border-router clean
+	#$(MAKE) -C PureBdrAgent clean
+	#$(MAKE) -C rpl-border-router clean
 
 
 
