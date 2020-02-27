@@ -365,7 +365,7 @@ main(void)
 	watchdog_start();
 	//fade(LEDS_ORANGE);
 
-	cc2538_rf_set_promiscous_mode(1);
+	/*cc2538_rf_set_promiscous_mode(1);*/
 
 
 	while(1) {
