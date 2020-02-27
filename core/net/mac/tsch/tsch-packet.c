@@ -60,7 +60,8 @@
 #else /* TSCH_LOG_LEVEL */
 #define DEBUG DEBUG_NONE
 #endif /* TSCH_LOG_LEVEL */
-#include "net/net-debug.h"
+#define MODULE_ID CONTIKI_MOD_TSCH
+#include "net/ip/uip-debug.h"
 
 /*---------------------------------------------------------------------------*/
 /* Construct enhanced ACK packet and return ACK length */

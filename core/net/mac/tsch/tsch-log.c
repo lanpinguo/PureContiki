@@ -56,7 +56,8 @@
 #else /* TSCH_LOG_LEVEL */
 #define DEBUG DEBUG_NONE
 #endif /* TSCH_LOG_LEVEL */
-#include "net/net-debug.h"
+#define MODULE_ID CONTIKI_MOD_TSCH
+#include "net/ip/uip-debug.h"
 
 #if TSCH_LOG_LEVEL >= 2 /* Skip this file for log levels 0 or 1 */
 

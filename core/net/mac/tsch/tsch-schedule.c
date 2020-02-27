@@ -60,7 +60,8 @@
 #else /* TSCH_LOG_LEVEL */
 #define DEBUG DEBUG_NONE
 #endif /* TSCH_LOG_LEVEL */
-#include "net/net-debug.h"
+#define MODULE_ID CONTIKI_MOD_TSCH
+#include "net/ip/uip-debug.h"
 
 /* Pre-allocated space for links */
 MEMB(link_memb, struct tsch_link, TSCH_SCHEDULE_MAX_LINKS);

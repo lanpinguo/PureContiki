@@ -64,7 +64,8 @@
 #else /* TSCH_LOG_LEVEL */
 #define DEBUG DEBUG_NONE
 #endif /* TSCH_LOG_LEVEL */
-#include "net/net-debug.h"
+#define MODULE_ID CONTIKI_MOD_TSCH_SLOT
+#include "net/ip/uip-debug.h"
 
 /* TSCH debug macros, i.e. to set LEDs or GPIOs on various TSCH
  * timeslot events */

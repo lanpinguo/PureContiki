@@ -65,6 +65,8 @@ typedef enum{
 	CONTIKI_MOD_NET ,			/* 16 */
 	CONTIKI_MOD_IP6,			/* 17 */
 	CONTIKI_MOD_TCP,			/* 18 */
+	CONTIKI_MOD_TSCH,			/* 19 */
+	CONTIKI_MOD_TSCH_SLOT,		/* 20 */
 }CONTIKI_MOD_ID_e;
 	
 typedef int (*TRACE_DEBUG_FILTER)(int mod, int line);
