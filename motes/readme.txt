@@ -15,3 +15,11 @@ ping6 fd00::212:4b00:1005:fdf1
 ping6 fd00::212:4b00:18f1:d9d2
 ping6 fd00::212:4b00:1005:fdf3
 ping6 fd00::1  
+
+5、
+Compile version with using tsch as mac layer
+/work/contiki/motes (tsch-debug *)$ make USING_TSCH=1 all
+
+Compile version with using csma as mac layer
+/work/contiki/motes (tsch-debug *)$ make USING_TSCH=1 all
+
