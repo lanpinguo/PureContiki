@@ -47,6 +47,7 @@
 #endif /* WITH_ORCHESTRA */
 
 #define DEBUG DEBUG_PRINT
+#define MODULE_ID CONTIKI_MOD_TSCH
 #include "net/ip/uip-debug.h"
 
 #define CONFIG_VIA_BUTTON PLATFORM_HAS_BUTTON
