@@ -276,6 +276,8 @@ typedef uint32_t rtimer_clock_t;
 /********************* Enable TSCH *********************/
 /*******************************************************/
 
+#define TSCH_CONF_DEFAULT_HOPPING_SEQUENCE TSCH_HOPPING_SEQUENCE_1_1
+#define TSCH_CONF_RADIO_ON_DURING_TIMESLOT	1
 /* Netstack layers */
 #undef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC     tschmac_driver
