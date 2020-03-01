@@ -265,9 +265,9 @@ typedef uint32_t rtimer_clock_t;
  */
 #ifndef NETSTACK_CONF_NETWORK
 #if NETSTACK_CONF_WITH_IPV6
-#define NETSTACK_CONF_NETWORK sicslowpan_driver
+#define NETSTACK_CONF_NETWORK 								sicslowpan_driver
 #else
-#define NETSTACK_CONF_NETWORK rime_driver
+#define NETSTACK_CONF_NETWORK 								rime_driver
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 #endif /* NETSTACK_CONF_NETWORK */
 
@@ -276,31 +276,31 @@ typedef uint32_t rtimer_clock_t;
 /********************* Enable TSCH *********************/
 /*******************************************************/
 
-#define TSCH_CONF_DEFAULT_HOPPING_SEQUENCE TSCH_HOPPING_SEQUENCE_1_1
-#define TSCH_CONF_RADIO_ON_DURING_TIMESLOT	1
+#define TSCH_CONF_DEFAULT_HOPPING_SEQUENCE 					TSCH_HOPPING_SEQUENCE_4_4
+#define TSCH_CONF_RADIO_ON_DURING_TIMESLOT					1
 /* Netstack layers */
 #undef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     tschmac_driver
+#define NETSTACK_CONF_MAC     								tschmac_driver
 #undef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nordc_driver
+#define NETSTACK_CONF_RDC     								nordc_driver
 #undef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER  framer_802154
+#define NETSTACK_CONF_FRAMER  								framer_802154
 
 /* IEEE802.15.4 frame version */
 #undef FRAME802154_CONF_VERSION
-#define FRAME802154_CONF_VERSION FRAME802154_IEEE802154E_2012
+#define FRAME802154_CONF_VERSION 							FRAME802154_IEEE802154E_2012
 
 /* TSCH and RPL callbacks */
-#define RPL_CALLBACK_PARENT_SWITCH tsch_rpl_callback_parent_switch
-#define RPL_CALLBACK_NEW_DIO_INTERVAL tsch_rpl_callback_new_dio_interval
-#define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network
-#define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
+#define RPL_CALLBACK_PARENT_SWITCH 							tsch_rpl_callback_parent_switch
+#define RPL_CALLBACK_NEW_DIO_INTERVAL 						tsch_rpl_callback_new_dio_interval
+#define TSCH_CALLBACK_JOINING_NETWORK 						tsch_rpl_callback_joining_network
+#define TSCH_CALLBACK_LEAVING_NETWORK 						tsch_rpl_callback_leaving_network
 
 /* Needed for CC2538 platforms only */
 /* For TSCH we have to use the more accurate crystal oscillator
  * by default the RC oscillator is activated */
 #undef SYS_CTRL_CONF_OSC32K_USE_XTAL
-#define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
+#define SYS_CTRL_CONF_OSC32K_USE_XTAL 						1
 
 /*******************************************************/
 /******************* Configure TSCH ********************/
@@ -309,84 +309,86 @@ typedef uint32_t rtimer_clock_t;
 /* TSCH logging. 0: disabled. 1: basic log. 2: with delayed
  * log messages from interrupt */
 #undef TSCH_LOG_CONF_LEVEL
-#define TSCH_LOG_CONF_LEVEL 2
+#define TSCH_LOG_CONF_LEVEL 								2
 
 /* IEEE802.15.4 PANID */
 #undef IEEE802154_CONF_PANID
-#define IEEE802154_CONF_PANID 0xabcd
+#define IEEE802154_CONF_PANID 								0xabcd
 
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
 #undef TSCH_CONF_AUTOSTART
-#define TSCH_CONF_AUTOSTART 0
+#define TSCH_CONF_AUTOSTART 								0
 
 /* 6TiSCH minimal schedule length.
  * Larger values result in less frequent active slots: reduces capacity and saves energy. */
 #undef TSCH_SCHEDULE_CONF_DEFAULT_LENGTH
-#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 3
+#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 					3
+
+#define TSCH_CONF_CHANNEL_SCAN_DURATION						(CLOCK_SECOND * 4)
 
 #if WITH_SECURITY
 
 /* Enable security */
 #undef LLSEC802154_CONF_ENABLED
-#define LLSEC802154_CONF_ENABLED 1
+#define LLSEC802154_CONF_ENABLED 							1
 /* TSCH uses explicit keys to identify k1 and k2 */
 #undef LLSEC802154_CONF_USES_EXPLICIT_KEYS
-#define LLSEC802154_CONF_USES_EXPLICIT_KEYS 1
+#define LLSEC802154_CONF_USES_EXPLICIT_KEYS 				1
 /* TSCH uses the ASN rather than frame counter to construct the Nonce */
 #undef LLSEC802154_CONF_USES_FRAME_COUNTER
-#define LLSEC802154_CONF_USES_FRAME_COUNTER 0
+#define LLSEC802154_CONF_USES_FRAME_COUNTER 				0
 
 #endif /* WITH_SECURITY */
 
 #if WITH_ORCHESTRA
 
 /* See apps/orchestra/README.md for more Orchestra configuration options */
-#define TSCH_SCHEDULE_CONF_WITH_6TISCH_MINIMAL 0 /* No 6TiSCH minimal schedule */
-#define TSCH_CONF_WITH_LINK_SELECTOR 1 /* Orchestra requires per-packet link selection */
+#define TSCH_SCHEDULE_CONF_WITH_6TISCH_MINIMAL 				0 /* No 6TiSCH minimal schedule */
+#define TSCH_CONF_WITH_LINK_SELECTOR 						1 /* Orchestra requires per-packet link selection */
 /* Orchestra callbacks */
-#define TSCH_CALLBACK_NEW_TIME_SOURCE orchestra_callback_new_time_source
-#define TSCH_CALLBACK_PACKET_READY orchestra_callback_packet_ready
-#define NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK orchestra_callback_child_added
-#define NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK orchestra_callback_child_removed
+#define TSCH_CALLBACK_NEW_TIME_SOURCE 						orchestra_callback_new_time_source
+#define TSCH_CALLBACK_PACKET_READY 							orchestra_callback_packet_ready
+#define NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK 		orchestra_callback_child_added
+#define NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK 	orchestra_callback_child_removed
 
 #endif /* WITH_ORCHESTRA */
 
-#define TSCH_CONF_HW_FRAME_FILTERING    0
+#define TSCH_CONF_HW_FRAME_FILTERING    					0
 
 
 #else
 
 #ifndef NETSTACK_CONF_MAC
-#define NETSTACK_CONF_MAC     csma_driver
+#define NETSTACK_CONF_MAC     								csma_driver
 #endif
 
 #ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nullrdc_driver
+#define NETSTACK_CONF_RDC     								nullrdc_driver
 #endif
 
 /* Configure NullRDC for when it's selected */
-#define NULLRDC_802154_AUTOACK                  1
-#define NULLRDC_802154_AUTOACK_HW               1
+#define NULLRDC_802154_AUTOACK                  			1
+#define NULLRDC_802154_AUTOACK_HW               			1
 
 /* Configure ContikiMAC for when it's selected */
-#define CONTIKIMAC_CONF_WITH_PHASE_OPTIMIZATION 0
-#define WITH_FAST_SLEEP                         1
+#define CONTIKIMAC_CONF_WITH_PHASE_OPTIMIZATION 			0
+#define WITH_FAST_SLEEP                         			1
 
 #ifndef NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE
-#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE    8
+#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE    			8
 #endif
 
 #ifndef NETSTACK_CONF_FRAMER
 #if NETSTACK_CONF_WITH_IPV6
-#define NETSTACK_CONF_FRAMER  framer_802154
+#define NETSTACK_CONF_FRAMER  								framer_802154
 #else /* NETSTACK_CONF_WITH_IPV6 */
-#define NETSTACK_CONF_FRAMER  contikimac_framer
+#define NETSTACK_CONF_FRAMER  								contikimac_framer
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 #endif /* NETSTACK_CONF_FRAMER */
 
 #endif
 
-#define NETSTACK_CONF_RADIO   cc2538_rf_driver
+#define NETSTACK_CONF_RADIO   								cc2538_rf_driver
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -394,7 +396,7 @@ typedef uint32_t rtimer_clock_t;
  * @{
  */
 #ifndef LPM_CONF_ENABLE
-#define LPM_CONF_ENABLE       0 /**< Set to 0 to disable LPM entirely */
+#define LPM_CONF_ENABLE       								0 /**< Set to 0 to disable LPM entirely */
 #endif
 
 /**
@@ -404,11 +406,11 @@ typedef uint32_t rtimer_clock_t;
  * 0 for PM0, 1 for PM1 and 2 for PM2
  */
 #ifndef LPM_CONF_MAX_PM
-#define LPM_CONF_MAX_PM       1
+#define LPM_CONF_MAX_PM       								1
 #endif
 
 #ifndef LPM_CONF_STATS
-#define LPM_CONF_STATS        0 /**< Set to 1 to enable LPM-related stats */
+#define LPM_CONF_STATS        								0 /**< Set to 1 to enable LPM-related stats */
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -424,7 +426,7 @@ typedef uint32_t rtimer_clock_t;
  * 1 => Use a hardcoded address, configured by IEEE_ADDR_CONF_ADDRESS
  */
 #ifndef IEEE_ADDR_CONF_HARDCODED
-#define IEEE_ADDR_CONF_HARDCODED             0
+#define IEEE_ADDR_CONF_HARDCODED             				0
 #endif
 
 /**
@@ -432,7 +434,7 @@ typedef uint32_t rtimer_clock_t;
  * is defined as 1
  */
 #ifndef IEEE_ADDR_CONF_ADDRESS
-#define IEEE_ADDR_CONF_ADDRESS { 0x00, 0x12, 0x4B, 0x00, 0x89, 0xAB, 0xCD, 0xEF }
+#define IEEE_ADDR_CONF_ADDRESS 								{ 0x00, 0x12, 0x4B, 0x00, 0x89, 0xAB, 0xCD, 0xEF }
 #endif
 
 /**
@@ -442,7 +444,7 @@ typedef uint32_t rtimer_clock_t;
  * 1 => Use the secondary address location
  */
 #ifndef IEEE_ADDR_CONF_USE_SECONDARY_LOCATION
-#define IEEE_ADDR_CONF_USE_SECONDARY_LOCATION 0
+#define IEEE_ADDR_CONF_USE_SECONDARY_LOCATION 				0
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
