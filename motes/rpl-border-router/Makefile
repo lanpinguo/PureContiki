@@ -58,6 +58,30 @@ APPS += er-coap
 APPS += rest-engine
 
 
+#TSCH CONFIG
+MAKE_WITH_ORCHESTRA ?= 0 # force Orchestra from command line
+MAKE_WITH_SECURITY ?= 0 # force Security from command line
+USING_TSCH ?= 0 # force TSCH Selection from command line
+
+ifeq ($(USING_TSCH),1)
+
+PROJECT_SOURCEFILES +=  tsch_node.c
+
+APPS += orchestra
+MODULES += core/net/mac/tsch
+CFLAGS += -DMAC_USING_TSCH
+
+ifeq ($(MAKE_WITH_ORCHESTRA),1)
+CFLAGS += -DWITH_ORCHESTRA=1
+endif
+
+ifeq ($(MAKE_WITH_SECURITY),1)
+CFLAGS += -DWITH_SECURITY=1
+endif
+
+endif
+
+
 ifeq ($(PREFIX),)
  PREFIX = fd00::1/64
 endif
