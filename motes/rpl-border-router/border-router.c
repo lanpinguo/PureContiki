@@ -453,8 +453,8 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
 }
 AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 
-static const char *TOP = "<html><head><title>ContikiRPL</title></head><body>\n";
-static const char *BOTTOM = "</body></html>\n";
+static const char *TOP = "<html><head><title>ContikiRPL</title></head><body>\r\n";
+static const char *BOTTOM = "</body></html>\r\n";
 #if BUF_USES_STACK
 static char *bufptr, *bufend;
 #define ADD(...) do {                                                   \
@@ -549,7 +549,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
       ipaddr_add(&nbr->ipaddr);
 #endif
 
-      ADD("\n");
+      ADD("\r\n");
 #if BUF_USES_STACK
       if(bufptr > bufend - 45) {
         SEND_STRING(&s->sout, buf);
@@ -562,7 +562,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
       }
 #endif
   }
-  ADD("</pre>Routes<pre>\n");
+  ADD("</pre>Routes<pre>\r\n");
   SEND_STRING(&s->sout, buf);
 #if BUF_USES_STACK
   bufptr = buf; bufend = bufptr + sizeof(buf);
@@ -598,9 +598,9 @@ PT_THREAD(generate_routes(struct httpd_state *s))
     ADD("/%u (via ", r->length);
     ipaddr_add(uip_ds6_route_nexthop(r));
     if(1 || (r->state.lifetime < 600)) {
-      ADD(") %lus\n", (unsigned long)r->state.lifetime);
+      ADD(") %lus\r\n", (unsigned long)r->state.lifetime);
     } else {
-      ADD(")\n");
+      ADD(")\r\n");
     }
     SEND_STRING(&s->sout, buf);
 #if BUF_USES_STACK
@@ -612,7 +612,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
   ADD("</pre>");
 
 #if RPL_WITH_NON_STORING
-  ADD("Links<pre>\n");
+  ADD("Links<pre>\r\n");
   SEND_STRING(&s->sout, buf);
 #if BUF_USES_STACK
   bufptr = buf; bufend = bufptr + sizeof(buf);
@@ -654,10 +654,10 @@ PT_THREAD(generate_routes(struct httpd_state *s))
       ADD(" (parent: ");
       ipaddr_add(&parent_ipaddr);
       if(1 || (link->lifetime < 600)) {
-        ADD(") %us\n", (unsigned int)link->lifetime); // iotlab printf does not have %lu
-        //ADD(") %lus\n", (unsigned long)r->state.lifetime);
+        ADD(") %us\r\n", (unsigned int)link->lifetime); // iotlab printf does not have %lu
+        //ADD(") %lus\r\n", (unsigned long)r->state.lifetime);
       } else {
-        ADD(")\n");
+        ADD(")\r\n");
       }
       SEND_STRING(&s->sout, buf);
 #if BUF_USES_STACK
@@ -702,14 +702,14 @@ print_local_addresses(void)
   int i;
   uint8_t state;
 
-  PRINTA("Server IPv6 addresses:\n");
+  PRINTA("Server IPv6 addresses:\r\n");
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused &&
        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
       PRINTA(" ");
       uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTA("\n");
+      PRINTA("\r\n");
     }
   }
 }
@@ -739,7 +739,7 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
   dag = rpl_set_root(RPL_DEFAULT_INSTANCE, &ipaddr);
   if(dag != NULL) {
     rpl_set_prefix(dag, &prefix, 64);
-    PRINTF("created a new RPL dag\n");
+    PRINTF("created a new RPL dag\r\n");
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -767,10 +767,10 @@ PROCESS_THREAD(border_router_process, ev, data)
 
 	SENSORS_ACTIVATE(button_sensor);
 
-	printf("RPL-Border router started\n");
+	printf("RPL-Border router started\r\n");
 
 #if MAC_USING_TSCH
-	printf("RPL-Border use TSCH\n");
+	printf("RPL-Border use TSCH\r\n");
 	if(LLSEC802154_ENABLED) {
 		  node_role = role_6dr_sec;
 	} else {
@@ -789,14 +789,20 @@ PROCESS_THREAD(border_router_process, ev, data)
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 	}
 	
-#if WITH_ORCHESTRA
-	orchestra_init();
-#endif /* WITH_ORCHESTRA */
-
+#if MAC_USING_TSCH 
+	printf("RPL-Border Now turn the radio on\r\n");
+	NETSTACK_MAC.on();
+#else
 	/* Now turn the radio on, but disable radio duty cycling.
 	* Since we are the DAG root, reception delays would constrain mesh throughbut.
 	*/
 	NETSTACK_MAC.off(1);
+#endif
+
+#if WITH_ORCHESTRA
+	orchestra_init();
+#endif /* WITH_ORCHESTRA */
+
 
 #if DEBUG || 1
 	print_local_addresses();
@@ -805,7 +811,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 	while(1) {
 		PROCESS_YIELD();
 		if (ev == sensors_event && data == &button_sensor) {
-			PRINTF("Initiating global repair\n");
+			PRINTF("Initiating global repair\r\n");
 			rpl_repair_root(RPL_DEFAULT_INSTANCE);
 		}
 	}
