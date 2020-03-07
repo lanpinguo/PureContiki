@@ -63,6 +63,13 @@
 #include "coap-server.h"
 #include "coap-client.h"
 
+#if MAC_USING_TSCH
+#include "net/mac/tsch/tsch.h"
+#endif
+#if WITH_ORCHESTRA
+#include "orchestra.h"
+#endif /* WITH_ORCHESTRA */
+
 
 #define DEBUG DEBUG_FULL
 #define MODULE_ID CONTIKI_MOD_NONE
@@ -75,10 +82,6 @@
 #define PRINTF(...)
 #endif
 
-
-extern 	FUNC_DEBUG_PRINT dbg_print_csma;
-extern 	FUNC_DEBUG_PRINT dbg_print_ip;
-extern 	FUNC_DEBUG_PRINT dbg_print_log;
 
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
@@ -120,50 +123,80 @@ SHELL_COMMAND(dbg_sw_command,
 
 PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 {
-	static int mod_id;
-	const char *nextptr;
+	static char* argv[5];
+	static int argc;
+	static int enable = 0;
+	static int mod_start = 0;
+	static int mod_end = 0;
+	static int line_start = 0;
+	static int line_end = 0;
 	
 	
 	PROCESS_BEGIN();
 	
 	if(data != NULL) {
-	  mod_id = shell_strtolong(data, &nextptr);
-	  if(nextptr != data) {
-	  }
-	}
-	switch(mod_id){
-		case 1:
-			break;
-		case 2:
-			if(dbg_print_csma){
-				dbg_print_csma = NULL;
+		argc = str_split((char*)data,(char*)" ",argv,5);
+		/*printf("\r\ncoap client cli [%d] \r\n",argc);	*/
+
+		if(strncmp(argv[0], "line", 2) == 0) {
+			if(argc == 2){
+				sscanf(argv[1],"%d-%d",&line_start,&line_end);
+				enable = -1;
+				mod_start = -1;
+				mod_end = -1;
+				/*line_start = -1;*/
+				/*line_end = -1;*/
 			}
 			else{
-				dbg_print_csma = printf;
+				goto ERROR;
 			}
-			break;
-		case 3:
-			if(dbg_print_ip){
-				(dbg_print_ip) = NULL;
+			
+			
+		} 
+		else if(strncmp(argv[0], "mod", 3) == 0) {
+			if(argc == 2){
+				sscanf(argv[1],"%d-%d",&mod_start,&mod_end);
+				enable = -1;
+				/*mod_start = -1;*/
+				/*mod_end = -1;*/
+				line_start = -1;
+				line_end = -1;
 			}
 			else{
-				(dbg_print_ip) = printf;
+				goto ERROR;
 			}
-			break;
-		case 4:
-			if((dbg_print_log)){
-				dbg_print_log = NULL;
-			}
-			else{
-				dbg_print_log = printf;
-			}
-			break;
-		default:
-			break;
+		}
+		else if(strncmp(argv[0], "enable", 3) == 0) {
+				enable = 1;
+				mod_start = -1;
+				mod_end = -1;
+				line_start = -1;
+				line_end = -1;
+		}
+		else if(strncmp(argv[0], "disable", 3) == 0) {
+				enable = 0;
+				mod_start = -1;
+				mod_end = -1;
+				line_start = -1;
+				line_end = -1;
+		}
+		else{
+			goto ERROR;
+		}
+
+
 	}
 
-	printf("\r\ntoggle module [%d] debug switch\r\n",mod_id);	
+	trace_print_filter_set(enable,mod_start,mod_end,line_start,line_end);
+	goto DONE;
 	
+ERROR:
+	printf("\r\nParameter Error !!\r\n");	
+    PROCESS_EXIT();
+DONE:	
+	printf("\r\ntoggle module debug switch\r\n"
+			"{enable:%d,mod_start:%d,mod_end:%d,line_start:%d,line_end:%d}\r\n",
+			enable,mod_start,mod_end,line_start,line_end);	
 	PROCESS_END();
 }
 
@@ -713,6 +746,9 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
 PROCESS_THREAD(border_router_process, ev, data)
 {
 	static struct etimer et;
+	static enum { role_6ln, role_6dr, role_6dr_sec } node_role;
+
+
 
 	PROCESS_BEGIN();
 
@@ -731,13 +767,19 @@ PROCESS_THREAD(border_router_process, ev, data)
 
 	SENSORS_ACTIVATE(button_sensor);
 
-	PRINTF("RPL-Border router started\n");
-#if 0
-	/* The border router runs with a 100% duty cycle in order to ensure high
-	packet reception rates.
-	Note if the MAC RDC is not turned off now, aggressive power management of the
-	cpu will interfere with establishing the SLIP connection */
-	NETSTACK_MAC.off(1);
+	printf("RPL-Border router started\n");
+
+#if MAC_USING_TSCH
+	printf("RPL-Border use TSCH\n");
+	if(LLSEC802154_ENABLED) {
+		  node_role = role_6dr_sec;
+	} else {
+		  node_role = role_6dr;
+	}
+	printf("Init: node starting with role %s\r\n",
+	     node_role == role_6ln ? "6ln" : (node_role == role_6dr) ? "6dr" : "6dr-sec");
+	tsch_set_pan_secured(LLSEC802154_ENABLED && (node_role == role_6dr_sec));
+
 #endif
 
 	/* Request prefix until it has been received */
@@ -746,6 +788,10 @@ PROCESS_THREAD(border_router_process, ev, data)
 		request_prefix();
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 	}
+	
+#if WITH_ORCHESTRA
+	orchestra_init();
+#endif /* WITH_ORCHESTRA */
 
 	/* Now turn the radio on, but disable radio duty cycling.
 	* Since we are the DAG root, reception delays would constrain mesh throughbut.

@@ -65,7 +65,7 @@ USING_TSCH ?= 0 # force TSCH Selection from command line
 
 ifeq ($(USING_TSCH),1)
 
-PROJECT_SOURCEFILES +=  tsch_node.c
+#PROJECT_SOURCEFILES +=  tsch_node.c
 
 APPS += orchestra
 MODULES += core/net/mac/tsch
