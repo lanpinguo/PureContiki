@@ -168,7 +168,7 @@ PROCESS_THREAD(node_process, ev, data)
   static enum { role_6ln, role_6dr, role_6dr_sec } node_role;
   node_role = role_6ln;
 
-  int coordinator_candidate = 1;
+  int coordinator_candidate = 0;
 
 
   if(coordinator_candidate) {
