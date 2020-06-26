@@ -41,7 +41,7 @@
 #include "net/ipv6/uip-ds6.h"
 #include "rest-engine.h"
 #include "er-coap.h"
-#include "res_common_cfg.h"
+/*#include "res_common_cfg.h"*/
 #include "sys/clock.h"
 #include "coap-server.h"
 #include "net/ip/uip-debug.h"
@@ -88,7 +88,7 @@ res_get_handler_nbr(void *request, void *response, uint8_t *buffer,
       len += uip_ipaddr2str(ipaddr,(char*)(buffer + len),REST_MAX_CHUNK_SIZE - len);
     }
     
-    printf("%s\r\n",buffer);
+    /*printf("%s\r\n",buffer);*/
     REST.set_response_payload(response, (uint8_t *)buffer, len);
   } else {
 
