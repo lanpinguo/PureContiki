@@ -90,7 +90,7 @@ extern process_event_t dbg_event;
 extern process_event_t nbr_chg_event;
 
 static struct etimer et;
-static uint8_t sync_done = 0;
+uint8_t sync_done = 0;
 static uint8_t ageing = 0;
 
 /* static struct uip_udp_conn *client_conn; */
@@ -323,7 +323,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 			}
 			else{
 				/* The live time of sync state is 5 minutes*/
-				if(++ageing > 100){
+				if(++ageing > 10){
 					sync_done = 0;
 					ageing = 0;
 				}

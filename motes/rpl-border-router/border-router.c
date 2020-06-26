@@ -342,8 +342,9 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 			}
 			goto DONE;
 		}
-		else if(strncmp(argv[0], "dump", 4) == 0) {
-			dump_server_addr();
+		else if(strncmp(argv[0], "sync", 4) == 0) {
+			extern uint8_t sync_done ;
+			sync_done = 0;
 		}
 		else if(strncmp(argv[0], "state", 5) == 0) {
 			coap_args.mod_id = COAP_CLIENT_SW_ST;
