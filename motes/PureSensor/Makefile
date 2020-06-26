@@ -5,7 +5,7 @@ TARGET = pure-cc2538
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
-REST_RESOURCES_DIR = ./resources
+REST_RESOURCES_DIR = ./resources ../common_resources
 
 REST_RESOURCES_FILES += res-defines.c res-device.c res-leds.c res-sensors.c  
 

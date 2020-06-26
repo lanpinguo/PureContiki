@@ -42,8 +42,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *coap_server_supported_msg = "Supported:";
-const char *coap_server_not_found_msg = "Resource not found";
 
 /*---------------------------------------------------------------------------*/
 /* Common resources */
@@ -64,6 +62,8 @@ extern resource_t 		res_device_hw;
 extern resource_t 		res_device_uptime;
 extern resource_t 		res_device_cfg_reset;
 
+extern resource_t 		res_temperature;
+extern resource_t 		res_humidity;
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -76,6 +76,8 @@ start_board_resources(void)
 	rest_activate_resource(&res_device_uptime, "uptime");
 	rest_activate_resource(&res_device_hw, "hw");
 	rest_activate_resource(&res_device_cfg_reset, "cfg-reset");
+	rest_activate_resource(&res_temperature, "temperature");
+	rest_activate_resource(&res_humidity, "humidity");
 
 }
 
