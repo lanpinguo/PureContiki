@@ -41,6 +41,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+const char *coap_server_supported_msg = "Supported:";
+const char *coap_server_not_found_msg = "Resource not found";
+
 /*---------------------------------------------------------------------------*/
 /* Common resources */
 /*
@@ -54,18 +58,11 @@
 /*extern resource_t  res_dc_status_obs; */
 /*extern resource_t  res_dc_status, */
 extern resource_t		res_leds;
-#if PLATFORM_HAS_RELAY_SWITCH
-extern resource_t		res_relay_switch;
-#endif
-
-#ifdef CO2
-extern resource_t		res_dc_co2;
-#endif
-#ifdef DCDC
-extern resource_t 		res_dc_status_obs;
-extern resource_t 		res_dc_vdc;
-extern resource_t 		res_dc_hwcfg;
-#endif	
+extern resource_t		res_device_model;
+extern resource_t		res_device_sw;
+extern resource_t 		res_device_hw;
+extern resource_t 		res_device_uptime;
+extern resource_t 		res_device_cfg_reset;
 
 
 /*---------------------------------------------------------------------------*/
@@ -74,19 +71,11 @@ start_board_resources(void)
 {
 
 	rest_activate_resource(&res_leds, "lt");
-#if PLATFORM_HAS_RELAY_SWITCH
-	rest_activate_resource(&res_relay_switch,"relay-sw");
-#endif
-#ifdef CO2
-	rest_activate_resource(&res_dc_co2, "dcdc/co2");
-#endif
-
-#ifdef DCDC
-	rest_activate_resource(&res_dc_status_obs, "dcdc/status");
-	/*  rest_activate_resource(&res_dc_status, "dcdc/status"); */
-	rest_activate_resource(&res_dc_vdc, "dcdc/vdc");
-	rest_activate_resource(&res_dc_hwcfg, "dcdc/hwcfg");
-#endif
+	rest_activate_resource(&res_device_model,"model");
+	rest_activate_resource(&res_device_sw, "sw");
+	rest_activate_resource(&res_device_uptime, "uptime");
+	rest_activate_resource(&res_device_hw, "hw");
+	rest_activate_resource(&res_device_cfg_reset, "cfg-reset");
 
 }
 

@@ -27,47 +27,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup cc26xx-web-demo
  * @{
  *
  * \file
- *  CoAP resource handler for the Sensortag-CC26xx sensors
+ *     A PureX-specific CoAP defines
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "rest-engine.h"
-#include "er-coap.h"
-#include "coap-server.h"
 
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
+const char *coap_server_supported_msg = "Supported:";
+const char *coap_server_not_found_msg = "Resource not found";
 
 
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-/* HTU-21 sensor resources and handler: Temperature, Humidity */
-static void
-res_get_handler_temp(void *request, void *response, uint8_t *buffer,
-                         uint16_t preferred_size, int32_t *offset)
-{
-
-}
-/*---------------------------------------------------------------------------*/
-static void
-res_get_handler_humidity(void *request, void *response, uint8_t *buffer,
-                             uint16_t preferred_size, int32_t *offset)
-{
-
-}
-/*---------------------------------------------------------------------------*/
-RESOURCE(res_temp, "title=\"Temperature\";rt=\"C\"",
-         res_get_handler_temp, NULL, NULL, NULL);
-
-RESOURCE(res_hum, "title=\"Humidity\";rt=\"%RH\"",
-         res_get_handler_humidity, NULL, NULL, NULL);
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-/** @} */
