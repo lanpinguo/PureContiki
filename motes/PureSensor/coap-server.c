@@ -70,14 +70,14 @@ static void
 start_board_resources(void)
 {
 
-	rest_activate_resource(&res_leds, "lt");
+	rest_activate_resource(&res_temperature, "temperature");
+	rest_activate_resource(&res_humidity, "humidity");
+	rest_activate_resource(&res_leds, "leds");
 	rest_activate_resource(&res_device_model,"model");
 	rest_activate_resource(&res_device_sw, "sw");
 	rest_activate_resource(&res_device_uptime, "uptime");
 	rest_activate_resource(&res_device_hw, "hw");
-	rest_activate_resource(&res_device_cfg_reset, "cfg-reset");
-	rest_activate_resource(&res_temperature, "temperature");
-	rest_activate_resource(&res_humidity, "humidity");
+	rest_activate_resource(&res_device_cfg_reset, "cfg-rst");
 
 }
 

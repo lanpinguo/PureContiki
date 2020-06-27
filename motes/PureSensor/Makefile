@@ -12,7 +12,7 @@ REST_RESOURCES_FILES += res-defines.c res-device.c res-leds.c res-sensors.c
 PROJECTDIRS += $(REST_RESOURCES_DIR)
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
-PROJECT_SOURCEFILES += coap-server.c coap-client.c test-coffee.c
+PROJECT_SOURCEFILES += coap-server.c test-coffee.c
 
 PLATFORM_HAS_RELAY_SWITCH=0
 PLATFORM_HAS_BUTTON = 1

@@ -41,7 +41,7 @@
 #define COAP_SERVER_H_
 /*---------------------------------------------------------------------------*/
 #define MOTE_HW_VERSION	"1.0.0"
-#define MOTE_MODEL		"Sensor1,0"
+#define MOTE_MODEL		"Sensor-1,0"
 #define MOTE_SW_VERSION	"1.0.0"
 
 /*---------------------------------------------------------------------------*/

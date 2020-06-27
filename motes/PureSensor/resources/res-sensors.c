@@ -40,7 +40,7 @@
 #include "rest-engine.h"
 #include "er-coap.h"
 #include "coap-server.h"
-
+#include "res_common_cfg.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -102,36 +102,42 @@ res_get_handler_temp(void *request, void *response,
 							uint8_t *buffer, uint16_t preferred_size,
 							int32_t *offset)
 {
-  /*
-   * For minimal complexity, request query and options should be ignored for GET on observable resources.
-   * Otherwise the requests must be stored with the observer list and passed by REST.notify_subscribers().
-   * This would be a TODO in the corresponding files in contiki/apps/erbium/!
-   */
+	/*
+	* For minimal complexity, request query and options should be ignored for GET on observable resources.
+	* Otherwise the requests must be stored with the observer list and passed by REST.notify_subscribers().
+	* This would be a TODO in the corresponding files in contiki/apps/erbium/!
+	*/
 
-  float temperature = 34;
+	float temperature = sensors_get_temperature();
+	unsigned int accept = -1;
+	int a,b;
 
-  unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%3.2f", temperature);
+	a = (int)(temperature);
+	b = (temperature - a) * 100;
+	
+	REST.get_header_accept(request, &accept);
 
-    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_JSON) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'temperature':%3.2f}", temperature);
+	if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+		REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+		snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d.%d", a, b);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    const char *msg = "Supporting content-types text/plain and application/json";
-    REST.set_response_payload(response, msg, strlen(msg));
-  }
+		REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+	} else if(accept == REST.type.APPLICATION_JSON) {
+		REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+		snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'temperature':%d.%d}", a, b);
 
-  REST.set_header_max_age(response, MAX_AGE);
+		REST.set_response_payload(response, buffer, strlen((char *)buffer));
+	} else {
+		REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
+		const char *msg = "Supporting content-types text/plain and application/json";
+		REST.set_response_payload(response, msg, strlen(msg));
+	}
 
-  /* The REST.subscription_handler() will be called for observable resources by the REST framework. */
+	PRINTF("%s",buffer);
+	/*REST.set_header_max_age(response, MAX_AGE);*/
+
+	/* The REST.subscription_handler() will be called for observable resources by the REST framework. */
 }
 
 /*
@@ -141,17 +147,17 @@ res_get_handler_temp(void *request, void *response,
 static void
 res_periodic_handler_temp()
 {
-  int temperature = 28;
+	int temperature = sensors_get_temperature();
 
-  ++interval_counter;
+	++interval_counter;
 
-  if((fabs(temperature - temperature_old) >= CHANGE && interval_counter >= INTERVAL_MIN) || 
-     interval_counter >= INTERVAL_MAX) {
-     interval_counter = 0;
-     temperature_old = temperature;
-    /* Notify the registered observers which will trigger the res_get_handler to create the response. */
-    REST.notify_subscribers(&res_temperature);
-  }
+	if((fabs(temperature - temperature_old) >= CHANGE && interval_counter >= INTERVAL_MIN) || 
+		interval_counter >= INTERVAL_MAX) {
+		interval_counter = 0;
+		temperature_old = temperature;
+		/* Notify the registered observers which will trigger the res_get_handler to create the response. */
+		REST.notify_subscribers(&res_temperature);
+	}
 }
 
 static void
@@ -159,36 +165,42 @@ res_get_handler_hum(void *request, void *response,
 							uint8_t *buffer, uint16_t preferred_size,
 							int32_t *offset)
 {
-  /*
-   * For minimal complexity, request query and options should be ignored for GET on observable resources.
-   * Otherwise the requests must be stored with the observer list and passed by REST.notify_subscribers().
-   * This would be a TODO in the corresponding files in contiki/apps/erbium/!
-   */
+	/*
+	* For minimal complexity, request query and options should be ignored for GET on observable resources.
+	* Otherwise the requests must be stored with the observer list and passed by REST.notify_subscribers().
+	* This would be a TODO in the corresponding files in contiki/apps/erbium/!
+	*/
 
-  float humidity = 55;
+	float humidity = sensors_get_humidity();
+	unsigned int accept = -1;
+	int a,b;
 
-  unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%3.2f", humidity);
+	a = (int)(humidity);
+	b = (humidity - a) * 100;
+	
+	REST.get_header_accept(request, &accept);
 
-    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_JSON) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'humidity':%3.2f}", humidity);
+	if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+		REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+		snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d.%d", a, b);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    const char *msg = "Supporting content-types text/plain and application/json";
-    REST.set_response_payload(response, msg, strlen(msg));
-  }
+		REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+	} else if(accept == REST.type.APPLICATION_JSON) {
+		REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+		snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'humidity':%d.%d}", a, b);
 
-  REST.set_header_max_age(response, MAX_AGE);
+		REST.set_response_payload(response, buffer, strlen((char *)buffer));
+	} else {
+		REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
+		const char *msg = "Supporting content-types text/plain and application/json";
+		REST.set_response_payload(response, msg, strlen(msg));
+	}
 
-  /* The REST.subscription_handler() will be called for observable resources by the REST framework. */
+	PRINTF("%s",buffer);
+	/*REST.set_header_max_age(response, MAX_AGE);*/
+
+	/* The REST.subscription_handler() will be called for observable resources by the REST framework. */
 }
 
 /*
@@ -198,17 +210,17 @@ res_get_handler_hum(void *request, void *response,
 static void
 res_periodic_handler_hum()
 {
-  float humidity = 28;
+	float humidity = sensors_get_humidity();
 
-  ++interval_counter;
+	++interval_counter;
 
-  if((fabs(humidity - humidity_old) >= CHANGE && interval_counter >= INTERVAL_MIN) || 
-     interval_counter >= INTERVAL_MAX) {
-     interval_counter = 0;
-     humidity_old = humidity;
-    /* Notify the registered observers which will trigger the res_get_handler to create the response. */
-    REST.notify_subscribers(&res_humidity);
-  }
+	if((fabs(humidity - humidity_old) >= CHANGE && interval_counter >= INTERVAL_MIN) || 
+		interval_counter >= INTERVAL_MAX) {
+		interval_counter = 0;
+		humidity_old = humidity;
+		/* Notify the registered observers which will trigger the res_get_handler to create the response. */
+		REST.notify_subscribers(&res_humidity);
+	}
 }
 
 
