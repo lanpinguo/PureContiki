@@ -311,9 +311,11 @@ typedef uint32_t rtimer_clock_t;
 #undef TSCH_LOG_CONF_LEVEL
 #define TSCH_LOG_CONF_LEVEL 								2
 
+#define TSCH_CONF_JOIN_MY_PANID_ONLY    					1
+
 /* IEEE802.15.4 PANID */
 #undef IEEE802154_CONF_PANID
-#define IEEE802154_CONF_PANID 								0xabcd
+#define IEEE802154_CONF_PANID 								0x1234
 
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
 #undef TSCH_CONF_AUTOSTART
