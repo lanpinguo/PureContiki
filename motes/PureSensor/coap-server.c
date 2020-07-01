@@ -64,6 +64,8 @@ extern resource_t 		res_device_cfg_reset;
 
 extern resource_t 		res_temperature;
 extern resource_t 		res_humidity;
+extern resource_t 		res_co2;
+extern resource_t 		res_tvoc;
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -72,6 +74,8 @@ start_board_resources(void)
 
 	rest_activate_resource(&res_temperature, "temperature");
 	rest_activate_resource(&res_humidity, "humidity");
+	rest_activate_resource(&res_co2, "co2");
+	rest_activate_resource(&res_tvoc, "tvoc");
 	rest_activate_resource(&res_leds, "leds");
 	rest_activate_resource(&res_device_model,"model");
 	rest_activate_resource(&res_device_sw, "sw");

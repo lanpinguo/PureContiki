@@ -344,11 +344,22 @@ uint8_t CRC8(uint8_t crc, uint8_t byte)
 int sensors_init(void)
 {
 	uint8_t rc;
+	uint8_t buf[2] = {0x20,0x03};
 
+	
 	i2c_init(GPIO_D_NUM,1,GPIO_D_NUM,0,I2C_SCL_NORMAL_BUS_SPEED);
 	printf("\r\ni2c_init done %x \r\n",(int)(2^16));
 
+	/* Reset HTU-21 */
 	rc = i2c_single_send(0x40,0xfe);
+	if(rc){
+		printf("Reset chip error (%x)\r\n",rc);
+		return -1;
+	}
+
+
+	/* Init_air_quality SGP-30 */
+	rc = i2c_burst_send(0x58,buf,2);
 	if(rc){
 		printf("Reset chip error (%x)\r\n",rc);
 		return -1;
@@ -448,6 +459,122 @@ error_process:
 	return 0;
 no_error:
 	return RH;
+}
+
+
+/*---------------------------------------------------------------------------*/
+uint16_t sensors_get_co2(void)
+{
+	uint8_t rc;
+	uint8_t buf[8];
+	uint16_t tmp;
+	uint8_t acc;
+  
+
+
+
+	buf[0] = 0x20;
+	buf[1] = 0x08;
+	rc = i2c_burst_send(0x58,buf,2);
+	if(rc){
+		printf("Trigger temp measure error(%x)\r\n",rc);
+		goto error_process;
+	}
+	
+	rc = i2c_burst_receive(0x58,buf,6);
+	if(rc){
+		printf("receive temp measure error(%x)\r\n",rc);
+		goto error_process;
+	}
+	acc = CRC8(0,buf[0]);
+	acc = CRC8(acc,buf[1]);
+
+	if(acc != buf[2]){
+		printf("Read error: %02x%02x ,crc %02x, acc = %02x\r\n",buf[0],buf[1],buf[2],acc);
+	}
+
+	tmp = (buf[0]<<8) | (buf[1]);
+
+	goto no_error;
+
+
+
+error_process:
+	buf[0] = 0x00;
+	buf[1] = 0x06;
+	rc = i2c_burst_send(0x58,buf,2);
+	if(rc){
+		printf("Reset chip error (%x)\r\n",rc);
+	}
+	buf[0] = 0x20;
+	buf[1] = 0x03;
+	rc = i2c_burst_send(0x58,buf,2);
+	if(rc){
+		printf("init sensor error (%x)\r\n",rc);
+	}
+	return 0;
+no_error:
+
+	return tmp;
+}
+
+/*---------------------------------------------------------------------------*/
+
+
+/*---------------------------------------------------------------------------*/
+uint16_t sensors_get_tvoc(void)
+{
+	uint8_t rc;
+	uint8_t buf[8];
+	uint16_t tmp;
+	uint8_t acc;
+  
+
+
+
+	buf[0] = 0x20;
+	buf[1] = 0x08;
+	rc = i2c_burst_send(0x58,buf,2);
+	if(rc){
+		printf("Trigger temp measure error(%x)\r\n",rc);
+		goto error_process;
+	}
+	
+	rc = i2c_burst_receive(0x58,buf,6);
+	if(rc){
+		printf("receive temp measure error(%x)\r\n",rc);
+		goto error_process;
+	}
+	acc = CRC8(0,buf[3]);
+	acc = CRC8(acc,buf[4]);
+
+	if(acc != buf[5]){
+		printf("Read error: %02x%02x ,crc %02x, acc = %02x\r\n",buf[0],buf[1],buf[2],acc);
+	}
+
+	tmp = (buf[3]<<8) | (buf[4]);
+
+	goto no_error;
+
+
+
+error_process:
+	buf[0] = 0x00;
+	buf[1] = 0x06;
+	rc = i2c_burst_send(0x58,buf,2);
+	if(rc){
+		printf("Reset chip error (%x)\r\n",rc);
+	}
+	buf[0] = 0x20;
+	buf[1] = 0x03;
+	rc = i2c_burst_send(0x58,buf,2);
+	if(rc){
+		printf("init sensor error (%x)\r\n",rc);
+	}
+	return 0;
+no_error:
+
+	return tmp;
 }
 
 

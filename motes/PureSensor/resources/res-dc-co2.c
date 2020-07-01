@@ -58,10 +58,6 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
 
   int co2 = 0; //co2_sa_kxx_sensor.value(CO2_SA_KXX_CO2); // 0 is CO2_SA_KXX_CO2
 
-#if PLATFORM_HAS_LEDS
-  /* set red led when receiving a packet */
-  leds_on(LEDS_RED);
-#endif
 
   PRINTF("dcdc/co2 GET (%s %u)\r\n", coap_req->type == COAP_TYPE_CON ? "CON" : "NON", coap_req->mid);
 
@@ -74,9 +70,5 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
 /*    snprintf((char *)buffer, MAX_COAP_PAYLOAD, "VMX\t%d.000\nIMX\t%d.000\nINT\t%d\r\n", v_max, i_max, interval)); */
     snprintf((char *)buffer, MAX_COAP_PAYLOAD, "CO2\t%d\r\n", co2));
 
-#if PLATFORM_HAS_LEDS
-  /* set yellow led when sending packet */
-  leds_on(LEDS_YELLOW);
-#endif
 }
 

@@ -48,7 +48,19 @@
 
 float sensors_get_temperature(void);
 float sensors_get_humidity(void);
+uint16_t sensors_get_co2(void);
+uint16_t sensors_get_tvoc(void);
 
+
+static void res_get_handler_co2(void *request, void *response,
+							uint8_t *buffer, uint16_t preferred_size,
+							int32_t *offset);
+static void res_periodic_handler_co2();
+
+static void res_get_handler_tvoc(void *request, void *response,
+							uint8_t *buffer, uint16_t preferred_size,
+							int32_t *offset);
+static void res_periodic_handler_tvoc();
 
 static void res_get_handler_temp(void *request, void *response,
 							uint8_t *buffer, uint16_t preferred_size,
@@ -70,11 +82,33 @@ static void res_periodic_handler_hum();
 static int32_t interval_counter = INTERVAL_MIN;
 static float temperature_old = 0;
 static float humidity_old = 0;
+static uint16_t co2_old = 0;
+static uint16_t tvoc_old = 0;
 
 
 /*---------------------------------------------------------------------------*/
 /* HTU-21 sensor resources and handler: Temperature, Humidity */
 /*---------------------------------------------------------------------------*/
+
+PERIODIC_RESOURCE(res_co2,
+		"title=\"co2\";rt=\"C\"",
+		res_get_handler_co2,
+		NULL,
+		NULL,
+		NULL,
+		CLOCK_SECOND,
+		res_periodic_handler_co2);
+
+PERIODIC_RESOURCE(res_tvoc,
+		"title=\"tvoc\";rt=\"C\"",
+		res_get_handler_tvoc,
+		NULL,
+		NULL,
+		NULL,
+		CLOCK_SECOND,
+		res_periodic_handler_tvoc);
+
+
 PERIODIC_RESOURCE(res_temperature,
 		"title=\"Temperature\";rt=\"C\"",
 		res_get_handler_temp,
@@ -95,7 +129,132 @@ PERIODIC_RESOURCE(res_humidity,
 		CLOCK_SECOND,
 		res_periodic_handler_hum);
 /*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 
+
+static void
+res_get_handler_co2(void *request, void *response,
+							uint8_t *buffer, uint16_t preferred_size,
+							int32_t *offset)
+{
+	/*
+	* For minimal complexity, request query and options should be ignored for GET on observable resources.
+	* Otherwise the requests must be stored with the observer list and passed by REST.notify_subscribers().
+	* This would be a TODO in the corresponding files in contiki/apps/erbium/!
+	*/
+
+	float co2 = sensors_get_co2();
+	unsigned int accept = -1;
+	int a,b;
+
+
+	a = (int)(co2);
+	b = (co2 - a) * 100;
+	
+	REST.get_header_accept(request, &accept);
+
+	if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+		REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+		snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d.%d", a, b);
+
+		REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+	} else if(accept == REST.type.APPLICATION_JSON) {
+		REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+		snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'co2':%d.%d}", a, b);
+
+		REST.set_response_payload(response, buffer, strlen((char *)buffer));
+	} else {
+		REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
+		const char *msg = "Supporting content-types text/plain and application/json";
+		REST.set_response_payload(response, msg, strlen(msg));
+	}
+
+	PRINTF("%s",buffer);
+	/*REST.set_header_max_age(response, MAX_AGE);*/
+
+	/* The REST.subscription_handler() will be called for observable resources by the REST framework. */
+}
+
+/*
+ * Additionally, a handler function named [resource name]_handler must be implemented for each PERIODIC_RESOURCE.
+ * It will be called by the REST manager process with the defined period.
+ */
+static void
+res_periodic_handler_co2()
+{
+	uint16_t co2 = sensors_get_co2();
+
+	++interval_counter;
+
+	if((abs(co2 - co2_old) >= CHANGE && interval_counter >= INTERVAL_MIN) || 
+		interval_counter >= INTERVAL_MAX) {
+		interval_counter = 0;
+		co2_old = co2;
+		/* Notify the registered observers which will trigger the res_get_handler to create the response. */
+		REST.notify_subscribers(&res_co2);
+	}
+}
+
+/*---------------------------------------------------------------------------*/
+
+
+static void
+res_get_handler_tvoc(void *request, void *response,
+							uint8_t *buffer, uint16_t preferred_size,
+							int32_t *offset)
+{
+	/*
+	* For minimal complexity, request query and options should be ignored for GET on observable resources.
+	* Otherwise the requests must be stored with the observer list and passed by REST.notify_subscribers().
+	* This would be a TODO in the corresponding files in contiki/apps/erbium/!
+	*/
+
+	uint16_t tvoc = sensors_get_tvoc();
+	unsigned int accept = -1;
+	
+	REST.get_header_accept(request, &accept);
+
+	if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+		REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+		snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d", tvoc);
+
+		REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+	} else if(accept == REST.type.APPLICATION_JSON) {
+		REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+		snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'tvoc':%d}", tvoc);
+
+		REST.set_response_payload(response, buffer, strlen((char *)buffer));
+	} else {
+		REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
+		const char *msg = "Supporting content-types text/plain and application/json";
+		REST.set_response_payload(response, msg, strlen(msg));
+	}
+
+	PRINTF("%s",buffer);
+	/*REST.set_header_max_age(response, MAX_AGE);*/
+
+	/* The REST.subscription_handler() will be called for observable resources by the REST framework. */
+}
+
+/*
+ * Additionally, a handler function named [resource name]_handler must be implemented for each PERIODIC_RESOURCE.
+ * It will be called by the REST manager process with the defined period.
+ */
+static void
+res_periodic_handler_tvoc()
+{
+	uint16_t tvoc = sensors_get_tvoc();
+
+	++interval_counter;
+
+	if((abs(tvoc - tvoc_old) >= CHANGE && interval_counter >= INTERVAL_MIN) || 
+		interval_counter >= INTERVAL_MAX) {
+		interval_counter = 0;
+		tvoc_old = tvoc;
+		/* Notify the registered observers which will trigger the res_get_handler to create the response. */
+		REST.notify_subscribers(&res_tvoc);
+	}
+}
 
 static void
 res_get_handler_temp(void *request, void *response,
@@ -147,7 +306,7 @@ res_get_handler_temp(void *request, void *response,
 static void
 res_periodic_handler_temp()
 {
-	int temperature = sensors_get_temperature();
+	float temperature = sensors_get_temperature();
 
 	++interval_counter;
 
