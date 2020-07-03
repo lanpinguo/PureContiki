@@ -94,6 +94,9 @@
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 process_event_t dbg_event;
+static struct etimer et;
+static uint16_t sgp30_measure_value[2];
+extern const struct sensors_sensor sgp30_sensor;
 
 
 PROCESS_NAME(testcoffee_process);
@@ -395,7 +398,7 @@ float sensors_get_temperature(void)
 	acc = CRC8(acc,buf[1]);
 
 	if(acc != buf[2]){
-		printf("Read error: %02x%02x ,crc %02x, acc = %02x\r\n",buf[0],buf[1],buf[2],acc);
+		printf("Read temp error: %02x%02x ,crc %02x, acc = %02x\r\n",buf[0],buf[1],buf[2],acc);
 	}
 
 	tmp = (buf[0]<<8) | (buf[1] & 0xFC);
@@ -408,7 +411,7 @@ float sensors_get_temperature(void)
 error_process:
 	rc = i2c_single_send(0x40,0xfe);
 	if(rc){
-		printf("Reset chip error (%x)\r\n",rc);
+		printf("Reset htu-21 chip error (%x)\r\n",rc);
 	}
 	return 0;
 no_error:
@@ -433,14 +436,14 @@ float sensors_get_humidity(void)
 	}
 	rc = i2c_burst_receive(0x40,buf,3);
 	if(rc){
-		printf("receive temp measure error(%x)\r\n",rc);
+		printf("receive humidity measure error(%x)\r\n",rc);
 		goto error_process;
 	}
 	acc = CRC8(0,buf[0]);
 	acc = CRC8(acc,buf[1]);
 
 	if(acc != buf[2]){
-		printf("Read error: %02x%02x ,crc %02x, acc = %02x\r\n",buf[0],buf[1],buf[2],acc);
+		printf("Read humidity error: %02x%02x ,crc %02x, acc = %02x\r\n",buf[0],buf[1],buf[2],acc);
 	}
 
 	tmp = (buf[0]<<8) | (buf[1] & 0xFC);
@@ -454,7 +457,7 @@ float sensors_get_humidity(void)
 error_process:
 	rc = i2c_single_send(0x40,0xfe);
 	if(rc){
-		printf("Reset chip error (%x)\r\n",rc);
+		printf("Reset htu-21 chip error (%x)\r\n",rc);
 	}
 	return 0;
 no_error:
@@ -465,57 +468,7 @@ no_error:
 /*---------------------------------------------------------------------------*/
 uint16_t sensors_get_co2(void)
 {
-	uint8_t rc;
-	uint8_t buf[8];
-	uint16_t tmp;
-	uint8_t acc;
-  
-
-
-
-	buf[0] = 0x20;
-	buf[1] = 0x08;
-	rc = i2c_burst_send(0x58,buf,2);
-	if(rc){
-		printf("Trigger temp measure error(%x)\r\n",rc);
-		goto error_process;
-	}
-	
-	rc = i2c_burst_receive(0x58,buf,6);
-	if(rc){
-		printf("receive temp measure error(%x)\r\n",rc);
-		goto error_process;
-	}
-	acc = CRC8(0,buf[0]);
-	acc = CRC8(acc,buf[1]);
-
-	if(acc != buf[2]){
-		printf("Read error: %02x%02x ,crc %02x, acc = %02x\r\n",buf[0],buf[1],buf[2],acc);
-	}
-
-	tmp = (buf[0]<<8) | (buf[1]);
-
-	goto no_error;
-
-
-
-error_process:
-	buf[0] = 0x00;
-	buf[1] = 0x06;
-	rc = i2c_burst_send(0x58,buf,2);
-	if(rc){
-		printf("Reset chip error (%x)\r\n",rc);
-	}
-	buf[0] = 0x20;
-	buf[1] = 0x03;
-	rc = i2c_burst_send(0x58,buf,2);
-	if(rc){
-		printf("init sensor error (%x)\r\n",rc);
-	}
-	return 0;
-no_error:
-
-	return tmp;
+	return sgp30_sensor.value(0);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -524,6 +477,7 @@ no_error:
 /*---------------------------------------------------------------------------*/
 uint16_t sensors_get_tvoc(void)
 {
+#if 0
 	uint8_t rc;
 	uint8_t buf[8];
 	uint16_t tmp;
@@ -531,25 +485,24 @@ uint16_t sensors_get_tvoc(void)
   
 
 
-
 	buf[0] = 0x20;
 	buf[1] = 0x08;
 	rc = i2c_burst_send(0x58,buf,2);
 	if(rc){
-		printf("Trigger temp measure error(%x)\r\n",rc);
+		printf("Trigger tvoc measure error(%x)\r\n",rc);
 		goto error_process;
 	}
-	
+
 	rc = i2c_burst_receive(0x58,buf,6);
 	if(rc){
-		printf("receive temp measure error(%x)\r\n",rc);
+		printf("receive tvoc measure error(%x)\r\n",rc);
 		goto error_process;
 	}
-	acc = CRC8(0,buf[3]);
+	acc = CRC8(0xff,buf[3]);
 	acc = CRC8(acc,buf[4]);
 
 	if(acc != buf[5]){
-		printf("Read error: %02x%02x ,crc %02x, acc = %02x\r\n",buf[0],buf[1],buf[2],acc);
+		printf("Read tvoc error: %02x%02x ,crc %02x, acc = %02x\r\n",buf[3],buf[4],buf[5],acc);
 	}
 
 	tmp = (buf[3]<<8) | (buf[4]);
@@ -559,23 +512,122 @@ uint16_t sensors_get_tvoc(void)
 
 
 error_process:
-	buf[0] = 0x00;
-	buf[1] = 0x06;
-	rc = i2c_burst_send(0x58,buf,2);
-	if(rc){
-		printf("Reset chip error (%x)\r\n",rc);
-	}
 	buf[0] = 0x20;
 	buf[1] = 0x03;
 	rc = i2c_burst_send(0x58,buf,2);
 	if(rc){
-		printf("init sensor error (%x)\r\n",rc);
+		printf("init tvoc sensor error (%x)\r\n",rc);
 	}
 	return 0;
 no_error:
 
 	return tmp;
+#endif	
+
+	return 0;
 }
+
+PROCESS(sgp30_driver_process, "SGP30 Sensor Driver");
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(sgp30_driver_process, ev, data)
+{
+	static uint8_t buf[8];
+	uint8_t rc;
+	uint8_t acc;
+
+	
+	PROCESS_BEGIN();
+
+	buf[0] = 0x20;
+	buf[1] = 0x03;
+	/* Init_air_quality SGP-30 */
+	rc = i2c_burst_send(0x58,buf,2);
+	if(rc){
+		printf("Reset chip error (%x)\r\n",rc);
+		return -1;
+	}
+	
+	etimer_set(&et, CLOCK_SECOND * 2 );
+	PROCESS_YIELD();
+
+	while(1) 
+	{
+
+		buf[0] = 0x20;
+		buf[1] = 0x08;
+		rc = i2c_burst_send(0x58,buf,2);
+		if(rc){
+			printf("Trigger co2 measure error(%x)\r\n",rc);
+			continue;
+		}
+		
+		etimer_set(&et, CLOCK_SECOND / 5);
+		PROCESS_YIELD();
+		if(etimer_expired(&et)) {
+			rc = i2c_burst_receive(0x58,buf,6);
+			if(rc){
+				printf("receive co2 measure error(%x)\r\n",rc);
+				continue;
+			}
+			acc = CRC8(0xff,buf[0]);
+			acc = CRC8(acc,buf[1]);
+
+			if(acc != buf[2]){
+				printf("Read co2 error: %02x%02x ,crc %02x, acc = %02x\r\n",buf[0],buf[1],buf[2],acc);
+			}
+			sgp30_measure_value[0] = (buf[0]<<8) | (buf[1]);
+			printf("Read co2 : %d \r\n",sgp30_measure_value[0]);
+
+			acc = CRC8(0xff,buf[3]);
+			acc = CRC8(acc,buf[4]);
+
+			if(acc != buf[5]){
+				printf("Read tvoc error: %02x%02x ,crc %02x, acc = %02x\r\n",buf[3],buf[4],buf[5],acc);
+			}
+
+			sgp30_measure_value[1] = (buf[3]<<8) | (buf[4]);
+			printf("Read tvoc : %d \r\n",sgp30_measure_value[1]);
+			
+
+		}
+		
+		etimer_set(&et, CLOCK_SECOND * 5 );
+		PROCESS_YIELD();
+		
+	}
+
+	PROCESS_END();
+}
+
+/*---------------------------------------------------------------------------*/
+static int
+value(int type)
+{
+	if((uint32_t)type > 1){
+		return 0;
+	}
+	return sgp30_measure_value[type];
+}
+/*---------------------------------------------------------------------------*/
+static int
+configure(int type, int value)
+{
+	switch(type) {
+		case SENSORS_HW_INIT:
+
+		break;
+	}
+	return 0;
+}
+/*---------------------------------------------------------------------------*/
+static int
+status(int type)
+{
+	return 1;
+}
+/*---------------------------------------------------------------------------*/
+SENSORS_SENSOR(sgp30_sensor, "SGP30", value, configure, status);
+
 
 
 /*---------------------------------------------------------------------------*/
@@ -618,6 +670,7 @@ AUTOSTART_PROCESSES(&pure_x_shell_process,
 #if MAC_USING_TSCH
 	&node_process,
 #endif
+	&sgp30_driver_process,
 	&coap_server_process);
 
 
