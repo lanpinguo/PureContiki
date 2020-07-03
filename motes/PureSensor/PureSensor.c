@@ -576,7 +576,7 @@ PROCESS_THREAD(sgp30_driver_process, ev, data)
 				printf("Read co2 error: %02x%02x ,crc %02x, acc = %02x\r\n",buf[0],buf[1],buf[2],acc);
 			}
 			sgp30_measure_value[0] = (buf[0]<<8) | (buf[1]);
-			printf("Read co2 : %d \r\n",sgp30_measure_value[0]);
+			/*printf("Read co2 : %d \r\n",sgp30_measure_value[0]);*/
 
 			acc = CRC8(0xff,buf[3]);
 			acc = CRC8(acc,buf[4]);
@@ -586,7 +586,7 @@ PROCESS_THREAD(sgp30_driver_process, ev, data)
 			}
 
 			sgp30_measure_value[1] = (buf[3]<<8) | (buf[4]);
-			printf("Read tvoc : %d \r\n",sgp30_measure_value[1]);
+			/*printf("Read tvoc : %d \r\n",sgp30_measure_value[1]);*/
 			
 
 		}
