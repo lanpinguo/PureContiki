@@ -355,8 +355,12 @@ main(void)
 	ENERGEST_ON(ENERGEST_TYPE_CPU);
 
 	//mac_sniffer_callback = usbeth_send;
+#if PLATFORM_HAS_LEDS
+	leds_arch_init();
+#endif
+
 #if PLATFORM_HAS_RELAY_SWITCH
-		relay_switch_init();
+	relay_switch_init();
 #endif
 
 

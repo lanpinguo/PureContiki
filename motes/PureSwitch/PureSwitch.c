@@ -92,6 +92,8 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 #include "relay_switch.h"
+#include "dev/leds.h"
+
 
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define RELAY_SW_ACTIVE_TIME	(60 * 60 * 6) /* 6 hours */
@@ -420,6 +422,10 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 
 	hcho_sensor_init(1);  
 
+	/* Defalut disable status indication leds*/
+	leds_arch_set(0x0);
+
+	
 #if 0
 	etimer_set(&et, RELAY_SW_ACTIVE_TIME * CLOCK_SECOND);
 	sw_ctrl(sw_on_flag);
