@@ -15,6 +15,7 @@ ping6 fd00::212:4b00:1005:fdf1
 ping6 fd00::212:4b00:18f1:d9d2
 ping6 fd00::212:4b00:1005:fdf3
 ping6 fd00::212:4b00:1940:c08f
+ping6 fd00::212:4b00:1940:c0d5
 ping6 fd00::1  
 
 5、
