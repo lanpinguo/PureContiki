@@ -116,7 +116,7 @@ PROCESS_THREAD(coap_server_process, ev, data)
 	start_board_resources();
 
 	/* enable show switch state */
-	leds_on(1);
+	/*leds_on(1);*/
 
 	/* Define application-specific events here. */
 	while(1) {
