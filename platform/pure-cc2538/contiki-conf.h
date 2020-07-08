@@ -621,8 +621,16 @@ typedef uint32_t rtimer_clock_t;
 
 #define SHELL_CONF_PROMPT
 
+#define SPI_CONF_DEFAULT_INSTANCE			0
+#define SPI0_CLK_PORT						GPIO_C_NUM
+#define SPI0_CLK_PIN						4
+#define SPI0_TX_PORT						GPIO_C_NUM
+#define SPI0_TX_PIN							5
+#define SPI0_RX_PORT						GPIO_C_NUM
+#define SPI0_RX_PIN							7
 
-
+#undef XMEM_ERASE_UNIT_SIZE
+#define XMEM_ERASE_UNIT_SIZE				(64 * 1024)
 
 /** @} */
 /*---------------------------------------------------------------------------*/

@@ -43,9 +43,30 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "spi-arch.h"
 #include "dev/spi.h"
 #include "dev/xmem.h"
 #include "dev/watchdog.h"
+
+#include "contiki-conf.h"
+
+/*
+ * SPI bus - W25QXX external flash configuration.
+ */
+
+#define FLASH_PWR       				3       /* P4.3 Output */
+#define FLASH_CS        				4       /* P4.4 Output */
+#define FLASH_HOLD      				7       /* P4.7 Output */
+
+/* Enable/disable flash access to the SPI bus (active low). */
+
+#define SPI_FLASH_ENABLE()  			( 0 )
+#define SPI_FLASH_DISABLE() 			( 0 )
+
+#define SPI_FLASH_HOLD()                ( 0 )
+#define SPI_FLASH_UNHOLD()              ( 0 )
+
+
 
 #if 0
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -68,15 +89,12 @@
 static void
 write_enable(void)
 {
-  int s;
 
-  s = splhigh();
   SPI_FLASH_ENABLE();
   
   SPI_WRITE(SPI_FLASH_INS_WREN);
 
   SPI_FLASH_DISABLE();
-  splx(s);
 }
 /*---------------------------------------------------------------------------*/
 static unsigned
@@ -84,9 +102,6 @@ read_status_register(void)
 {
   unsigned char u;
 
-  int s;
-
-  s = splhigh();
   SPI_FLASH_ENABLE();
   
   SPI_WRITE(SPI_FLASH_INS_RDSR);
@@ -95,7 +110,6 @@ read_status_register(void)
   SPI_READ(u);
 
   SPI_FLASH_DISABLE();
-  splx(s);
 
   return u;
 }
@@ -125,7 +139,6 @@ erase_sector(unsigned long offset)
   wait_ready();
   write_enable();
 
-  s = splhigh();
   SPI_FLASH_ENABLE();
   
   SPI_WRITE_FAST(SPI_FLASH_INS_SE);
@@ -135,7 +148,6 @@ erase_sector(unsigned long offset)
   SPI_WAITFORTx_ENDED();
 
   SPI_FLASH_DISABLE();
-  splx(s);
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -147,16 +159,14 @@ xmem_init(void)
   int s;
   spi_init();
 
-  P4DIR |= BV(FLASH_CS) | BV(FLASH_HOLD) | BV(FLASH_PWR);
-  P4OUT |= BV(FLASH_PWR);       /* P4.3 Output, turn on power! */
+  //P4DIR |= BV(FLASH_CS) | BV(FLASH_HOLD) | BV(FLASH_PWR);
+  //P4OUT |= BV(FLASH_PWR);       /* P4.3 Output, turn on power! */
 
   /* Release from Deep Power-down */
-  s = splhigh();
   SPI_FLASH_ENABLE();
   SPI_WRITE_FAST(SPI_FLASH_INS_RES);
   SPI_WAITFORTx_ENDED();
   SPI_FLASH_DISABLE();		/* Unselect flash. */
-  splx(s);
 
   SPI_FLASH_UNHOLD();
 }
@@ -166,13 +176,11 @@ xmem_pread(void *_p, int size, unsigned long offset)
 {
   unsigned char *p = _p;
   const unsigned char *end = p + size;
-  int s;
 
   wait_ready();
 
   ENERGEST_ON(ENERGEST_TYPE_FLASH_READ);
 
-  s = splhigh();
   SPI_FLASH_ENABLE();
 
   SPI_WRITE_FAST(SPI_FLASH_INS_READ);
@@ -189,7 +197,6 @@ xmem_pread(void *_p, int size, unsigned long offset)
   }
 
   SPI_FLASH_DISABLE();
-  splx(s);
 
   ENERGEST_OFF(ENERGEST_TYPE_FLASH_READ);
 

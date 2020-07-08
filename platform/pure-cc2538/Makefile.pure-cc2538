@@ -6,6 +6,9 @@ endif
 
 CONTIKI_TARGET_DIRS = . dev
 
+CONTIKI_TARGET_SOURCEFILES += xmem.c 
+
+
 ifdef PLATFORM_HAS_LEDS
 ifneq (0,${PLATFORM_HAS_LEDS})
 CONTIKI_TARGET_SOURCEFILES += leds.c leds-arch.c 

@@ -26,7 +26,6 @@
 #ifndef __RES_COMMON_CFG_H__
 #define __RES_COMMON_CFG_H__
 
-#define XMEM_ERASE_UNIT_SIZE 1024 /*1K*/
 
 #define MAX_COAP_PAYLOAD 64 + 1       /* +1 for the terminating zero, which is not transmitted */
 
