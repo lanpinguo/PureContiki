@@ -60,11 +60,11 @@
 
 /* Enable/disable flash access to the SPI bus (active low). */
 
-#define SPI_FLASH_ENABLE()  			( 0 )
-#define SPI_FLASH_DISABLE() 			( 0 )
+#define SPI_FLASH_ENABLE()  			SPI_CS_CLR(SPI_XMEM_CS_PORT, SPI_XMEM_CS_PIN)
+#define SPI_FLASH_DISABLE() 			SPI_CS_SET(SPI_XMEM_CS_PORT, SPI_XMEM_CS_PIN)
 
-#define SPI_FLASH_HOLD()                ( 0 )
-#define SPI_FLASH_UNHOLD()              ( 0 )
+#define SPI_FLASH_HOLD()               
+#define SPI_FLASH_UNHOLD()              
 
 
 
@@ -86,15 +86,19 @@
 #define  SPI_FLASH_INS_DP          0xb9
 #define  SPI_FLASH_INS_RES         0xab
 /*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 static void
 write_enable(void)
 {
+  int s;
 
+  s = splhigh();
   SPI_FLASH_ENABLE();
   
   SPI_WRITE(SPI_FLASH_INS_WREN);
 
   SPI_FLASH_DISABLE();
+  splx(s);
 }
 /*---------------------------------------------------------------------------*/
 static unsigned
@@ -102,6 +106,9 @@ read_status_register(void)
 {
   unsigned char u;
 
+  int s;
+
+  s = splhigh();
   SPI_FLASH_ENABLE();
   
   SPI_WRITE(SPI_FLASH_INS_RDSR);
@@ -110,6 +117,7 @@ read_status_register(void)
   SPI_READ(u);
 
   SPI_FLASH_DISABLE();
+  splx(s);
 
   return u;
 }
@@ -139,6 +147,7 @@ erase_sector(unsigned long offset)
   wait_ready();
   write_enable();
 
+  s = splhigh();
   SPI_FLASH_ENABLE();
   
   SPI_WRITE_FAST(SPI_FLASH_INS_SE);
@@ -148,6 +157,7 @@ erase_sector(unsigned long offset)
   SPI_WAITFORTx_ENDED();
 
   SPI_FLASH_DISABLE();
+  splx(s);
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -156,19 +166,20 @@ erase_sector(unsigned long offset)
 void
 xmem_init(void)
 {
-  int s;
-  spi_init();
+	int s;
+	spi_init();
 
-  //P4DIR |= BV(FLASH_CS) | BV(FLASH_HOLD) | BV(FLASH_PWR);
-  //P4OUT |= BV(FLASH_PWR);       /* P4.3 Output, turn on power! */
+	spix_cs_init(SPI_XMEM_CS_PORT, SPI_XMEM_CS_PIN);
 
-  /* Release from Deep Power-down */
-  SPI_FLASH_ENABLE();
-  SPI_WRITE_FAST(SPI_FLASH_INS_RES);
-  SPI_WAITFORTx_ENDED();
-  SPI_FLASH_DISABLE();		/* Unselect flash. */
+	/* Release from Deep Power-down */
+	s = splhigh();
+	SPI_FLASH_ENABLE();
+	SPI_WRITE_FAST(SPI_FLASH_INS_RES);
+	SPI_WAITFORTx_ENDED();
+	SPI_FLASH_DISABLE();		/* Unselect flash. */
+	splx(s);
 
-  SPI_FLASH_UNHOLD();
+	SPI_FLASH_UNHOLD();
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -176,11 +187,13 @@ xmem_pread(void *_p, int size, unsigned long offset)
 {
   unsigned char *p = _p;
   const unsigned char *end = p + size;
+  int s;
 
   wait_ready();
 
   ENERGEST_ON(ENERGEST_TYPE_FLASH_READ);
 
+  s = splhigh();
   SPI_FLASH_ENABLE();
 
   SPI_WRITE_FAST(SPI_FLASH_INS_READ);
@@ -197,6 +210,7 @@ xmem_pread(void *_p, int size, unsigned long offset)
   }
 
   SPI_FLASH_DISABLE();
+  splx(s);
 
   ENERGEST_OFF(ENERGEST_TYPE_FLASH_READ);
 
@@ -276,3 +290,4 @@ xmem_erase(long size, unsigned long addr)
   return size;
 }
 /*---------------------------------------------------------------------------*/
+

@@ -628,6 +628,8 @@ typedef uint32_t rtimer_clock_t;
 #define SPI0_TX_PIN							5
 #define SPI0_RX_PORT						GPIO_C_NUM
 #define SPI0_RX_PIN							7
+#define SPI_XMEM_CS_PORT					GPIO_C_NUM
+#define SPI_XMEM_CS_PIN						6
 
 #undef XMEM_ERASE_UNIT_SIZE
 #define XMEM_ERASE_UNIT_SIZE				(64 * 1024)
