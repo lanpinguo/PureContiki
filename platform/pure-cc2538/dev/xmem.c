@@ -88,6 +88,8 @@ uint32_t W25qxx_ReadID(void)
 	SPI_FLASH_ENABLE();
 
 	SPI_WRITE(0x9F);
+
+	SPI_FLUSH();
 	SPI_READ(Temp0);
 	SPI_READ(Temp1);
 	SPI_READ(Temp2);
@@ -183,7 +185,7 @@ xmem_init(void)
 	spix_cs_init(SPI_XMEM_CS_PORT, SPI_XMEM_CS_PIN);
 
 	w25q_id = W25qxx_ReadID();
-	printf("W25QXX ID : %lx\r\n", w25q_id);
+	printf("\r\nW25QXX ID : %lx\r\n", w25q_id);
 	/* Release from Deep Power-down */
 	SPI_FLASH_ENABLE();
 	SPI_WRITE_FAST(SPI_FLASH_INS_RES);
