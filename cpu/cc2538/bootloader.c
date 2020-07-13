@@ -127,7 +127,7 @@ int boot_main(void)
 	HWREG(GPIO_A_DIR) |= 0x34;
 	HWREG(GPIO_A_DATA + (0x34 << 2)) = 0;
 	
-	xmem_init();
+	//xmem_init();
 
 	
 #if 0	
