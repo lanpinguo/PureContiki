@@ -79,6 +79,9 @@
 #include "relay_switch.h"
 #endif
 
+#include "xmem.h"
+
+
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
@@ -348,6 +351,10 @@ main(void)
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 	adc_init();
+
+	xmem_init();
+
+
 
 	process_start(&sensors_process, NULL);
 

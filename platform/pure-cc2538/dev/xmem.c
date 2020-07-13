@@ -79,6 +79,27 @@
 #define  SPI_FLASH_INS_DP          0xb9
 #define  SPI_FLASH_INS_RES         0xab
 /*---------------------------------------------------------------------------*/
+
+
+uint32_t W25qxx_ReadID(void)
+{
+	uint32_t Temp = 0, Temp0 = 0, Temp1 = 0, Temp2 = 0;
+
+	SPI_FLASH_ENABLE();
+
+	SPI_WRITE(0x9F);
+	SPI_READ(Temp0);
+	SPI_READ(Temp1);
+	SPI_READ(Temp2);
+	
+	SPI_FLASH_DISABLE();
+	
+	Temp = (Temp0 << 16) | (Temp1 << 8) | Temp2;
+	return Temp;
+}
+
+
+
 /*---------------------------------------------------------------------------*/
 static void
 write_enable(void)
@@ -150,10 +171,19 @@ erase_sector(unsigned long offset)
 void
 xmem_init(void)
 {
+	uint32_t w25q_id;
+	
 	spi_init();
 
+	/* Current spi clock is 16MHz */
+
+	/* Mode 0 */
+	spix_set_mode(SPI_DEFAULT_INSTANCE, SSI_CR0_FRF_MOTOROLA,0,0,8);
+	
 	spix_cs_init(SPI_XMEM_CS_PORT, SPI_XMEM_CS_PIN);
 
+	w25q_id = W25qxx_ReadID();
+	printf("W25QXX ID : %lx\r\n", w25q_id);
 	/* Release from Deep Power-down */
 	SPI_FLASH_ENABLE();
 	SPI_WRITE_FAST(SPI_FLASH_INS_RES);
