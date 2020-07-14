@@ -614,7 +614,7 @@ typedef uint32_t rtimer_clock_t;
 
 
 #ifndef FLASH_OTA_BOOT_MANAGER
-#define FLASH_OTA_BOOT_MANAGER 	1
+#define FLASH_OTA_BOOT_MANAGER 	0
 #endif
 
 
