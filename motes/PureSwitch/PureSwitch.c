@@ -71,6 +71,7 @@
 #include <ctype.h>
 
 
+#include "xmem.h"
 
 #include "shell.h"
 #include "serial-shell.h"
@@ -90,6 +91,7 @@
 #include "hcho-sensor.h"
 
 #define DEBUG DEBUG_PRINT
+#define MODULE_ID CONTIKI_MOD_NONE
 #include "net/ip/uip-debug.h"
 #include "relay_switch.h"
 #include "dev/leds.h"
@@ -128,14 +130,27 @@ SHELL_COMMAND(pure_command,
 
 /*---------------------------------------------------------------------------*/
 
+void buffer_dump(uint8_t * buf, uint32_t len)
+{
+  uint16_t i;
+  printf("block  %u:", 64);
+  for (i = 0; i < len ; i++) {
+    uint8_t data = buf[i];
+	if(i % 16 == 0){
+      printf("\r\n");
+	}
+    printf("%02x ", data);
+  }
+  printf("\r\n");
+}
 
 
 PROCESS_THREAD(shell_debug_process, ev, data)
 {
 	char* argv[5];
 	int argc;
-
-
+	static int i = 0;
+	char buf[64];
 	
 	PROCESS_BEGIN();
 	
@@ -169,6 +184,23 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 		}
 
 		cfs_close(wfd);
+
+	}
+	else if(strncmp(argv[0], "flash", 5) == 0){
+		/* Erase 3 sectors */
+		xmem_erase(6 * 512, 0);
+
+		for(i = 1 ; i < 6 * 512; i++){
+			buf[i % 64] = i;
+			if(i % 64 == 0){
+				xmem_pwrite(buf, 64, i - 1);
+			}
+		}
+		
+		for(i = 0 ; i < 6 * 512; i += 64){
+			xmem_pread(buf, 64, i );
+			buffer_dump((uint8_t*)buf,64);
+		}
 
 	}
 
@@ -466,7 +498,9 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 /* The AUTOSTART_PROCESSES() definition specifices what processes to
    start when this module is loaded. We put both our processes
    there. */
-AUTOSTART_PROCESSES(&pure_x_shell_process,
+AUTOSTART_PROCESSES(
+	&shell_debug_process,
+	&pure_x_shell_process,
 #if MAC_USING_TSCH
 	&node_process,
 #endif
