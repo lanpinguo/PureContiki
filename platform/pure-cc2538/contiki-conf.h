@@ -632,7 +632,7 @@ typedef uint32_t rtimer_clock_t;
 #define SPI_XMEM_CS_PIN						6
 
 #undef XMEM_ERASE_UNIT_SIZE
-#define XMEM_ERASE_UNIT_SIZE				(64 * 1024)
+#define XMEM_ERASE_UNIT_SIZE				(4 * 1024)
 
 /** @} */
 /*---------------------------------------------------------------------------*/

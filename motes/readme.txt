@@ -33,4 +33,28 @@ pure-bridge-agent.service
 pure-web.service
 systemctl status pure-bridge-agent
 
+7\
+	CONTIKI_MOD_NONE ,			/* 00 */
+	CONTIKI_MOD_SLIP_BRG,		/* 01 */
+	CONTIKI_MOD_RF ,			/* 02 */
+	CONTIKI_MOD_RF_RX,			/* 03 */
+	CONTIKI_MOD_RF_TX,			/* 04 */
+	CONTIKI_MOD_MAC ,			/* 05 */	
+	CONTIKI_MOD_LINK ,			/* 06 */	
+	CONTIKI_MOD_ND6,			/* 07 */
+	CONTIKI_MOD_DS6_ROUTE,		/* 08 */		
+	CONTIKI_MOD_RPL,			/* 09 */
+	CONTIKI_MOD_RPL_OF0,		/* 10 */
+	CONTIKI_MOD_RPL_ICMP6,		/* 11 */
+	CONTIKI_MOD_RPL_DAG,		/* 12 */
+	CONTIKI_MOD_RPL_DAG_ROOT,	/* 13 */
+	CONTIKI_MOD_DS6_NBR,		/* 14 */
+	CONTIKI_MOD_SICS,			/* 15 */
+	CONTIKI_MOD_NET ,			/* 16 */
+	CONTIKI_MOD_IP6,			/* 17 */
+	CONTIKI_MOD_TCP,			/* 18 */
+	CONTIKI_MOD_TSCH,			/* 19 */
+	CONTIKI_MOD_TSCH_SLOT,		/* 20 */
+	CONTIKI_MOD_TSCH_LOG,		/* 21 */
+	CONTIKI_MOD_CCM_STAR,		/* 22 */
 
