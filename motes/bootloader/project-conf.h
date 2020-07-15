@@ -32,7 +32,7 @@
 #define PROJECT_CONF_H_
 
 #define FLASH_CONF_FW_ADDR				(CC2538_DEV_FLASH_ADDR + 10*1024)
-#define FLASH_CONF_FW_SIZE 				(8*1024)
+#define FLASH_CONF_FW_SIZE 				(4*1024)   /* 2 Pages, 2K per Page */
 
 
 #endif /*PROJECT_CONF_H_*/
