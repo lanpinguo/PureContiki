@@ -27,6 +27,8 @@ Compile version with using csma as mac layer
 
 /work/contiki/motes (tsch-debug *)$ make USING_TSCH=1 MAKE_WITH_SECURITY=1  all
 
+/work/contiki/motes (tsch-debug *)$ make USING_TSCH=1 MAKE_WITH_SECURITY=1 OTA_ENABLE=1 all
+
 6\
 border-router-6lowpan.service
 pure-bridge-agent.service
