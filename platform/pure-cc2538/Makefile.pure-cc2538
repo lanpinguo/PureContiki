@@ -27,8 +27,12 @@ ifneq (0,${PLATFORM_HAS_HCHO_SENSOR})
 endif
 endif
 
-CONTIKI_TARGET_SOURCEFILES += contiki-main.c
-CONTIKI_TARGET_SOURCEFILES += sensors.c smartrf-sensors.c
+ifdef BOOTLOADER_MODE_ENABLE
+  CONTIKI_TARGET_SOURCEFILES += boot_main.c
+else
+  CONTIKI_TARGET_SOURCEFILES += contiki-main.c
+  CONTIKI_TARGET_SOURCEFILES += sensors.c smartrf-sensors.c
+endif
 
 ifdef PLATFORM_HAS_ADC_ALS
 ifneq (0,${PLATFORM_HAS_ADC_ALS})
@@ -42,7 +46,11 @@ ifneq (0,${PLATFORM_HAS_BUTTON})
 endif
 endif
 
-CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+ifndef BOOTLOADER_MODE_ENABLE
+  CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+else
+  CONTIKI_SOURCEFILES = $(CONTIKI_TARGET_SOURCEFILES)
+endif
 
 CLEAN += *.cc2538dk
 
@@ -55,9 +63,13 @@ endif
 CONTIKI_CPU=$(CONTIKI)/cpu/cc2538
 include $(CONTIKI_CPU)/Makefile.cc2538
 
-MODULES += core/net core/net/mac \
+ifndef BOOTLOADER_MODE_ENABLE
+  MODULES += core/net core/net/mac \
            core/net/mac/contikimac \
            core/net/llsec core/net/llsec/noncoresec
+else
+  MODULES = 		   
+endif
 
 PYTHON = python
 BSL_FLAGS += -e -w -v
