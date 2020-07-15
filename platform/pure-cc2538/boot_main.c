@@ -85,25 +85,6 @@
 #endif
 /*---------------------------------------------------------------------------*/
 
-FUNC_DEBUG_PRINT dbg_print_ip = NULL;
-FUNC_DEBUG_PRINT dbg_print_log = NULL;
-
-/*---------------------------------------------------------------------------*/
-void
-log_message(char *m1, char *m2)
-{
-	if(dbg_print_log){ 
-		dbg_print_log("\r\n%s%s", m1, m2);
-	}
-}
-/*---------------------------------------------------------------------------*/
-void
-uip_log(char *m)
-{
-	if(dbg_print_ip){ 
-		dbg_print_ip("\r\nuIP: '%s'", m);
-	}
-}
 
 
 /*---------------------------------------------------------------------------*/
@@ -129,12 +110,17 @@ void debug_led(void)
 	};
 }
 
+void
+uart_write_byte(uint8_t uart, uint8_t b);
  
 int
 main(void)
 {
+	char test[] = "hello world\r\n";
+	int i = 0;
+	
 	nvic_init();
-
+	
 	ioc_init();
 	sys_ctrl_init();
 	//clock_init();
@@ -162,12 +148,10 @@ main(void)
 
 
 	while(1) {
-		uint8_t r;
-		do {
-			/* Reset watchdog and handle polls and events */
-			//watchdog_periodic();
 
-		} while(r > 0);
+		for(i = 0; test[i] != 0; i++){
+			uart_write_byte(0, test[i]);
+		}
 
 		/* We have serviced all pending events. Enter a Low-Power mode. */
 		lpm_enter();
