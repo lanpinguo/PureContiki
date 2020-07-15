@@ -56,7 +56,7 @@ CONTIKI_CPU_DIRS += ../cc253x/usb/common ../cc253x/usb/common/cdc-acm
 
 
 ifneq ($(BOOTLOADER_MODE_ENABLE),)
-CONTIKI_CPU_SOURCEFILES += soc.c uart.c watchdog.c
+CONTIKI_CPU_SOURCEFILES += soc.c uart.c 
 CONTIKI_CPU_SOURCEFILES += nvic.c sys-ctrl.c gpio.c ioc.c spi.c
 else
 ### CPU-dependent source files

@@ -185,7 +185,6 @@ xmem_init(void)
 	spix_cs_init(SPI_XMEM_CS_PORT, SPI_XMEM_CS_PIN);
 
 	w25q_id = W25qxx_ReadID();
-	printf("\r\nW25QXX ID : %lx\r\n", w25q_id);
 	/* Release from Deep Power-down */
 	SPI_FLASH_ENABLE();
 	SPI_WRITE_FAST(SPI_FLASH_INS_RES);
@@ -281,12 +280,10 @@ xmem_erase(long size, unsigned long addr)
   unsigned long end = addr + size;
 
   if(size % XMEM_ERASE_UNIT_SIZE != 0) {
-    PRINTF("xmem_erase: bad size\n");
     return -1;
   }
 
   if(addr % XMEM_ERASE_UNIT_SIZE != 0) {
-    PRINTF("xmem_erase: bad offset\n");
     return -1;
   }
 
