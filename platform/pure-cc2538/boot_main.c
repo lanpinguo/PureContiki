@@ -73,12 +73,17 @@
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
 
-
 enum {
 	ENCODING_TYPE_RAW,
 	ENCODING_TYPE_UTF8,
 };
 /*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
+#ifndef BOOT_VERSION_STRING
+#define BOOT_VERSION_STRING "1.0.x"
+#endif /* BOOT_VERSION_STRING */
+
 #define GPIO_A_DIR							0x400D9400
 #define GPIO_A_DATA							0x400D9000
 #define GPIO_C_DIR							0x400DB400
@@ -90,6 +95,12 @@ char dummy[] 		= "dummy loop\r\n";
 char no_img_found[] = "No Image Found\r\n";
 char img_found[] 	= "Found Image:\r\n";
 
+/*---------------------------------------------------------------------------*/
+void uart_write_byte(uint8_t uart, uint8_t b);
+uint32_t W25qxx_ReadID(void);
+
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 
 
 
@@ -105,7 +116,6 @@ void EnterNvmApplication(uint32_t spInit, uint32_t resetVector)
 	asm("bx r1");  // Branch to application reset ISR.
 }
 
-void uart_write_byte(uint8_t uart, uint8_t b);
 
 
 int dbg_output(char * buf, uint32_t encoding, uint32_t len)
@@ -125,7 +135,7 @@ int dbg_output(char * buf, uint32_t encoding, uint32_t len)
 					out = out + '0';
 				}
 				else{
-					out = out + 'A';
+					out = out + ('A' - 10);
 				}
 				uart_write_byte(0, out);
 			}
@@ -139,7 +149,7 @@ int dbg_output(char * buf, uint32_t encoding, uint32_t len)
 
 int boot_app(void)
 {
-	volatile uint32_t ledgerPageAddr = FLASH_FW_ADDR;
+	volatile uint32_t ledgerPageAddr = CC2538_DEV_FLASH_ADDR;
 
 	// Set direction output and initial value for PC2 and PC0
 	// Greed LED on PA2
@@ -210,6 +220,8 @@ void debug_led(void)
 int main(void)
 {
 	int rc = 0;
+	uint32_t w25q_id;
+
 	
 	nvic_init();
 	
@@ -220,11 +232,18 @@ int main(void)
 	//rtimer_init();
 	//gpio_init();
 	//watchdog_init();
-
 	uart_init(0);
 
 	xmem_init();
 
+	w25q_id = W25qxx_ReadID();
+
+	dbg_output("Bootloader Version:", ENCODING_TYPE_RAW, sizeof("Bootloader Version:"));
+	dbg_output(BOOT_VERSION_STRING, ENCODING_TYPE_RAW, sizeof(BOOT_VERSION_STRING));
+	dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
+	dbg_output("SPI-Flash ID:", ENCODING_TYPE_RAW, sizeof("SPI-Flash ID:"));
+	dbg_output((char*)&w25q_id, ENCODING_TYPE_UTF8, sizeof(w25q_id));
+	dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
 
 	//watchdog_start();
 	//fade(LEDS_ORANGE);
