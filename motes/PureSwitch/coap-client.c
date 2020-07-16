@@ -83,10 +83,6 @@
 
 /**************************************************************************/
 
-#define UDP_CLIENT_PORT 8765
-#define UDP_SERVER_PORT 5678
-
-#define UDP_EXAMPLE_ID  190
 
 /* #define DEBUG DEBUG_PRINT */
 /* #include "net/ip/uip-debug.h" */
