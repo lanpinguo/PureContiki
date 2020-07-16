@@ -66,94 +66,29 @@
 #include "flash.h"
 
 #include "xmem.h"
-
+#include "ota_types.h"
 
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
-#if STARTUP_CONF_VERBOSE
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
 
-#if UART_CONF_ENABLE
-#define PUTS(s) puts(s)
-#else
-#define PUTS(s)
-#endif
+
+enum {
+	ENCODING_TYPE_RAW,
+	ENCODING_TYPE_UTF8,
+};
 /*---------------------------------------------------------------------------*/
-/* ------------------------------------------------------------------------------------------------
- *                                          Typedefs
- * ------------------------------------------------------------------------------------------------
- */
-	// OTA Header constants
-#define OTA_HDR_MAGIC_NUMBER                0x0BEEF11E
-#define OTA_HDR_BLOCK_SIZE                  128
-#define OTA_HDR_STACK_VERSION               2
-#define OTA_HDR_HEADER_VERSION              0x0100
-#define OTA_HDR_FIELD_CTRL                  0
-	
-#define OTA_HEADER_LEN_MIN                  56
-#define OTA_HEADER_LEN_MAX                  69
-#define OTA_HEADER_LEN_MIN_ECDSA            166
-#define OTA_HEADER_STR_LEN                  32
-	
-#define OTA_HEADER_IMG_VALID              	0x5A5A
-	
-#define OTA_FC_SCV_PRESENT                  (0x1 << 0)
-#define OTA_FC_DSF_PRESENT                  (0x1 << 1)
-#define OTA_FC_HWV_PRESENT                  (0x1 << 2)
+#define GPIO_A_DIR							0x400D9400
+#define GPIO_A_DATA							0x400D9000
+#define GPIO_C_DIR							0x400DB400
+#define GPIO_C_DATA							0x400DB000
 
-	
-#define HAL_IBM_LEDGER_PAGE        			254
+#define HWREG(x)  							(*((volatile unsigned long *)(x)))
 
-#define NVIC_VECTOR_SIZE					(163*4)
-	
-	
-#define GPIO_A_DIR				0x400D9400
-#define GPIO_A_DATA				0x400D9000
-#define GPIO_C_DIR				0x400DB400
-#define GPIO_C_DATA				0x400DB000
-
-#define HWREG(x)                                                              \
-	(*((volatile unsigned long *)(x)))
-
- 
-typedef struct
-{
-	uint16_t manufacturer;
-	uint16_t type;
-	uint32_t version;
-} zclOTA_FileID_t;
-
-typedef struct
-{
-	uint16_t tag;
-	uint32_t length;
-} OTA_SubElementHdr_t;
-
-typedef struct
-{
-	uint32_t magicNumber;
-	uint32_t imageSize;
-	uint16_t imageValid;
-	uint16_t headerLength;
-	uint16_t headerVersion;
-	uint16_t fieldControl;
-	zclOTA_FileID_t fileId;
-}__attribute__ ((packed)) OTA_ImageHeader_t;
-
-typedef struct {
-  uint32_t stackPtr;
-  uint32_t nvicReset;
-} ibm_ledger_t;
-//static_assert((sizeof(ibm_ledger_t) == 16), "Need to PACK the ibm_ledger_t");
-
-char test[] = "hello world\r\n";
-char no_img_found[] = "no image found\r\n";
-char img_found[] = "found image:\r\n";
+char dummy[] 		= "dummy loop\r\n";
+char no_img_found[] = "No Image Found\r\n";
+char img_found[] 	= "Found Image:\r\n";
 
 
 
@@ -173,12 +108,31 @@ void EnterNvmApplication(uint32_t spInit, uint32_t resetVector)
 void uart_write_byte(uint8_t uart, uint8_t b);
 
 
-int dbg_output(char * buf, unsigned int len)
+int dbg_output(char * buf, uint32_t encoding, uint32_t len)
 {
 	int i = 0;
 
 	for(i = 0; i < len ; i++){
-		uart_write_byte(0, buf[i]);
+		char raw_out = buf[i];
+		if(encoding == ENCODING_TYPE_UTF8){
+			char out;
+			
+			for(int j = 0; j < 2; j++, raw_out <<= 4){
+				
+				out = (raw_out & 0xF0) >> 4;
+				
+				if(out < 10){
+					out = out + '0';
+				}
+				else{
+					out = out + 'A';
+				}
+				uart_write_byte(0, out);
+			}
+		}
+		else{
+			uart_write_byte(0, raw_out);
+		}
 	}
 	return i;
 }
@@ -211,12 +165,12 @@ int boot_app(void)
 
 		if (pLedger->imageValid == OTA_HEADER_IMG_VALID)
 		{
-			dbg_output(img_found,sizeof(img_found));
-			dbg_output((char*)&pLedger->headerLength,6);
-			dbg_output("\r\n",2);
-			dbg_output("on page:",sizeof("on page:"));
-			dbg_output((char*)&pgCnt,4);
-			dbg_output("\r\n",2);
+			dbg_output(img_found, ENCODING_TYPE_RAW, sizeof(img_found));
+			dbg_output((char*)&pLedger->headerLength,ENCODING_TYPE_UTF8, 6);
+			dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
+			dbg_output("on page:", ENCODING_TYPE_RAW, sizeof("on page:"));
+			dbg_output((char*)&pgCnt, ENCODING_TYPE_UTF8, 4);
+			dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
 			HWREG(GPIO_A_DATA + (0x04 << 2)) = 0x04;
 			ibm_ledger_t* img = (ibm_ledger_t*)(ledgerPageAddr);
 			// Sanity check NVIC entries.
@@ -277,12 +231,12 @@ int main(void)
 
 	rc = boot_app();
 	if(rc != 0){
-		dbg_output(no_img_found,sizeof(no_img_found));
+		dbg_output(no_img_found, ENCODING_TYPE_RAW, sizeof(no_img_found));
 	}
 
 	while(1) {
 
-		dbg_output(test,sizeof(test));
+		dbg_output(dummy, ENCODING_TYPE_RAW, sizeof(dummy));
 		debug_led();
 		/* We have serviced all pending events. Enter a Low-Power mode. */
 		lpm_enter();
