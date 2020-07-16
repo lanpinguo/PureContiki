@@ -4,6 +4,15 @@ CONTIKI_PROJECT=bootloader
 
 TARGET = pure-cc2538
 
+ifndef BOOTRELSTR
+BOOTRELSTR:=${shell git --git-dir ${CONTIKI}/.git describe --tags --always}
+endif
+
+ifneq ($(BOOTRELSTR),)
+CFLAGS += -DBOOT_VERSION_STRING=\"$(BOOTRELSTR)\"
+endif
+
+
 all: $(CONTIKI_PROJECT) 
 
 

@@ -173,7 +173,6 @@ erase_sector(unsigned long offset)
 void
 xmem_init(void)
 {
-	uint32_t w25q_id;
 	
 	spi_init();
 
@@ -184,7 +183,6 @@ xmem_init(void)
 	
 	spix_cs_init(SPI_XMEM_CS_PORT, SPI_XMEM_CS_PIN);
 
-	w25q_id = W25qxx_ReadID();
 	/* Release from Deep Power-down */
 	SPI_FLASH_ENABLE();
 	SPI_WRITE_FAST(SPI_FLASH_INS_RES);
