@@ -492,6 +492,78 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 }
 
 
+/*---------------------------------------------------------------------------*/
+static void
+ota_packet_handler(void)
+{
+  char *appdata;
+
+  if(uip_newdata()) {
+    appdata = (char *)uip_appdata;
+    appdata[uip_datalen()] = 0;
+    printf("DATA recv '%s' from ", appdata);
+    printf("%d",
+           UIP_IP_BUF->srcipaddr.u8[sizeof(UIP_IP_BUF->srcipaddr.u8) - 1]);
+    printf("\r\n");
+#if SERVER_REPLY
+    printf("DATA sending reply\r\n");
+    uip_ipaddr_copy(&server_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
+    uip_udp_packet_send(server_conn, "Reply", sizeof("Reply"));
+    uip_create_unspecified(&server_conn->ripaddr);
+#endif
+  }
+}
+
+
+/*---------------------------------------------------------------------------*/
+static struct uip_udp_conn *server_conn;
+#define UDP_CLIENT_PORT 8765
+#define UDP_SERVER_PORT 5678
+
+#define UDP_EXAMPLE_ID  190
+
+/*---------------------------------------------------------------------------*/
+PROCESS(ota_upgrade_process, "ota-upgrade");
+
+PROCESS_THREAD(ota_upgrade_process, ev, data)
+{
+
+	PROCESS_BEGIN();
+
+	PROCESS_PAUSE();
+
+
+	printf("\r\nUDP server started. nbr:%d routes:%d \r\n",
+			NBR_TABLE_CONF_MAX_NEIGHBORS,
+			UIP_CONF_MAX_ROUTES);
+
+	//print_local_addresses();
+
+
+	server_conn = udp_new(NULL, UIP_HTONS(UDP_CLIENT_PORT), NULL);
+	if(server_conn == NULL) {
+		printf("No UDP connection available, exiting the process!\r\n");
+		PROCESS_EXIT();
+	}
+	
+	udp_bind(server_conn, UIP_HTONS(UDP_SERVER_PORT));
+
+	printf("Created a server connection with remote address ");
+	uip_ipaddr_print(&server_conn->ripaddr);
+	printf(" local/remote port %u/%u\r\n",
+			UIP_HTONS(server_conn->lport),
+			UIP_HTONS(server_conn->rport));
+
+	while(1) {
+		PROCESS_YIELD();
+		if(ev == tcpip_event) {
+			ota_packet_handler();
+		}
+	}
+
+	PROCESS_END();
+}
+
 
 
 
@@ -504,6 +576,7 @@ AUTOSTART_PROCESSES(
 #if MAC_USING_TSCH
 	&node_process,
 #endif
+	&ota_upgrade_process,
 	&coap_server_process, 
 	&coap_client_process);
 
