@@ -68,6 +68,7 @@ typedef struct
 	uint32_t 	deviceType;
 	uint32_t 	version;
 	uint8_t 	primary;
+	uint16_t 	maxSeqno;
 
 }__attribute__ ((packed)) OTA_UpgradeRequestFrameHeader_t;
 
