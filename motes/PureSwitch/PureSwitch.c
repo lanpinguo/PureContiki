@@ -96,9 +96,16 @@
 #include "relay_switch.h"
 
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
+#define UIP_UDP_BUF       ((struct uip_udp_hdr *)&uip_buf[UIP_LLH_LEN + UIP_IPH_LEN])
+
 #define RELAY_SW_ACTIVE_TIME	(60 * 60 * 6) /* 6 hours */
 #define RELAY_SW_DEACTIVE_TIME	(60 * 60 * 18) /* 18 hours */
 
+#define UDP_SERVER_PORT 		5678
+#define UDP_EXAMPLE_ID  		190
+
+static struct uip_udp_conn *server_conn;
+static struct uip_udp_conn *tx_conn;
 
 
 process_event_t dbg_event;
@@ -487,34 +494,33 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 
 
 /*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
 static void
 ota_packet_handler(void)
 {
-  char *appdata;
+	char *appdata;
 
-  if(uip_newdata()) {
-    appdata = (char *)uip_appdata;
-    appdata[uip_datalen()] = 0;
-    printf("DATA recv '%s' from ", appdata);
-    printf("%d",
-           UIP_IP_BUF->srcipaddr.u8[sizeof(UIP_IP_BUF->srcipaddr.u8) - 1]);
-    printf("\r\n");
-#if SERVER_REPLY
-    printf("DATA sending reply\r\n");
-    uip_ipaddr_copy(&server_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
-    uip_udp_packet_send(server_conn, "Reply", sizeof("Reply"));
-    uip_create_unspecified(&server_conn->ripaddr);
-#endif
-  }
+	if(uip_newdata()) {
+
+		appdata = (char *)uip_appdata;
+		appdata[uip_datalen()] = 0;
+
+		
+		printf("DATA recv '%s' from ", appdata);
+		printf("%d", UIP_IP_BUF->srcipaddr.u8[sizeof(UIP_IP_BUF->srcipaddr.u8) - 1]);
+		printf("\r\n");
+
+		printf("DATA sending reply\r\n");
+	    uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
+		tx_conn->rport = UIP_UDP_BUF->srcport;
+		//uip_ipaddr_copy(&server_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
+		uip_udp_packet_send(tx_conn, "Reply", sizeof("Reply"));
+		//uip_create_unspecified(&server_conn->ripaddr);
+	}
 }
 
 
-/*---------------------------------------------------------------------------*/
-static struct uip_udp_conn *server_conn;
-#define UDP_CLIENT_PORT 8765
-#define UDP_SERVER_PORT 5678
-
-#define UDP_EXAMPLE_ID  190
 
 /*---------------------------------------------------------------------------*/
 PROCESS(ota_upgrade_process, "ota-upgrade");
@@ -534,7 +540,7 @@ PROCESS_THREAD(ota_upgrade_process, ev, data)
 	//print_local_addresses();
 
 
-	server_conn = udp_new(NULL, UIP_HTONS(UDP_CLIENT_PORT), NULL);
+	server_conn = udp_new(NULL, 0, NULL);
 	if(server_conn == NULL) {
 		printf("No UDP connection available, exiting the process!\r\n");
 		PROCESS_EXIT();
@@ -547,6 +553,14 @@ PROCESS_THREAD(ota_upgrade_process, ev, data)
 	printf(" local/remote port %u/%u\r\n",
 			UIP_HTONS(server_conn->lport),
 			UIP_HTONS(server_conn->rport));
+
+
+	tx_conn = udp_new(NULL, 0, NULL);
+	if(tx_conn == NULL) {
+		printf("No UDP connection available, exiting the process!\r\n");
+		PROCESS_EXIT();
+	}
+
 
 	while(1) {
 		PROCESS_YIELD();
