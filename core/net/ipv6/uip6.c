@@ -1534,7 +1534,9 @@ uip_process(uint8_t flag)
       goto udp_found;
     }
   }
-  PRINTF("udp: no matching connection found\r\n");
+  PRINTF("udp: no matching connection found , dest-port = %u, src-port = %u \r\n",
+  			UIP_UDP_BUF->destport,
+  			UIP_UDP_BUF->srcport);
   UIP_STAT(++uip_stat.udp.drop);
 
   uip_icmp6_error_output(ICMP6_DST_UNREACH, ICMP6_DST_UNREACH_NOPORT, 0);
