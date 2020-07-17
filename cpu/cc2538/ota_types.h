@@ -60,6 +60,46 @@ typedef struct {
 } ibm_ledger_t;
 //static_assert((sizeof(ibm_ledger_t) == 16), "Need to PACK the ibm_ledger_t");
 
+
+
+typedef struct
+{
+	uint8_t 	type;
+	uint32_t 	deviceType;
+	uint32_t 	version;
+	uint8_t 	primary;
+
+}__attribute__ ((packed)) OTA_UpgradeRequestFrameHeader_t;
+
+typedef struct
+{
+	uint8_t 	type;
+	uint32_t 	deviceType;
+	uint32_t 	version;
+	uint16_t 	seqno;
+
+}__attribute__ ((packed)) OTA_DataRequestFrameHeader_t;
+
+typedef struct
+{
+	uint8_t 	type;
+	uint32_t 	deviceType;
+	uint32_t 	version;
+	uint16_t 	seqno;
+	uint32_t 	checkCode;
+
+}__attribute__ ((packed)) OTA_DoneFrameHeader_t;
+
+typedef struct
+{
+	uint8_t 	type;
+	uint32_t 	deviceType;
+	uint32_t 	version;
+	uint16_t 	seqno;
+	uint8_t 	dataLength;
+	uint8_t 	data[0];
+}__attribute__ ((packed)) OTA_DataFrameHeader_t;
+
 #endif /* _OTA_TYPES_H_*/
 
 
