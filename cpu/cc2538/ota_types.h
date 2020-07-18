@@ -4,6 +4,9 @@
  *                                          Typedefs
  * ------------------------------------------------------------------------------------------------
  */
+
+
+
 	// OTA Header constants
 #define OTA_HDR_MAGIC_NUMBER                0x0BEEF11E
 #define OTA_HDR_BLOCK_SIZE                  128
@@ -60,6 +63,34 @@ typedef struct {
 } ibm_ledger_t;
 //static_assert((sizeof(ibm_ledger_t) == 16), "Need to PACK the ibm_ledger_t");
 
+typedef enum {
+	OTA_FRAME_TYPE_NONE = 0,
+	OTA_FRAME_TYPE_UPGRADE_REQUEST = 1,
+	OTA_FRAME_TYPE_DATA_REQUEST,
+	OTA_FRAME_TYPE_FINISH,
+	OTA_FRAME_TYPE_DATA,
+
+}OTA_FrameType_e;
+
+
+typedef enum {
+	OTA_STATE_NONE = 0,
+	OTA_STATE_START ,
+	OTA_STATE_RUNNING,
+	OTA_STATE_FINISH,
+
+}OTA_State_e;
+
+
+typedef struct
+{
+	uint32_t 	deviceType;
+	uint32_t 	version;
+	uint8_t 	primary;
+	uint16_t 	seqno;
+	uint16_t 	maxSeqno;
+	OTA_State_e	state;
+}__attribute__ ((packed)) OTA_Info_t;
 
 
 typedef struct
@@ -69,6 +100,7 @@ typedef struct
 	uint32_t 	version;
 	uint8_t 	primary;
 	uint16_t 	maxSeqno;
+	uint8_t		force;
 
 }__attribute__ ((packed)) OTA_UpgradeRequestFrameHeader_t;
 
@@ -79,7 +111,7 @@ typedef struct
 	uint32_t 	version;
 	uint16_t 	seqno;
 
-}__attribute__ ((packed)) OTA_DataRequestFrameHeader_t;
+}__attribute__ ((packed)) OTA_DataRequestFrame_t;
 
 typedef struct
 {
@@ -89,7 +121,7 @@ typedef struct
 	uint16_t 	seqno;
 	uint32_t 	checkCode;
 
-}__attribute__ ((packed)) OTA_DoneFrameHeader_t;
+}__attribute__ ((packed)) OTA_FinishFrameHeader_t;
 
 typedef struct
 {
