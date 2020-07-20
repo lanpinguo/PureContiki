@@ -502,6 +502,7 @@ static OTA_Info_t ota_info_current = {
 	.deviceType = 1,
 	.version = 0x10000,
 	.primary = 1,
+	.seqno = 0,
 	.state = OTA_STATE_NONE,
 };
 
@@ -520,7 +521,13 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 		case OTA_STATE_NONE:{
 			if(pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST){
 				OTA_DataRequestFrame_t req;
-				ota_info_current.state = OTA_STATE_RUNNING;
+
+				OTA_UpgradeRequestFrameHeader_t * frame = (OTA_UpgradeRequestFrameHeader_t *)data;
+			
+				printf("device type: %lu, version: %lu\r\n",frame->deviceType, frame->version);
+				buffer_dump((uint8_t *)data,uip_datalen());
+
+			
 				req.type = OTA_FRAME_TYPE_DATA_REQUEST;
 				req.deviceType = ota_info_current.deviceType;
 				req.version = ota_info_current.version;
@@ -528,6 +535,8 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 			    uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
 				tx_conn->rport = UIP_UDP_BUF->srcport;
 				uip_udp_packet_send(tx_conn, &req, sizeof(req));
+
+				ota_info_current.state = OTA_STATE_RUNNING;
 			}
 
 
@@ -540,12 +549,13 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 		}
 
 		case OTA_STATE_RUNNING:{
-			if(pkt_type == OTA_FRAME_TYPE_DATA){
+			if(pkt_type == OTA_FRAME_TYPE_DATA ||
+				pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST ){
 				OTA_DataRequestFrame_t req;
 				OTA_DataFrameHeader_t * frame = (OTA_DataFrameHeader_t *)data;
 			
 				printf("seqno %u, data len: %u\r\n",frame->seqno, frame->dataLength);
-				buffer_dump((uint8_t *)data,uip_datalen());
+				//buffer_dump((uint8_t *)data,uip_datalen());
 				req.type = OTA_FRAME_TYPE_DATA_REQUEST;
 				req.deviceType = ota_info_current.deviceType;
 				req.version = ota_info_current.version;
@@ -562,11 +572,12 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 			break;
 		}
 		case OTA_STATE_FINISH:{
-			if(pkt_type == OTA_FRAME_TYPE_DATA){
+			if(pkt_type == OTA_FRAME_TYPE_FINISH){
 				OTA_FinishFrameHeader_t * frame = (OTA_FinishFrameHeader_t *)data;
 			
 				printf("seqno %u, checkCode: %lu\r\n",frame->seqno, frame->checkCode);
-				buffer_dump((uint8_t *)data,uip_datalen());
+				//buffer_dump((uint8_t *)data,uip_datalen());
+				ota_info_current.state = OTA_STATE_NONE;
 			}
 
 			break;
@@ -589,7 +600,7 @@ ota_packet_handler(void)
 		appdata = (char *)uip_appdata;
 		appdata[uip_datalen()] = 0;
 
-
+		//buffer_dump((uint8_t *)appdata,uip_datalen());
 		OTA_StateMachineUpdate(appdata,0);
 #if 0
 		printf("DATA recv '%s' from ", appdata);
