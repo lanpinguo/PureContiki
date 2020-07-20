@@ -64,14 +64,22 @@ typedef struct {
 //static_assert((sizeof(ibm_ledger_t) == 16), "Need to PACK the ibm_ledger_t");
 
 typedef enum {
-	OTA_FRAME_TYPE_NONE = 0,
-	OTA_FRAME_TYPE_UPGRADE_REQUEST = 1,
-	OTA_FRAME_TYPE_DATA_REQUEST,
-	OTA_FRAME_TYPE_FINISH,
-	OTA_FRAME_TYPE_DATA,
+	OTA_FRAME_TYPE_NONE 			= 0,
+	OTA_FRAME_TYPE_UPGRADE_REQUEST 	= 1,
+	OTA_FRAME_TYPE_DATA_REQUEST		= 2,
+	OTA_FRAME_TYPE_FINISH			= 3,
+	OTA_FRAME_TYPE_DATA				= 4,
 
 }OTA_FrameType_e;
 
+typedef enum {
+	OTA_UPGRADE_OPTION_NONE         = 0,
+	OTA_UPGRADE_OPTION_FORCE        = 1,
+	OTA_UPGRADE_OPTION_RESTART      = 2,
+	OTA_UPGRADE_OPTION_CONTINUE     = 3,
+	OTA_UPGRADE_OPTION_CHECK        = 4,
+
+}OTA_UPGRADE_OPTION_e;
 
 typedef enum {
 	OTA_STATE_NONE = 0,
@@ -100,7 +108,7 @@ typedef struct
 	uint32_t 	version;
 	uint8_t 	primary;
 	uint16_t 	maxSeqno;
-	uint8_t		force;
+	OTA_UPGRADE_OPTION_e option;
 
 }__attribute__ ((packed)) OTA_UpgradeRequestFrameHeader_t;
 

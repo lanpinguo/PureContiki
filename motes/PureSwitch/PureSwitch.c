@@ -506,6 +506,31 @@ static OTA_Info_t ota_info_current = {
 	.state = OTA_STATE_NONE,
 };
 
+int32_t OTA_UpgradeStart(char * data)
+{
+	OTA_DataRequestFrame_t req;
+
+	OTA_UpgradeRequestFrameHeader_t * frame = (OTA_UpgradeRequestFrameHeader_t *)data;
+
+	printf("device type: %lu, version: %lu\r\n",frame->deviceType, frame->version);
+	buffer_dump((uint8_t *)data,uip_datalen());
+
+
+	req.type = OTA_FRAME_TYPE_DATA_REQUEST;
+	req.deviceType = ota_info_current.deviceType;
+	req.version = ota_info_current.version;
+	req.seqno = ota_info_current.seqno = 0;
+    uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
+	tx_conn->rport = UIP_UDP_BUF->srcport;
+	uip_udp_packet_send(tx_conn, &req, sizeof(req));
+
+	ota_info_current.state = OTA_STATE_RUNNING;
+
+	return 0;
+
+}
+
+
 int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 {
 	uint32_t pkt_type = OTA_FRAME_TYPE_NONE;
@@ -520,26 +545,8 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 	switch(ota_info_current.state){
 		case OTA_STATE_NONE:{
 			if(pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST){
-				OTA_DataRequestFrame_t req;
-
-				OTA_UpgradeRequestFrameHeader_t * frame = (OTA_UpgradeRequestFrameHeader_t *)data;
-			
-				printf("device type: %lu, version: %lu\r\n",frame->deviceType, frame->version);
-				buffer_dump((uint8_t *)data,uip_datalen());
-
-			
-				req.type = OTA_FRAME_TYPE_DATA_REQUEST;
-				req.deviceType = ota_info_current.deviceType;
-				req.version = ota_info_current.version;
-				req.seqno = ota_info_current.seqno = 0;
-			    uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
-				tx_conn->rport = UIP_UDP_BUF->srcport;
-				uip_udp_packet_send(tx_conn, &req, sizeof(req));
-
-				ota_info_current.state = OTA_STATE_RUNNING;
+				OTA_UpgradeStart(data);
 			}
-
-
 			break;
 		}
 		case OTA_STATE_START:{
@@ -553,7 +560,16 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 				pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST ){
 				OTA_DataRequestFrame_t req;
 				OTA_DataFrameHeader_t * frame = (OTA_DataFrameHeader_t *)data;
-			
+
+				if (pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST){
+					OTA_UpgradeRequestFrameHeader_t * frame = (OTA_UpgradeRequestFrameHeader_t *)data;
+
+					if(frame->option == OTA_UPGRADE_OPTION_RESTART){
+						OTA_UpgradeStart(data);
+					}
+
+				}
+				
 				printf("seqno %u, data len: %u\r\n",frame->seqno, frame->dataLength);
 				//buffer_dump((uint8_t *)data,uip_datalen());
 				req.type = OTA_FRAME_TYPE_DATA_REQUEST;
