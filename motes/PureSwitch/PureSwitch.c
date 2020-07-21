@@ -69,7 +69,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
+#include "crc32.h"
 
 #include "xmem.h"
 
@@ -503,6 +503,7 @@ static OTA_Info_t ota_info_current = {
 	.version = 0x10000,
 	.primary = 1,
 	.seqno = 0,
+	.totalLen = 0,
 	.state = OTA_STATE_NONE,
 };
 
@@ -546,6 +547,9 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 		case OTA_STATE_NONE:{
 			if(pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST){
 				OTA_UpgradeStart(data);
+
+				/* Erase external flash pages */
+				xmem_erase(516 * 1024, 0);
 			}
 			break;
 		}
@@ -570,8 +574,13 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 
 				}
 				
-				printf("seqno %u, data len: %u\r\n",frame->seqno, frame->dataLength);
+				//printf("seqno %u, data len: %u\r\n",frame->seqno, frame->dataLength);
 				//buffer_dump((uint8_t *)data,uip_datalen());
+				/* Write data into flash */
+				xmem_pwrite(frame->data, frame->dataLength, 4 * 1024 + frame->seqno * 55);
+				ota_info_current.totalLen += frame->dataLength;
+				
+				/* Request next block */
 				req.type = OTA_FRAME_TYPE_DATA_REQUEST;
 				req.deviceType = ota_info_current.deviceType;
 				req.version = ota_info_current.version;
@@ -590,9 +599,30 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 		case OTA_STATE_FINISH:{
 			if(pkt_type == OTA_FRAME_TYPE_FINISH){
 				OTA_FinishFrameHeader_t * frame = (OTA_FinishFrameHeader_t *)data;
-			
+				uint32_t checkCode = 0xFFFFFFFF;
+				uint32_t i;
+
+				
 				printf("seqno %u, checkCode: %lu\r\n",frame->seqno, frame->checkCode);
 				//buffer_dump((uint8_t *)data,uip_datalen());
+
+				/* re-generate check code */
+				for(i = 0; i < ota_info_current.totalLen; ){
+					uint8_t buf[1024];
+					int len = 1024;
+
+					if(ota_info_current.totalLen - i < 1024){
+						len = ota_info_current.totalLen - i ;
+					}
+						
+					xmem_pread(buf,len,i);
+					
+					checkCode = crc32_data(buf, len, checkCode);
+
+					i += len;
+				}
+
+				
 				ota_info_current.state = OTA_STATE_NONE;
 			}
 

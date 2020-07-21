@@ -97,6 +97,7 @@ typedef struct
 	uint8_t 	primary;
 	uint16_t 	seqno;
 	uint16_t 	maxSeqno;
+	uint32_t 	totalLen;		/* total length in bytes */
 	OTA_State_e	state;
 }__attribute__ ((packed)) OTA_Info_t;
 
