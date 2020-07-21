@@ -138,7 +138,7 @@ SHELL_COMMAND(pure_command,
 void buffer_dump(uint8_t * buf, uint32_t len)
 {
   uint16_t i;
-  printf("block  %u:", 64);
+  printf("block  %lu:", len);
   for (i = 0; i < len ; i++) {
     uint8_t data = buf[i];
 	if(i % 16 == 0){
@@ -156,6 +156,9 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 	int argc;
 	static int i = 0;
 	char buf[64];
+	static	uint32_t addr,size;
+	int rc;
+
 	
 	PROCESS_BEGIN();
 	
@@ -193,23 +196,72 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 	}
 	else if(strncmp(argv[0], "flash", 5) == 0){
 		/* Erase 3 sectors */
-		xmem_erase(6 * 512, 0);
+		//xmem_erase(6 * 512, 0);
+		/* Erase external flash pages */
+		xmem_erase(6 * 1024, 0);
 
 		for(i = 1 ; i < 6 * 512; i++){
-			buf[i % 64] = i;
-			if(i % 64 == 0){
-				xmem_pwrite(buf, 64, i - 1);
-			}
+			buf[0] = 0x55;
+			xmem_pwrite(buf, 1, i - 1);
 		}
-		
-		for(i = 0 ; i < 6 * 512; i += 64){
-			xmem_pread(buf, 64, i );
-			buffer_dump((uint8_t*)buf,64);
+
+		memset(buf,0,64);
+		for(i = 0 ; i < 6 * 512; ){
+			if(6 * 512 - i < 64){
+				xmem_pread(buf, size - i, i );
+				buffer_dump((uint8_t*)buf, size - i);
+				i += (6 * 512 -i);
+				if(6 * 512 - i <= 0){
+					break;
+				}
+			}
+			else{
+				xmem_pread(buf, 64, i );
+				buffer_dump((uint8_t*)buf,64);
+				i += 64;
+			}
 		}
 
 	}
 
+	else if(strncmp(argv[0], "erase", 5) == 0){
+		if(argc == 3){
+			sscanf(argv[1],"%lu", &addr);
+			sscanf(argv[2],"%lu", &size);
+		}
+		/* Erase external flash pages */
+		rc = xmem_erase(size * XMEM_ERASE_UNIT_SIZE, addr * XMEM_ERASE_UNIT_SIZE);
+		if(rc < 0){
+			printf("\r\nxmem erase failed");	
+		}
+		else{
+			printf("\r\nxmem erase %u bytes from address 0x%lx done \r\n",
+					rc, addr*1024);	
+		}
 
+	}
+	else if(strncmp(argv[0], "dump", 4) == 0){
+		
+		if(argc == 3){
+			sscanf(argv[1],"%lu", &addr);
+			sscanf(argv[2],"%lu", &size);
+		}
+		printf("\r\ndump at addr 0x%lx, size %lu bytes:  \r\n",addr,size);
+		for(i = 0 ; i < size;  ){
+			if(size - i < 64){
+				xmem_pread(buf, size - i, i );
+				buffer_dump((uint8_t*)buf, size - i);
+				i += (size -i);
+			}
+			else{
+				xmem_pread(buf, 64, i );
+				buffer_dump((uint8_t*)buf,64);
+				i += 64;
+			}
+		}
+
+
+	}
 
 
 
@@ -549,7 +601,7 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 				OTA_UpgradeStart(data);
 
 				/* Erase external flash pages */
-				xmem_erase(516 * 1024, 0);
+				//xmem_erase(516 * 1024, 0);
 			}
 			break;
 		}
@@ -620,6 +672,9 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 					checkCode = crc32_data(buf, len, checkCode);
 
 					i += len;
+					if(len <= 0){
+						break;
+					}
 				}
 
 				
