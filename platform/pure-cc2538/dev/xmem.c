@@ -74,8 +74,8 @@
 #define  SPI_FLASH_INS_READ        0x03
 #define  SPI_FLASH_INS_FAST_READ   0x0b
 #define  SPI_FLASH_INS_PP          0x02
-#define  SPI_FLASH_INS_SE          0xd8
-#define  SPI_FLASH_INS_BE          0xc7
+#define  SPI_FLASH_INS_SE          0x20
+#define  SPI_FLASH_INS_BE          0xd8
 #define  SPI_FLASH_INS_DP          0xb9
 #define  SPI_FLASH_INS_RES         0xab
 /*---------------------------------------------------------------------------*/
@@ -224,29 +224,32 @@ xmem_pread(void *_p, int size, unsigned long offset)
   return size;
 }
 /*---------------------------------------------------------------------------*/
+/* Here write the inverse code of data  into flash*/
 static const unsigned char *
 program_page(unsigned long offset, const unsigned char *p, int nbytes)
 {
-  const unsigned char *end = p + nbytes;
+	const unsigned char *end = p + nbytes;
 
-  wait_ready();
-  write_enable();
+	wait_ready();
+	write_enable();
 
-  SPI_FLASH_ENABLE();
-  
-  SPI_WRITE_FAST(SPI_FLASH_INS_PP);
-  SPI_WRITE_FAST(offset >> 16);	/* MSB */
-  SPI_WRITE_FAST(offset >> 8);
-  SPI_WRITE_FAST(offset >> 0);	/* LSB */
+	SPI_FLASH_ENABLE();
 
-  for(; p < end; p++) {
-    SPI_WRITE_FAST(~*p);
-  }
-  SPI_WAITFORTx_ENDED();
+	SPI_WRITE_FAST(SPI_FLASH_INS_PP);
+	SPI_WRITE_FAST(offset >> 16);	/* MSB */
+	SPI_WRITE_FAST(offset >> 8);
+	SPI_WRITE_FAST(offset >> 0);	/* LSB */
 
-  SPI_FLASH_DISABLE();
+	for(; p < end; p++) {
+		SPI_WRITE_FAST(~*p);
+	}
+	SPI_WAITFORTx_ENDED();
 
-  return p;
+	SPI_FLASH_DISABLE();
+
+	watchdog_periodic();
+
+	return p;
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -287,6 +290,7 @@ xmem_erase(long size, unsigned long addr)
 
   for (; addr < end; addr += XMEM_ERASE_UNIT_SIZE) {
     erase_sector(addr);
+    watchdog_periodic();
   }
 
   return size;
