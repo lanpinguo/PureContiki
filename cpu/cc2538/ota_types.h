@@ -96,7 +96,8 @@ typedef struct
 	uint32_t 	version;
 	uint8_t 	primary;
 	uint16_t 	seqno;
-	uint16_t 	maxSeqno;
+	uint32_t 	fileLen;		/* image file total length in bytes */
+	uint16_t 	blockSize;		/* max size in a block */
 	uint32_t 	totalLen;		/* total length in bytes */
 	OTA_State_e	state;
 }__attribute__ ((packed)) OTA_Info_t;
@@ -108,7 +109,8 @@ typedef struct
 	uint32_t 	deviceType;
 	uint32_t 	version;
 	uint8_t 	primary;
-	uint16_t 	maxSeqno;
+	uint16_t 	blockSize;		/* max size in a block */
+	uint32_t 	fileLen;		/* image file total length in bytes */
 	OTA_UPGRADE_OPTION_e option;
 
 }__attribute__ ((packed)) OTA_UpgradeRequestFrameHeader_t;
