@@ -121,6 +121,7 @@ PROCESS_NAME(node_process);
 #endif
 
 
+extern int show_system_info(uint32_t mode);
 
 
 /*---------------------------------------------------------------------------*/
@@ -172,6 +173,9 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 
 		process_start(&testcoffee_process,NULL);
 	
+	}
+	else if(strncmp(argv[0], "info", 4) == 0){
+		show_system_info(3);
 	}
 	else if(strncmp(argv[0], "default", 7) == 0){
 		int wfd;
@@ -565,6 +569,7 @@ int32_t OTA_UpgradeStart(char * data)
 
 	OTA_UpgradeRequestFrameHeader_t * frame = (OTA_UpgradeRequestFrameHeader_t *)data;
 
+	show_system_info(2);
 	printf("device type: %lu, version: %lu\r\n",frame->deviceType, frame->version);
 	buffer_dump((uint8_t *)data,uip_datalen());
 
@@ -576,7 +581,6 @@ int32_t OTA_UpgradeStart(char * data)
     uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
 	tx_conn->rport = UIP_UDP_BUF->srcport;
 	uip_udp_packet_send(tx_conn, &req, sizeof(req));
-
 	ota_info_current.state = OTA_STATE_RUNNING;
 
 	return 0;
@@ -613,7 +617,9 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 
 		case OTA_STATE_RUNNING:{
 			if(pkt_type == OTA_FRAME_TYPE_DATA ||
-				pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST ){
+				pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST ||
+				pkt_type == OTA_FRAME_TYPE_FINISH ){
+				
 				OTA_DataRequestFrame_t req;
 				OTA_DataFrameHeader_t * frame = (OTA_DataFrameHeader_t *)data;
 
@@ -626,10 +632,10 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 
 				}
 				
-				//printf("seqno %u, data len: %u\r\n",frame->seqno, frame->dataLength);
+				printf("seqno %u, data len: %u\r\n",frame->seqno, frame->dataLength);
 				//buffer_dump((uint8_t *)data,uip_datalen());
 				/* Write data into flash */
-				xmem_pwrite(frame->data, frame->dataLength, 4 * 1024 + frame->seqno * 55);
+				xmem_pwrite(frame->data, frame->dataLength, 4 * 1024 + ota_info_current.totalLen);
 				ota_info_current.totalLen += frame->dataLength;
 				
 				/* Request next block */
@@ -638,7 +644,8 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 				req.version = ota_info_current.version;
 				req.seqno = ++ota_info_current.seqno;
 
-				if(req.seqno == ota_info_current.maxSeqno){
+				if(req.seqno == ota_info_current.maxSeqno ||
+					pkt_type == OTA_FRAME_TYPE_FINISH ){
 					ota_info_current.state = OTA_STATE_FINISH;
 				}
 				
@@ -655,7 +662,7 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 				uint32_t i;
 
 				
-				printf("seqno %u, checkCode: %lu\r\n",frame->seqno, frame->checkCode);
+				printf("seqno %u, checkCode: 0x%08lx\r\n",frame->seqno, frame->checkCode);
 				//buffer_dump((uint8_t *)data,uip_datalen());
 
 				/* re-generate check code */
@@ -670,6 +677,7 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 					xmem_pread(buf,len,i);
 					
 					checkCode = crc32_data(buf, len, checkCode);
+					printf("local checkCode: 0x%08lx\r\n", checkCode);
 
 					i += len;
 					if(len <= 0){
