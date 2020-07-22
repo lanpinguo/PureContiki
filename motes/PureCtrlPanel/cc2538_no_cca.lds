@@ -35,9 +35,7 @@
  */
 MEMORY
 {
-    FLASH_FW (rx) : ORIGIN = FLASH_FW_ADDR, LENGTH = 0x7f800
-    FLASH_BOOT(RX) : ORIGIN = 0x0027F800, LENGTH = 0x3a0
-    FLASH_CCA (RX) : ORIGIN = FLASH_CCA_ADDR, LENGTH = FLASH_CCA_SIZE
+    FLASH_FW (rx) : ORIGIN = FLASH_FW_ADDR, LENGTH = FLASH_FW_SIZE
 
     /*
      * If PM2 is enabled, then the PM2 SRAM limitations apply, i.e. the
@@ -105,6 +103,7 @@ SECTIONS
 
     _heap = .;
     _eheap = ORIGIN(FRSRAM) + LENGTH(FRSRAM);
+    end = _eheap;
 
     .nrdata (NOLOAD) :
     {
@@ -113,20 +112,6 @@ SECTIONS
         _enrdata = .;
     } > NRSRAM
 
-
-    .bootloader :
-    {
-        _bootloader = .;
-        KEEP(*(.boot_vectors))
-        KEEP(*(.boot_fw))
-        KEEP(*(.boot_data))
-        _ebootloader = .;
-    } > FLASH_BOOT
-
-    .flashcca :
-    {
-        *(.flashcca)
-    } > FLASH_CCA
 
 
 }

@@ -204,4 +204,22 @@ uip_ipaddr2str(const uip_ipaddr_t *addr, char* buf, int len_max)
   return len;
 }
 
+void buffer_dump(uint8_t * buf, uint32_t len)
+{
+  uint16_t i;
+
+  
+  //printf("block  %lu:", len);
+  for (i = 0; i < len ; i++) {
+    uint8_t data = buf[i];
+	if(i % 16 == 0){
+      printf("\r\n");
+	}
+    printf("%02x ", data);
+  }
+  printf("\r\n");
+}
+
+
+
 /*---------------------------------------------------------------------------*/
