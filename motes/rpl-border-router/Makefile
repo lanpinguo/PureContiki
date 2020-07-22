@@ -85,7 +85,14 @@ endif
 ifeq ($(PREFIX),)
  PREFIX = fd00::1/64
 endif
-SOURCE_LDSCRIPT = ./cc2538_boot.lds
+
+ifeq ($(OTA_ENABLE),1)
+  CFLAGS += -DOTA_VERSION_NO_CCA=1
+  SOURCE_LDSCRIPT = ./cc2538_no_cca.lds
+else
+  SOURCE_LDSCRIPT = ./cc2538_boot.lds
+endif
+
 CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
 
