@@ -520,9 +520,11 @@ typedef uint32_t rtimer_clock_t;
 #ifndef UIP_CONF_TCP
 #define UIP_CONF_TCP                         1
 #endif
+
 #ifndef UIP_CONF_TCP_MSS
 #define UIP_CONF_TCP_MSS                    64
 #endif
+
 #define UIP_CONF_UDP                         1
 #define UIP_CONF_UDP_CHECKSUMS               1
 #define UIP_CONF_ICMP6                       1
@@ -540,9 +542,8 @@ typedef uint32_t rtimer_clock_t;
 #endif
 
 /* uIP */
-#ifndef UIP_CONF_BUFFER_SIZE
+#undef UIP_CONF_BUFFER_SIZE
 #define UIP_CONF_BUFFER_SIZE                128
-#endif
 
 #define UIP_CONF_IPV6_QUEUE_PKT              1
 #define UIP_CONF_IPV6_CHECKS                 1
@@ -580,7 +581,7 @@ typedef uint32_t rtimer_clock_t;
 /* Network setup for non-IPv6 (rime). */
 #define UIP_CONF_IP_FORWARD                  1
 
-#define UIP_CONF_BUFFER_SIZE               128
+#define UIP_CONF_BUFFER_SIZE               	128
 
 #define RIME_CONF_NO_POLITE_ANNOUCEMENTS     0
 

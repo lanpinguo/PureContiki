@@ -157,16 +157,6 @@ set_rf_params(void)
   /* Populate linkaddr_node_addr. Maintain endianness */
   memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
 
-#if STARTUP_CONF_VERBOSE
-  {
-    int i;
-    printf("Node Configured with address ");
-    for(i = 0; i < LINKADDR_SIZE - 1; i++) {
-      printf("%02x:", linkaddr_node_addr.u8[i]);
-    }
-    printf("%02x\n", linkaddr_node_addr.u8[i]);
-  }
-#endif
 
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
@@ -251,6 +241,36 @@ int rf_ext_driver_register(void)
     cc2592_hgm_enable();
 	return 0;
 }
+
+
+int show_system_info(uint32_t mode)
+{
+    int i;
+
+	if(mode & 0x1){
+		PUTS(CONTIKI_VERSION_STRING);
+		PUTS(BOARD_STRING);
+
+		soc_print_info();
+
+		PRINTF("\r\nSys Status: 0x%08lx\r\n", REG(SYS_CTRL_CLOCK_STA));
+		PRINTF("Net: ");
+		PRINTF("%s\r\n", NETSTACK_NETWORK.name);
+		PRINTF("MAC: ");
+		PRINTF("%s\r\n", NETSTACK_MAC.name);
+		PRINTF("RDC: ");
+		PRINTF("%s\r\n", NETSTACK_RDC.name);
+	}
+	
+	if(mode & 0x02){
+	    printf("Node address ");
+	    for(i = 0; i < LINKADDR_SIZE - 1; i++) {
+	      printf("%02x:", linkaddr_node_addr.u8[i]);
+	    }
+	    printf("%02x\r\n", linkaddr_node_addr.u8[i]);
+	}
+	return 0;
+}
  
 int
 main(void)
@@ -309,21 +329,7 @@ main(void)
 	INTERRUPTS_ENABLE();
 	//fade(LEDS_GREEN);
 
-	PUTS(CONTIKI_VERSION_STRING);
-	PUTS(BOARD_STRING);
-#if STARTUP_CONF_VERBOSE
-	soc_print_info();
-#endif
-
-
-	PRINTF("\r\nSys Status: 0x%08lx\r\n", REG(SYS_CTRL_CLOCK_STA));
-	PRINTF("Net: ");
-	PRINTF("%s\r\n", NETSTACK_NETWORK.name);
-	PRINTF("MAC: ");
-	PRINTF("%s\r\n", NETSTACK_MAC.name);
-	PRINTF("RDC: ");
-	PRINTF("%s\r\n", NETSTACK_RDC.name);
-
+	
 	/* Initialise the H/W RNG engine. */
 	random_init(0);
 
@@ -337,6 +343,8 @@ main(void)
 
 	set_rf_params();
 
+	show_system_info(0x3);
+	
 #if CRYPTO_CONF_INIT
 	crypto_init();
 	crypto_disable();
