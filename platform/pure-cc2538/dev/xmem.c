@@ -214,7 +214,7 @@ xmem_pread(void *_p, int size, unsigned long offset)
   for(; p < end; p++) {
     unsigned char u;
     SPI_READ(u);
-    *p = ~u;
+    *p = u;
   }
 
   SPI_FLASH_DISABLE();
@@ -224,7 +224,6 @@ xmem_pread(void *_p, int size, unsigned long offset)
   return size;
 }
 /*---------------------------------------------------------------------------*/
-/* Here write the inverse code of data  into flash*/
 static const unsigned char *
 program_page(unsigned long offset, const unsigned char *p, int nbytes)
 {
@@ -241,7 +240,7 @@ program_page(unsigned long offset, const unsigned char *p, int nbytes)
 	SPI_WRITE_FAST(offset >> 0);	/* LSB */
 
 	for(; p < end; p++) {
-		SPI_WRITE_FAST(~*p);
+		SPI_WRITE_FAST(*p);
 	}
 	SPI_WAITFORTx_ENDED();
 

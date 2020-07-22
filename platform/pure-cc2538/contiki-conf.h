@@ -328,6 +328,8 @@ typedef uint32_t rtimer_clock_t;
 
 #define TSCH_CONF_CHANNEL_SCAN_DURATION						(CLOCK_SECOND * 4)
 
+#define TSCH_CONF_EB_PERIOD									(CLOCK_SECOND * 2)								
+
 #if WITH_SECURITY
 
 /* Enable security */
