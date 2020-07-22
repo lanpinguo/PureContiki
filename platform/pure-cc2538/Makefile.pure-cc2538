@@ -6,7 +6,7 @@ endif
 
 CONTIKI_TARGET_DIRS = . dev
 
-CONTIKI_TARGET_SOURCEFILES += xmem.c 
+CONTIKI_TARGET_SOURCEFILES += util.c xmem.c ota_upgrade.c
 
 
 ifdef PLATFORM_HAS_LEDS

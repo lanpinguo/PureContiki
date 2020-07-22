@@ -30,6 +30,17 @@
 
 #define NVIC_VECTOR_SIZE					(163*4)
 	
+#define IMG_HEADER_SIZE						(4 * 1024)
+#define IMG_DATA_MAX_SIZE					(512 * 1024)
+#define IMG_FACTORY_HEADER_START 			0
+#define IMG_FACTORY_DATA_START 				(IMG_FACTORY_HEADER_START + IMG_HEADER_SIZE)
+#define IMG_FACTORY_DATA_CAPACITY			IMG_DATA_MAX_SIZE
+#define IMG_1_HEADER_START 					(IMG_FACTORY_DATA_START  + IMG_FACTORY_DATA_CAPACITY)
+#define IMG_1_DATA_START 					(IMG_1_HEADER_START + IMG_HEADER_SIZE)
+#define IMG_1_DATA_CAPACITY					IMG_DATA_MAX_SIZE
+#define IMG_2_HEADER_START 					(IMG_1_DATA_START  + IMG_1_DATA_CAPACITY)
+#define IMG_2_DATA_START 					(IMG_2_HEADER_START + IMG_HEADER_SIZE)
+#define IMG_2_DATA_CAPACITY					IMG_DATA_MAX_SIZE
 	
 
  
@@ -98,7 +109,24 @@ typedef struct
 	uint16_t 	seqno;
 	uint32_t 	fileLen;		/* image file total length in bytes */
 	uint16_t 	blockSize;		/* max size in a block */
+	uint32_t 	checkCode;
+	OTA_UPGRADE_OPTION_e option;
+	OTA_State_e	state;
+}__attribute__ ((packed)) OTA_FlashImageHeader_t;
+
+
+
+typedef struct
+{
+	uint32_t 	deviceType;
+	uint32_t 	version;
+	uint8_t 	primary;
+	uint16_t 	seqno;
+	uint32_t 	fileLen;		/* image file total length in bytes */
+	uint16_t 	blockSize;		/* max size in a block */
 	uint32_t 	totalLen;		/* total length in bytes */
+	uint32_t 	checkCode;
+	OTA_UPGRADE_OPTION_e option;
 	OTA_State_e	state;
 }__attribute__ ((packed)) OTA_Info_t;
 
