@@ -6,7 +6,7 @@ endif
 
 CONTIKI_TARGET_DIRS = . dev
 
-CONTIKI_TARGET_SOURCEFILES += util.c xmem.c ota_upgrade.c
+CONTIKI_TARGET_SOURCEFILES += xmem.c 
 
 
 ifdef PLATFORM_HAS_LEDS
@@ -28,10 +28,10 @@ endif
 endif
 
 ifdef BOOTLOADER_MODE_ENABLE
-  CONTIKI_TARGET_SOURCEFILES += boot_main.c
+  CONTIKI_TARGET_SOURCEFILES += boot_main.c 
 else
   CONTIKI_TARGET_SOURCEFILES += contiki-main.c
-  CONTIKI_TARGET_SOURCEFILES += sensors.c smartrf-sensors.c
+  CONTIKI_TARGET_SOURCEFILES += sensors.c smartrf-sensors.c util.c ota_upgrade.c
 endif
 
 ifdef PLATFORM_HAS_ADC_ALS

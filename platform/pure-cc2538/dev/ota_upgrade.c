@@ -33,7 +33,8 @@ extern int show_system_info(uint32_t mode);
 static struct uip_udp_conn *server_conn;
 static struct uip_udp_conn *tx_conn;
 
-static uint8_t buf[1024]; /* flash shared buf */
+#define FLASH_BUF_LEN	512
+static uint8_t buf[FLASH_BUF_LEN]; /* flash shared buf */
 
 
 
@@ -163,9 +164,9 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 				ota_info_current.checkCode = frame->checkCode;
 				/* re-generate check code */
 				for(i = 0; i < ota_info_current.fileLen; ){
-					int len = 1024;
+					int len = FLASH_BUF_LEN;
 
-					if(ota_info_current.fileLen - i < 1024){
+					if(ota_info_current.fileLen - i < FLASH_BUF_LEN){
 						len = ota_info_current.fileLen - i ;
 					}
 						
@@ -218,20 +219,8 @@ ota_packet_handler(void)
 		appdata = (char *)uip_appdata;
 		appdata[uip_datalen()] = 0;
 
-		//buffer_dump((uint8_t *)appdata,uip_datalen());
+		/*buffer_dump((uint8_t *)appdata,uip_datalen());*/
 		OTA_StateMachineUpdate(appdata,0);
-#if 0
-		printf("DATA recv '%s' from ", appdata);
-		printf("%d", UIP_IP_BUF->srcipaddr.u8[sizeof(UIP_IP_BUF->srcipaddr.u8) - 1]);
-		printf("\r\n");
-
-		printf("DATA sending reply\r\n");
-	    uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
-		tx_conn->rport = UIP_UDP_BUF->srcport;
-		//uip_ipaddr_copy(&server_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
-		uip_udp_packet_send(tx_conn, "Reply", sizeof("Reply"));
-		//uip_create_unspecified(&server_conn->ripaddr);
-#endif		
 	}
 }
 

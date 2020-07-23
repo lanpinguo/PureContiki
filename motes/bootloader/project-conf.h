@@ -32,7 +32,7 @@
 #define PROJECT_CONF_H_
 
 #define FLASH_CONF_FW_ADDR				(CC2538_DEV_FLASH_ADDR + 10*1024)
-#define FLASH_CONF_FW_SIZE 				(502*1024)   /* 512 Pages, 2K per Page */
+#define FLASH_CONF_FW_SIZE 				((512 - 10 - 4 - 2)*1024)   /* 512 Pages, 2K per Page */
 
 #define FLASH_CONF_BOOT_ADDR			(CC2538_DEV_FLASH_ADDR + CC2538_DEV_FLASH_SIZE - 4*1024)
 #define FLASH_CONF_BOOT_SIZE 			(4*1024)   /* 4 Pages, 2K per Page */
