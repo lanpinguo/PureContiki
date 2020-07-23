@@ -64,7 +64,7 @@
 #include "ieee-addr.h"
 #include "lpm.h"
 #include "flash.h"
-
+#include "rom-util.h"
 #include "xmem.h"
 #include "ota_types.h"
 
@@ -84,6 +84,8 @@ enum {
 #define BOOT_VERSION_STRING "1.0.x"
 #endif /* BOOT_VERSION_STRING */
 
+#define SHARED_BUF_MAX						(2 * 1024)
+
 #define GPIO_A_DIR							0x400D9400
 #define GPIO_A_DATA							0x400D9000
 #define GPIO_C_DIR							0x400DB400
@@ -91,10 +93,14 @@ enum {
 
 #define HWREG(x)  							(*((volatile unsigned long *)(x)))
 
-char dummy[] 		= "dummy loop\r\n";
-char no_img_found[] = "No Image Found\r\n";
-char img_found[] 	= "Found Image:\r\n";
 
+
+static char dummy[] 		= "dummy loop\r\n";
+static char no_img_found[] = "No Image Found\r\n";
+static char img_found[] 	= "Found Image:\r\n";
+
+
+static char shared_buf[SHARED_BUF_MAX] ;
 /*---------------------------------------------------------------------------*/
 void uart_write_byte(uint8_t uart, uint8_t b);
 uint32_t W25qxx_ReadID(void);
@@ -149,7 +155,7 @@ int dbg_output(char * buf, uint32_t encoding, uint32_t len)
 
 int boot_app(void)
 {
-	volatile uint32_t ledgerPageAddr = CC2538_DEV_FLASH_ADDR;
+	volatile uint32_t ledgerPageAddr = FLASH_FW_ADDR;
 
 	// Set direction output and initial value for PC2 and PC0
 	// Greed LED on PA2
@@ -221,7 +227,11 @@ int main(void)
 {
 	int rc = 0;
 	uint32_t w25q_id;
+	OTA_FlashImageHeader_t  img_hdr ;
+	OTA_FlashImageStatus_t  img_status;
 
+
+		
 	
 	nvic_init();
 	
@@ -252,6 +262,74 @@ int main(void)
 	if(rc != 0){
 		dbg_output(no_img_found, ENCODING_TYPE_RAW, sizeof(no_img_found));
 	}
+
+	/* Try copy a image from external flash */
+	xmem_pread(&img_hdr,sizeof(OTA_FlashImageHeader_t),IMG_1_HEADER_START);
+	xmem_pread(&img_status,sizeof(OTA_FlashImageStatus_t),IMG_1_STATUS_OFFSET);
+	
+	dbg_output("Check ext-img-1 size:", ENCODING_TYPE_RAW, sizeof("FCheck ext-img-1 size:"));
+	dbg_output((char*)&img_hdr.fileLen, ENCODING_TYPE_UTF8, sizeof(img_hdr.fileLen));
+	dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
+
+	
+	if(img_hdr.deviceType != 0xFFFFFFFF &&
+		img_hdr.fileLen < FLASH_FW_SIZE){
+		
+		int i;
+		int count;
+
+		
+		dbg_output("Found ext-img-1:", ENCODING_TYPE_RAW, sizeof("Found ext-img-1:"));
+		dbg_output((char*)&img_hdr.fileLen, ENCODING_TYPE_UTF8, sizeof(img_hdr.fileLen));
+		dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
+
+		/* First, erase chip flash */
+		rom_util_page_erase(FLASH_FW_ADDR, FLASH_FW_SIZE);
+
+		dbg_output("copy ext-img :\r\n", ENCODING_TYPE_RAW, sizeof("copy ext-img :\r\n"));
+		/* copy ext-img to chip flash */
+		for(i = 0 ; i < img_hdr.fileLen; ){
+
+			if(img_hdr.fileLen - i < SHARED_BUF_MAX){
+				count = img_hdr.fileLen - i;
+				/*memset(shared_buf,0xFF,SHARED_BUF_MAX);*/
+				if(count % FLASH_WORD_SIZE != 0){
+					count = (count / FLASH_WORD_SIZE + 1) * FLASH_WORD_SIZE;
+				}
+			}
+			else{
+				count = SHARED_BUF_MAX;
+			}
+			
+			xmem_pread(shared_buf,count,IMG_1_DATA_START + i);
+
+			dbg_output(".", ENCODING_TYPE_RAW, sizeof("."));
+			if( i % 32){
+				dbg_output("\r\n", ENCODING_TYPE_RAW, sizeof("\r\n"));
+			}
+			
+		    INTERRUPTS_DISABLE();
+			
+			rom_util_program_flash((uint32_t *)shared_buf,FLASH_FW_ADDR + i, count);
+			
+		    INTERRUPTS_ENABLE();
+			
+			
+			i += count;
+		}
+
+		dbg_output("\r\n", ENCODING_TYPE_RAW, sizeof("\r\n"));
+		dbg_output("Copy Done!!\r\n", ENCODING_TYPE_RAW, sizeof("Copy Done!!\r\n"));
+		dbg_output("Try boot again!!\r\n", ENCODING_TYPE_RAW, sizeof("Try boot again!!\r\n"));
+
+		rc = boot_app();
+		if(rc != 0){
+			dbg_output(no_img_found, ENCODING_TYPE_RAW, sizeof(no_img_found));
+		}
+
+
+	}
+
 
 	while(1) {
 

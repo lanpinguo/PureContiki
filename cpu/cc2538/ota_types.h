@@ -32,13 +32,18 @@
 	
 #define IMG_HEADER_SIZE						(4 * 1024)
 #define IMG_DATA_MAX_SIZE					(512 * 1024)
+
 #define IMG_FACTORY_HEADER_START 			0
 #define IMG_FACTORY_DATA_START 				(IMG_FACTORY_HEADER_START + IMG_HEADER_SIZE)
 #define IMG_FACTORY_DATA_CAPACITY			IMG_DATA_MAX_SIZE
+
 #define IMG_1_HEADER_START 					(IMG_FACTORY_DATA_START  + IMG_FACTORY_DATA_CAPACITY)
+#define IMG_1_STATUS_OFFSET					(IMG_1_HEADER_START  + 2 * 1024)
 #define IMG_1_DATA_START 					(IMG_1_HEADER_START + IMG_HEADER_SIZE)
 #define IMG_1_DATA_CAPACITY					IMG_DATA_MAX_SIZE
+
 #define IMG_2_HEADER_START 					(IMG_1_DATA_START  + IMG_1_DATA_CAPACITY)
+#define IMG_2_STATUS_OFFSET					(IMG_2_HEADER_START  + 2 * 1024)
 #define IMG_2_DATA_START 					(IMG_2_HEADER_START + IMG_HEADER_SIZE)
 #define IMG_2_DATA_CAPACITY					IMG_DATA_MAX_SIZE
 	
@@ -101,6 +106,12 @@ typedef enum {
 }OTA_State_e;
 
 
+typedef enum {
+	OTA_EXT_IMG_STATUS_FRESH = 0xFFFFFFFF ,
+	OTA_EXT_IMG_STATUS_STALE = 0x55AA55AA,
+}OTA_ExtImageStatus_e;
+
+
 typedef struct
 {
 	uint32_t 	deviceType;
@@ -114,6 +125,10 @@ typedef struct
 	OTA_State_e	state;
 }__attribute__ ((packed)) OTA_FlashImageHeader_t;
 
+typedef struct
+{
+	OTA_ExtImageStatus_e	status;
+}__attribute__ ((packed)) OTA_FlashImageStatus_t;
 
 
 typedef struct
