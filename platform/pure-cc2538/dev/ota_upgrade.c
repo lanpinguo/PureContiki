@@ -63,6 +63,15 @@ int32_t OTA_UpgradeStart(char * data)
 	buffer_dump((uint8_t *)data,uip_datalen());
 
 
+	printf("Erase ext-img: %u \r\n",frame->primary);
+	/* Erase external flash pages */
+	if(frame->primary == 1){
+		xmem_erase(IMG_HEADER_SIZE + IMG_DATA_MAX_SIZE, IMG_1_HEADER_START);
+	}
+	else{
+		xmem_erase(IMG_HEADER_SIZE + IMG_DATA_MAX_SIZE, IMG_2_HEADER_START);
+	}
+
 	ota_info_current.fileLen = frame->fileLen;
 	ota_info_current.blockSize = frame->blockSize;
 	ota_info_current.state = OTA_STATE_RUNNING;
@@ -92,117 +101,103 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 	}
 
 	
-	switch(ota_info_current.state){
-		case OTA_STATE_NONE:{
-			if(pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST){
-				OTA_UpgradeStart(data);
+	if(ota_info_current.state == OTA_STATE_NONE){
+		
+		if(pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST){
+			OTA_UpgradeStart(data);
+		}
+	}
+	else if (ota_info_current.state == OTA_STATE_RUNNING){
+		
+		if(pkt_type == OTA_FRAME_TYPE_DATA ||
+			pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST ||
+			pkt_type == OTA_FRAME_TYPE_FINISH ){
+			
+			OTA_DataRequestFrame_t req;
+			OTA_DataFrameHeader_t * frame = (OTA_DataFrameHeader_t *)data;
 
-				/* Erase external flash pages */
-				//xmem_erase(516 * 1024, 0);
+			if (pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST){
+				OTA_UpgradeRequestFrameHeader_t * frame = (OTA_UpgradeRequestFrameHeader_t *)data;
+
+				if(frame->option == OTA_UPGRADE_OPTION_RESTART){
+					OTA_UpgradeStart(data);
+				}
+
 			}
-			break;
-		}
-		case OTA_STATE_START:{
+			
+			printf("seqno %u, data len: %u\r\n",frame->seqno, frame->dataLength);
+			//buffer_dump((uint8_t *)data,uip_datalen());
+			/* Write data into flash */
+			xmem_pwrite(frame->data,
+						frame->dataLength,
+						IMG_1_DATA_START + frame->seqno * ota_info_current.blockSize);
+			ota_info_current.totalLen += frame->dataLength;
 
-
-			break;
-		}
-
-		case OTA_STATE_RUNNING:{
-			if(pkt_type == OTA_FRAME_TYPE_DATA ||
-				pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST ||
-				pkt_type == OTA_FRAME_TYPE_FINISH ){
-				
-				OTA_DataRequestFrame_t req;
-				OTA_DataFrameHeader_t * frame = (OTA_DataFrameHeader_t *)data;
-
-				if (pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST){
-					OTA_UpgradeRequestFrameHeader_t * frame = (OTA_UpgradeRequestFrameHeader_t *)data;
-
-					if(frame->option == OTA_UPGRADE_OPTION_RESTART){
-						OTA_UpgradeStart(data);
-					}
-
-				}
-				
-				printf("seqno %u, data len: %u\r\n",frame->seqno, frame->dataLength);
-				//buffer_dump((uint8_t *)data,uip_datalen());
-				/* Write data into flash */
-				xmem_pwrite(frame->data,
-							frame->dataLength,
-							IMG_1_DATA_START + frame->seqno * ota_info_current.blockSize);
-				ota_info_current.totalLen += frame->dataLength;
-
-				if(ota_info_current.totalLen >= ota_info_current.fileLen){
-					ota_info_current.state = OTA_STATE_FINISH;
-				}
-				/* Request next block */
-				req.type = OTA_FRAME_TYPE_DATA_REQUEST;
-				req.deviceType = ota_info_current.deviceType;
-				req.version = ota_info_current.version;
-				req.seqno = ++ota_info_current.seqno;
-
-				if(	pkt_type == OTA_FRAME_TYPE_FINISH ){
-					ota_info_current.state = OTA_STATE_FINISH;
-				}
-				
-			    uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
-				tx_conn->rport = UIP_UDP_BUF->srcport;
-				uip_udp_packet_send(tx_conn, &req, sizeof(req));
+			if(ota_info_current.totalLen >= ota_info_current.fileLen){
+				ota_info_current.state = OTA_STATE_FINISH;
 			}
-			break;
+			/* Request next block */
+			req.type = OTA_FRAME_TYPE_DATA_REQUEST;
+			req.deviceType = ota_info_current.deviceType;
+			req.version = ota_info_current.version;
+			req.seqno = ++ota_info_current.seqno;
+
+			if(	pkt_type == OTA_FRAME_TYPE_FINISH ){
+				ota_info_current.state = OTA_STATE_FINISH;
+			}
+			
+		    uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
+			tx_conn->rport = UIP_UDP_BUF->srcport;
+			uip_udp_packet_send(tx_conn, &req, sizeof(req));
 		}
-		case OTA_STATE_FINISH:{
-			if(pkt_type == OTA_FRAME_TYPE_FINISH){
-				OTA_FinishFrameHeader_t * frame = (OTA_FinishFrameHeader_t *)data;
-				uint32_t checkCode = 0xFFFFFFFF;
-				uint32_t i;
+	}
+	else if (ota_info_current.state == OTA_STATE_FINISH){
+		
+		if(pkt_type == OTA_FRAME_TYPE_FINISH){
+			OTA_FinishFrameHeader_t * frame = (OTA_FinishFrameHeader_t *)data;
+			uint32_t checkCode = 0xFFFFFFFF;
+			uint32_t i;
 
-				
-				printf("seqno %u, checkCode: 0x%08lx\r\n",frame->seqno, frame->checkCode);
-				//buffer_dump((uint8_t *)data,uip_datalen());
-				ota_info_current.checkCode = frame->checkCode;
-				/* re-generate check code */
-				for(i = 0; i < ota_info_current.fileLen; ){
-					int len = FLASH_BUF_LEN;
+			
+			printf("seqno %u, checkCode: 0x%08lx\r\n",frame->seqno, frame->checkCode);
+			//buffer_dump((uint8_t *)data,uip_datalen());
+			ota_info_current.checkCode = frame->checkCode;
+			/* re-generate check code */
+			for(i = 0; i < ota_info_current.fileLen; ){
+				int len = FLASH_BUF_LEN;
 
-					if(ota_info_current.fileLen - i < FLASH_BUF_LEN){
-						len = ota_info_current.fileLen - i ;
-					}
-						
-					if(len <= 0){
-						break;
-					}
+				if(ota_info_current.fileLen - i < FLASH_BUF_LEN){
+					len = ota_info_current.fileLen - i ;
+				}
 					
-					xmem_pread(buf, len, IMG_1_DATA_START + i);
-					
-					checkCode = crc32_data(buf, len, checkCode);
-
-					i += len;
+				if(len <= 0){
+					break;
 				}
+				
+				xmem_pread(buf, len, IMG_1_DATA_START + i);
+				
+				checkCode = crc32_data(buf, len, checkCode);
 
-				if(checkCode == frame->checkCode){
-					OTA_FlashImageHeader_t *imgHeader = (OTA_FlashImageHeader_t*)buf;
-
-					imgHeader->deviceType 	= ota_info_current.deviceType;
-					imgHeader->version 		= ota_info_current.version;
-					imgHeader->fileLen		= ota_info_current.fileLen;
-					imgHeader->checkCode	= ota_info_current.checkCode;
-					imgHeader->blockSize	= ota_info_current.blockSize;
-					xmem_pwrite(buf,
-								sizeof(OTA_FlashImageHeader_t),
-								IMG_1_HEADER_START);
-
-
-				}
-				printf("total lentgh : %lu, Local Check Code: 0x%08lx\r\n",ota_info_current.totalLen, checkCode);
-				ota_info_current.state = OTA_STATE_NONE;
+				i += len;
 			}
 
-			break;
+			if(checkCode == frame->checkCode){
+				OTA_FlashImageHeader_t *imgHeader = (OTA_FlashImageHeader_t*)buf;
+
+				imgHeader->deviceType 	= ota_info_current.deviceType;
+				imgHeader->version 		= ota_info_current.version;
+				imgHeader->fileLen		= ota_info_current.fileLen;
+				imgHeader->checkCode	= ota_info_current.checkCode;
+				imgHeader->blockSize	= ota_info_current.blockSize;
+				xmem_pwrite(buf,
+							sizeof(OTA_FlashImageHeader_t),
+							IMG_1_HEADER_START);
+
+
+			}
+			printf("total lentgh : %lu, Local Check Code: 0x%08lx\r\n",ota_info_current.totalLen, checkCode);
+			ota_info_current.state = OTA_STATE_NONE;
 		}
-		default :
-			break;
 
 	}
 
