@@ -229,7 +229,9 @@ int main(void)
 	uint32_t w25q_id;
 	OTA_FlashImageHeader_t  img_hdr ;
 	OTA_FlashImageStatus_t  img_status;
-
+	uint32_t imgHeaderStartOffset = 0;
+	uint32_t imgStatusOffset = 0;
+	uint32_t imgDataStartOffset = 0;
 
 		
 	
@@ -258,76 +260,102 @@ int main(void)
 	//watchdog_start();
 	//fade(LEDS_ORANGE);
 
+
+	/* Try copy a image from external flash */
+
+	for(int s = 0; s < 2 ; s++ ){
+
+		if(s == 0){
+			imgHeaderStartOffset 	= IMG_1_HEADER_START;
+			imgStatusOffset 		= IMG_1_STATUS_OFFSET;
+			imgDataStartOffset 		= IMG_1_DATA_START ;
+		}
+		else{
+			imgHeaderStartOffset 	= IMG_2_HEADER_START;
+			imgStatusOffset 		= IMG_2_STATUS_OFFSET;
+			imgDataStartOffset 		= IMG_2_DATA_START;
+		}
+	
+		xmem_pread(&img_hdr,sizeof(OTA_FlashImageHeader_t),imgHeaderStartOffset);
+		xmem_pread(&img_status,sizeof(OTA_FlashImageStatus_t),imgStatusOffset);
+		
+		dbg_output((s == 0 ? "Check ext-img 1:" : "Check ext-img 2:"),
+					ENCODING_TYPE_RAW, 
+					sizeof("Check ext-img 1:"));
+		dbg_output((char*)&img_hdr, ENCODING_TYPE_UTF8, sizeof(img_hdr));
+		dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
+
+		
+		if(img_hdr.deviceType != 0xFFFFFFFF &&
+			img_hdr.fileLen < FLASH_FW_SIZE){
+			
+			int pos;
+			int count;
+			int i;
+			
+
+			if(img_status.status == OTA_EXT_IMG_STATUS_STALE){
+				continue;
+			}
+			
+			dbg_output((s == 0 ? "Found ext-img-1:" : "Found ext-img-2:"),
+						ENCODING_TYPE_RAW,
+						sizeof("Found ext-img-1:"));
+			dbg_output((char*)&img_hdr.fileLen, ENCODING_TYPE_UTF8, sizeof(img_hdr.fileLen));
+			dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
+
+			/* First, erase on-chip flash */
+			rom_util_page_erase(FLASH_FW_ADDR, FLASH_FW_SIZE);
+
+			dbg_output("copy ext-img :\r\n", ENCODING_TYPE_RAW, sizeof("copy ext-img :\r\n"));
+			/* copy ext-img to on-chip flash */
+			for(pos = 0, i = 1 ; pos < img_hdr.fileLen; i++){
+
+				if(img_hdr.fileLen - pos < SHARED_BUF_MAX){
+					count = img_hdr.fileLen - pos;
+					/*memset(shared_buf,0xFF,SHARED_BUF_MAX);*/
+					if(count % FLASH_WORD_SIZE != 0){
+						count = (count / FLASH_WORD_SIZE + 1) * FLASH_WORD_SIZE;
+					}
+				}
+				else{
+					count = SHARED_BUF_MAX;
+				}
+				
+				xmem_pread(shared_buf, count, imgDataStartOffset + pos);
+
+				dbg_output(".", ENCODING_TYPE_RAW, sizeof("."));
+				if( i % 32 == 0){
+					dbg_output("\r\n", ENCODING_TYPE_RAW, sizeof("\r\n"));
+				}
+				
+			    INTERRUPTS_DISABLE();
+				
+				rom_util_program_flash((uint32_t *)shared_buf, FLASH_FW_ADDR + pos, count);
+				
+			    INTERRUPTS_ENABLE();
+				
+				
+				pos += count;
+			}
+
+			dbg_output("\r\n", ENCODING_TYPE_RAW, sizeof("\r\n"));
+			dbg_output("Copy Done!!\r\n", ENCODING_TYPE_RAW, sizeof("Copy Done!!\r\n"));
+
+			/* Set flag indicating ext-image already copyed into on-chip flash */
+			img_status.status = OTA_EXT_IMG_STATUS_STALE;
+			xmem_pwrite(&img_status,sizeof(OTA_FlashImageStatus_t),imgStatusOffset);
+			
+			break;
+
+		}
+	}
+
+
+	dbg_output("booting:\r\n", ENCODING_TYPE_RAW, sizeof("booting:\r\n"));
 	rc = boot_app();
 	if(rc != 0){
 		dbg_output(no_img_found, ENCODING_TYPE_RAW, sizeof(no_img_found));
-	}
-
-	/* Try copy a image from external flash */
-	xmem_pread(&img_hdr,sizeof(OTA_FlashImageHeader_t),IMG_1_HEADER_START);
-	xmem_pread(&img_status,sizeof(OTA_FlashImageStatus_t),IMG_1_STATUS_OFFSET);
-	
-	dbg_output("Check ext-img-1 size:", ENCODING_TYPE_RAW, sizeof("FCheck ext-img-1 size:"));
-	dbg_output((char*)&img_hdr.fileLen, ENCODING_TYPE_UTF8, sizeof(img_hdr.fileLen));
-	dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
-
-	
-	if(img_hdr.deviceType != 0xFFFFFFFF &&
-		img_hdr.fileLen < FLASH_FW_SIZE){
-		
-		int i;
-		int count;
-
-		
-		dbg_output("Found ext-img-1:", ENCODING_TYPE_RAW, sizeof("Found ext-img-1:"));
-		dbg_output((char*)&img_hdr.fileLen, ENCODING_TYPE_UTF8, sizeof(img_hdr.fileLen));
-		dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
-
-		/* First, erase chip flash */
-		rom_util_page_erase(FLASH_FW_ADDR, FLASH_FW_SIZE);
-
-		dbg_output("copy ext-img :\r\n", ENCODING_TYPE_RAW, sizeof("copy ext-img :\r\n"));
-		/* copy ext-img to chip flash */
-		for(i = 0 ; i < img_hdr.fileLen; ){
-
-			if(img_hdr.fileLen - i < SHARED_BUF_MAX){
-				count = img_hdr.fileLen - i;
-				/*memset(shared_buf,0xFF,SHARED_BUF_MAX);*/
-				if(count % FLASH_WORD_SIZE != 0){
-					count = (count / FLASH_WORD_SIZE + 1) * FLASH_WORD_SIZE;
-				}
-			}
-			else{
-				count = SHARED_BUF_MAX;
-			}
-			
-			xmem_pread(shared_buf,count,IMG_1_DATA_START + i);
-
-			dbg_output(".", ENCODING_TYPE_RAW, sizeof("."));
-			if( i % 32){
-				dbg_output("\r\n", ENCODING_TYPE_RAW, sizeof("\r\n"));
-			}
-			
-		    INTERRUPTS_DISABLE();
-			
-			rom_util_program_flash((uint32_t *)shared_buf,FLASH_FW_ADDR + i, count);
-			
-		    INTERRUPTS_ENABLE();
-			
-			
-			i += count;
-		}
-
-		dbg_output("\r\n", ENCODING_TYPE_RAW, sizeof("\r\n"));
-		dbg_output("Copy Done!!\r\n", ENCODING_TYPE_RAW, sizeof("Copy Done!!\r\n"));
-		dbg_output("Try boot again!!\r\n", ENCODING_TYPE_RAW, sizeof("Try boot again!!\r\n"));
-
-		rc = boot_app();
-		if(rc != 0){
-			dbg_output(no_img_found, ENCODING_TYPE_RAW, sizeof(no_img_found));
-		}
-
-
 	}
 
 
