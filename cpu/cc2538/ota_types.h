@@ -158,6 +158,7 @@ typedef struct
 
 typedef struct
 {
+	uint8_t 	type;
 	uint32_t 	deviceType;
 	uint32_t 	version;
 	uint8_t 	primary;
