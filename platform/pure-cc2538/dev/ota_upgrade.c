@@ -7,6 +7,7 @@
 #include "net/rpl/rpl.h"
 #include "cfs/cfs.h"
 #include "net/netstack.h"
+#include "dev/watchdog.h"
 #include "dev/button-sensor.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,17 +65,17 @@ int32_t OTA_UpgradeStart(char * data)
 
 
 	printf("Erase ext-img: %u \r\n",frame->primary);
+	if(frame->primary >= IMG_MAX_NUMBER){
+		return -1;
+	}
+	
 	/* Erase external flash pages */
-	if(frame->primary == 1){
-		xmem_erase(IMG_HEADER_SIZE + IMG_DATA_MAX_SIZE, IMG_1_HEADER_START);
-	}
-	else{
-		xmem_erase(IMG_HEADER_SIZE + IMG_DATA_MAX_SIZE, IMG_2_HEADER_START);
-	}
+	xmem_erase(IMG_HEADER_SIZE + IMG_DATA_MAX_SIZE, IMG_BASE(frame->primary));
 
 	ota_info_current.fileLen = frame->fileLen;
 	ota_info_current.blockSize = frame->blockSize;
 	ota_info_current.state = OTA_STATE_RUNNING;
+	ota_info_current.primary = frame->primary;
 	
 	req.type = OTA_FRAME_TYPE_DATA_REQUEST;
 	req.deviceType = ota_info_current.deviceType;
@@ -92,7 +93,7 @@ int32_t OTA_UpgradeStart(char * data)
 
 int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 {
-	uint32_t pkt_type = OTA_FRAME_TYPE_NONE;
+	static uint32_t pkt_type = OTA_FRAME_TYPE_NONE;
 
 
 
@@ -100,6 +101,19 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 		pkt_type = data[0];
 	}
 
+	if(pkt_type == OTA_FRAME_TYPE_REBOOT){
+		OTA_RebootRequestFrame_t * frame = (OTA_RebootRequestFrame_t *)data;
+		if(frame->magicNumber == OTA_HDR_MAGIC_NUMBER){
+			if(frame->domain != 0){
+				if(frame->deviceType != ota_info.deviceType){
+					return 0;
+				}
+			}
+			if(frame->reboot == 0x55aa55aa){
+				watchdog_reboot();
+			}
+		}
+	}
 	
 	if(ota_info_current.state == OTA_STATE_NONE){
 		
@@ -113,8 +127,9 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 			pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST ||
 			pkt_type == OTA_FRAME_TYPE_FINISH ){
 			
-			OTA_DataRequestFrame_t req;
+			static OTA_DataRequestFrame_t req;
 			OTA_DataFrameHeader_t * frame = (OTA_DataFrameHeader_t *)data;
+			static char flag;
 
 			if (pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST){
 				OTA_UpgradeRequestFrameHeader_t * frame = (OTA_UpgradeRequestFrameHeader_t *)data;
@@ -130,7 +145,13 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 			/* Write data into flash */
 			xmem_pwrite(frame->data,
 						frame->dataLength,
-						IMG_1_DATA_START + frame->seqno * ota_info_current.blockSize);
+						IMG_DATA_START(ota_info_current.primary) + frame->seqno * ota_info_current.blockSize);
+			/* Set flag indicating current block is programed into ext-flash */
+			flag  = ~(1<<(frame->seqno % 8));
+			xmem_pwrite( &flag,
+						 1,
+						 IMG_FLAG_DOMAIN_OFFSET(ota_info_current.primary) + frame->seqno / 8 );
+			
 			ota_info_current.totalLen += frame->dataLength;
 
 			if(ota_info_current.totalLen >= ota_info_current.fileLen){
@@ -156,7 +177,7 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 		if(pkt_type == OTA_FRAME_TYPE_FINISH){
 			OTA_FinishFrameHeader_t * frame = (OTA_FinishFrameHeader_t *)data;
 			uint32_t checkCode = 0xFFFFFFFF;
-			uint32_t i;
+			static uint32_t i;
 
 			
 			printf("seqno %u, checkCode: 0x%08lx\r\n",frame->seqno, frame->checkCode);
@@ -174,7 +195,7 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 					break;
 				}
 				
-				xmem_pread(buf, len, IMG_1_DATA_START + i);
+				xmem_pread(buf, len, IMG_DATA_START(ota_info_current.primary) + i);
 				
 				checkCode = crc32_data(buf, len, checkCode);
 
@@ -184,15 +205,17 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 			if(checkCode == frame->checkCode){
 				OTA_FlashImageHeader_t *imgHeader = (OTA_FlashImageHeader_t*)buf;
 
+				imgHeader->magicNumber	= OTA_HDR_MAGIC_NUMBER;
 				imgHeader->deviceType 	= ota_info_current.deviceType;
 				imgHeader->version 		= ota_info_current.version;
 				imgHeader->fileLen		= ota_info_current.fileLen;
 				imgHeader->checkCode	= ota_info_current.checkCode;
 				imgHeader->blockSize	= ota_info_current.blockSize;
+
+				
 				xmem_pwrite(buf,
 							sizeof(OTA_FlashImageHeader_t),
-							IMG_1_HEADER_START);
-
+							IMG_HEADER_START(ota_info_current.primary));
 
 			}
 			printf("total lentgh : %lu, Local Check Code: 0x%08lx\r\n",ota_info_current.totalLen, checkCode);
@@ -207,7 +230,7 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 static void
 ota_packet_handler(void)
 {
-	char *appdata;
+	static char *appdata;
 
 	if(uip_newdata()) {
 
