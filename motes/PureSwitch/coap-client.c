@@ -297,6 +297,9 @@ PROCESS_THREAD(coap_client_process, ev, data)
    #endif
  */
 	COAP_CLIENT_ARG_t* p_coap_args;
+	static char msg[64] = "";
+
+	
 
 	PROCESS_BEGIN();
 
@@ -335,8 +338,6 @@ PROCESS_THREAD(coap_client_process, ev, data)
 									  client_chunk_handler);
 
 			}else if(data == &button_left_sensor){
-				static int state = 0;
-				char msg[64] = "";
 
 				state = ~state;
 				coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
@@ -366,7 +367,6 @@ PROCESS_THREAD(coap_client_process, ev, data)
 					                  client_chunk_handler);
 			}
 			else if (p_coap_args->mod_id == COAP_CLIENT_SW){
-				char msg[64] = "";
 				coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
 				coap_set_header_uri_path(request, service_urls[4]);
 				generate_relay_sw_config_payload(p_coap_args->coap_conf,p_coap_args->coap_param, msg);
