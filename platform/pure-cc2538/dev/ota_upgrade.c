@@ -101,25 +101,28 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 		pkt_type = data[0];
 	}
 
-	if(pkt_type == OTA_FRAME_TYPE_REBOOT){
-		OTA_RebootRequestFrame_t * frame = (OTA_RebootRequestFrame_t *)data;
-		if(frame->magicNumber == OTA_HDR_MAGIC_NUMBER){
-			if(frame->domain != 0){
-				if(frame->deviceType != ota_info.deviceType){
-					return 0;
-				}
-			}
-			if(frame->reboot == 0x55aa55aa){
-				watchdog_reboot();
-			}
-		}
-	}
 	
 	if(ota_info_current.state == OTA_STATE_NONE){
 		
 		if(pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST){
+			
 			OTA_UpgradeStart(data);
 		}
+		else if(pkt_type == OTA_FRAME_TYPE_REBOOT){
+			
+			OTA_RebootRequestFrame_t * frame = (OTA_RebootRequestFrame_t *)data;
+			if(frame->magicNumber == OTA_HDR_MAGIC_NUMBER){
+				if(frame->domain != 0){
+					if(frame->deviceType != ota_info.deviceType){
+						return 0;
+					}
+				}
+				if(frame->reboot == 0x55aa55aa){
+					watchdog_reboot();
+				}
+		}
+	}
+
 	}
 	else if (ota_info_current.state == OTA_STATE_RUNNING){
 		
