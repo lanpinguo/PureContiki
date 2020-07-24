@@ -518,6 +518,9 @@ typedef uint32_t rtimer_clock_t;
 #define UIP_CONF_LLH_LEN                     0
 #define UIP_CONF_NETIF_MAX_ADDRESSES         3
 
+
+#define UIP_CONF_STATISTICS					 1
+
 /* TCP, UDP, ICMP */
 #ifndef UIP_CONF_TCP
 #define UIP_CONF_TCP                         1
