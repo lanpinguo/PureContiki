@@ -29,24 +29,21 @@
 #define HAL_IBM_LEDGER_PAGE        			254
 
 #define NVIC_VECTOR_SIZE					(163*4)
+
+#define IMG_MAX_NUMBER						3
 	
 #define IMG_HEADER_SIZE						(4 * 1024)
 #define IMG_DATA_MAX_SIZE					(512 * 1024)
 
-#define IMG_FACTORY_HEADER_START 			0
-#define IMG_FACTORY_DATA_START 				(IMG_FACTORY_HEADER_START + IMG_HEADER_SIZE)
-#define IMG_FACTORY_DATA_CAPACITY			IMG_DATA_MAX_SIZE
+#define IMG_DEFAULLT_FACTORY_START 			0
+#define IMG_DEFAULLT_FACTORY_END 			(4 * 1024)
 
-#define IMG_1_HEADER_START 					(IMG_FACTORY_DATA_START  + IMG_FACTORY_DATA_CAPACITY)
-#define IMG_1_STATUS_OFFSET					(IMG_1_HEADER_START  + 2 * 1024)
-#define IMG_1_DATA_START 					(IMG_1_HEADER_START + IMG_HEADER_SIZE)
-#define IMG_1_DATA_CAPACITY					IMG_DATA_MAX_SIZE
-
-#define IMG_2_HEADER_START 					(IMG_1_DATA_START  + IMG_1_DATA_CAPACITY)
-#define IMG_2_STATUS_OFFSET					(IMG_2_HEADER_START  + 2 * 1024)
-#define IMG_2_DATA_START 					(IMG_2_HEADER_START + IMG_HEADER_SIZE)
-#define IMG_2_DATA_CAPACITY					IMG_DATA_MAX_SIZE
-	
+#define IMG_BASE(i)							(i * (IMG_HEADER_SIZE  + IMG_DATA_MAX_SIZE) + IMG_DEFAULLT_FACTORY_END)
+#define IMG_HEADER_START(i) 				IMG_BASE(i)
+#define IMG_STATUS_OFFSET(i) 				(IMG_BASE(i)  + 64)
+#define IMG_FLAG_DOMAIN_OFFSET(i) 			(IMG_BASE(i)  + 2 * 1024)
+#define IMG_DATA_START(i)  					(IMG_BASE(i) + IMG_HEADER_SIZE)
+#define IMG_DATA_CAPACITY(i) 				IMG_DATA_MAX_SIZE
 
  
 typedef struct
@@ -85,6 +82,7 @@ typedef enum {
 	OTA_FRAME_TYPE_DATA_REQUEST		= 2,
 	OTA_FRAME_TYPE_FINISH			= 3,
 	OTA_FRAME_TYPE_DATA				= 4,
+	OTA_FRAME_TYPE_REBOOT			= 5,
 
 }OTA_FrameType_e;
 
@@ -114,6 +112,7 @@ typedef enum {
 
 typedef struct
 {
+	uint32_t 	magicNumber;
 	uint32_t 	deviceType;
 	uint32_t 	version;
 	uint8_t 	primary;
@@ -149,6 +148,16 @@ typedef struct
 typedef struct
 {
 	uint8_t 	type;
+	uint32_t 	magicNumber;
+	uint32_t 	deviceType;
+	uint32_t 	domain;
+	uint32_t 	reboot;
+
+}__attribute__ ((packed)) OTA_RebootRequestFrame_t;
+
+
+typedef struct
+{
 	uint32_t 	deviceType;
 	uint32_t 	version;
 	uint8_t 	primary;

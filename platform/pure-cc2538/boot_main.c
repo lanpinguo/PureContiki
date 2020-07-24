@@ -226,14 +226,14 @@ void debug_led(void)
 int main(void)
 {
 	int rc = 0;
+	int s = 1;	
 	uint32_t w25q_id;
 	OTA_FlashImageHeader_t  img_hdr ;
 	OTA_FlashImageStatus_t  img_status;
 	uint32_t imgHeaderStartOffset = 0;
 	uint32_t imgStatusOffset = 0;
 	uint32_t imgDataStartOffset = 0;
-
-		
+	uint32_t needRestoreFactoryImg = 0;
 	
 	nvic_init();
 	
@@ -262,45 +262,39 @@ int main(void)
 
 
 	/* Try copy a image from external flash */
+	xmem_pread(&needRestoreFactoryImg,sizeof(needRestoreFactoryImg),IMG_DEFAULLT_FACTORY_START);
+	if(needRestoreFactoryImg == OTA_EXT_IMG_STATUS_FRESH){
+		s = 0; /* search from factory default image */
+	}
 
-	for(int s = 0; s < 2 ; s++ ){
+	for(; s < IMG_MAX_NUMBER ; s++ ){
 
-		if(s == 0){
-			imgHeaderStartOffset 	= IMG_1_HEADER_START;
-			imgStatusOffset 		= IMG_1_STATUS_OFFSET;
-			imgDataStartOffset 		= IMG_1_DATA_START ;
-		}
-		else{
-			imgHeaderStartOffset 	= IMG_2_HEADER_START;
-			imgStatusOffset 		= IMG_2_STATUS_OFFSET;
-			imgDataStartOffset 		= IMG_2_DATA_START;
-		}
+		imgHeaderStartOffset 	= IMG_HEADER_START(s);
+		imgStatusOffset 		= IMG_STATUS_OFFSET(s);
+		imgDataStartOffset 		= IMG_DATA_START(s);
 	
 		xmem_pread(&img_hdr,sizeof(OTA_FlashImageHeader_t),imgHeaderStartOffset);
 		xmem_pread(&img_status,sizeof(OTA_FlashImageStatus_t),imgStatusOffset);
 		
-		dbg_output((s == 0 ? "Check ext-img 1:" : "Check ext-img 2:"),
-					ENCODING_TYPE_RAW, 
-					sizeof("Check ext-img 1:"));
+		dbg_output("Check ext-img:", ENCODING_TYPE_RAW, sizeof("Check ext-img:"));
 		dbg_output((char*)&img_hdr, ENCODING_TYPE_UTF8, sizeof(img_hdr));
 		dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
 
 		
-		if(img_hdr.deviceType != 0xFFFFFFFF &&
-			img_hdr.fileLen < FLASH_FW_SIZE){
+		if( img_hdr.magicNumber ==  OTA_HDR_MAGIC_NUMBER && 
+			img_hdr.deviceType != 0xFFFFFFFF &&
+			img_hdr.fileLen < FLASH_FW_SIZE ){
 			
 			int pos;
 			int count;
 			int i;
 			
 
-			if(img_status.status == OTA_EXT_IMG_STATUS_STALE){
+			if(s != 0 && img_status.status == OTA_EXT_IMG_STATUS_STALE){
 				continue;
 			}
 			
-			dbg_output((s == 0 ? "Found ext-img-1:" : "Found ext-img-2:"),
-						ENCODING_TYPE_RAW,
-						sizeof("Found ext-img-1:"));
+			dbg_output("Found ext-img:",ENCODING_TYPE_RAW,sizeof("Found ext-img:"));
 			dbg_output((char*)&img_hdr.fileLen, ENCODING_TYPE_UTF8, sizeof(img_hdr.fileLen));
 			dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
 
@@ -345,6 +339,12 @@ int main(void)
 			/* Set flag indicating ext-image already copyed into on-chip flash */
 			img_status.status = OTA_EXT_IMG_STATUS_STALE;
 			xmem_pwrite(&img_status,sizeof(OTA_FlashImageStatus_t),imgStatusOffset);
+
+			/* do not search from factory default image in next boot */
+			if(s == 0){
+				needRestoreFactoryImg = OTA_EXT_IMG_STATUS_STALE;
+				xmem_pwrite(&needRestoreFactoryImg,sizeof(OTA_FlashImageStatus_t),IMG_DEFAULLT_FACTORY_START);
+			}
 			
 			break;
 
