@@ -20,7 +20,7 @@
 #include "ota_types.h"
 
 #define DEBUG DEBUG_PRINT
-#define MODULE_ID CONTIKI_MOD_NONE
+#define MODULE_ID CONTIKI_MOD_OTA
 #include "net/ip/uip-debug.h"
 
 extern int show_system_info(uint32_t mode);
@@ -51,6 +51,26 @@ static OTA_Info_t ota_info_current = {
 	.state = OTA_STATE_NONE,
 };
 
+static struct etimer ota_timeout;
+
+
+void BUFFER_DUMP(uint8_t * buf, uint32_t len)
+{
+  uint16_t i;
+
+  
+  //printf("block  %lu:", len);
+  for (i = 0; i < len ; i++) {
+    uint8_t data = buf[i];
+	if(i % 16 == 0){
+      PRINTF("\r\n");
+	}
+    PRINTF("%02x ", data);
+  }
+  PRINTF("\r\n");
+}
+
+
 int32_t OTA_UpgradeStart(char * data)
 {
 	OTA_DataRequestFrame_t req;
@@ -76,6 +96,7 @@ int32_t OTA_UpgradeStart(char * data)
 	ota_info_current.blockSize = frame->blockSize;
 	ota_info_current.state = OTA_STATE_RUNNING;
 	ota_info_current.primary = frame->primary;
+	ota_info_current.totalLen = 0;
 	
 	req.type = OTA_FRAME_TYPE_DATA_REQUEST;
 	req.deviceType = ota_info_current.deviceType;
@@ -93,15 +114,15 @@ int32_t OTA_UpgradeStart(char * data)
 
 int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 {
-	static uint32_t pkt_type = OTA_FRAME_TYPE_NONE;
+	static uint32_t pkt_type;
 
 
-
+	pkt_type = OTA_FRAME_TYPE_NONE;
 	if(data != NULL){
 		pkt_type = data[0];
+		PRINTF("pkt type : %u\r\n",pkt_type);
 	}
 
-	
 	if(ota_info_current.state == OTA_STATE_NONE){
 		
 		if(pkt_type == OTA_FRAME_TYPE_UPGRADE_REQUEST){
@@ -173,6 +194,8 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 		    uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
 			tx_conn->rport = UIP_UDP_BUF->srcport;
 			uip_udp_packet_send(tx_conn, &req, sizeof(req));
+
+			etimer_set(&ota_timeout,  CLOCK_SECOND * 3);
 		}
 	}
 	else if (ota_info_current.state == OTA_STATE_FINISH){
@@ -181,7 +204,9 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 			OTA_FinishFrameHeader_t * frame = (OTA_FinishFrameHeader_t *)data;
 			uint32_t checkCode = 0xFFFFFFFF;
 			static uint32_t i;
+			
 
+			etimer_stop(&ota_timeout);
 			
 			printf("seqno %u, checkCode: 0x%08lx\r\n",frame->seqno, frame->checkCode);
 			//buffer_dump((uint8_t *)data,uip_datalen());
@@ -230,18 +255,50 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 	return 0;
 }
 
+static void try_to_request_data_again(void)
+{
+
+	static OTA_DataRequestFrame_t req;
+
+
+
+	if (ota_info_current.state != OTA_STATE_RUNNING){
+		return;
+	}
+
+	/* Request current block */
+	req.type = OTA_FRAME_TYPE_DATA_REQUEST;
+	req.deviceType = ota_info_current.deviceType;
+	req.version = ota_info_current.version;
+	req.seqno = ota_info_current.seqno;
+
+
+	uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
+	tx_conn->rport = UIP_UDP_BUF->srcport;
+	uip_udp_packet_send(tx_conn, &req, sizeof(req));
+
+	etimer_set(&ota_timeout,  CLOCK_SECOND * 3);
+
+}
+
+
 static void
 ota_packet_handler(void)
 {
 	static char *appdata;
 
+	PRINTF("ota_packet_handler enter \r\n");
 	if(uip_newdata()) {
 
 		appdata = (char *)uip_appdata;
 		appdata[uip_datalen()] = 0;
 
-		/*buffer_dump((uint8_t *)appdata,uip_datalen());*/
+		BUFFER_DUMP((uint8_t *)appdata,uip_datalen());
+		
 		OTA_StateMachineUpdate(appdata,0);
+	}
+	else{
+		printf("ota_packet_handler no new data :%u \r\n",uip_newdata());
 	}
 }
 
@@ -288,10 +345,20 @@ PROCESS_THREAD(ota_upgrade_process, ev, data)
 
 
 	while(1) {
+		
 		PROCESS_YIELD();
+		
 		if(ev == tcpip_event) {
 			ota_packet_handler();
 		}
+
+		if(ev == PROCESS_EVENT_TIMER){
+			if(etimer_expired(&ota_timeout)) {
+				PRINTF("ota_timeout expired\r\n");
+				try_to_request_data_again();
+			}
+		}
+
 	}
 
 	PROCESS_END();
