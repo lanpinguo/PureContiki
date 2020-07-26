@@ -16,6 +16,16 @@
 #include PROJECT_CONF_H
 #endif /* PROJECT_CONF_H */
 /*---------------------------------------------------------------------------*/
+
+#ifndef OTA_DEVICE_TYPE
+#define OTA_DEVICE_TYPE     		0
+#endif
+
+
+#ifndef OTA_FIRMWARE_VERSION
+#define OTA_FIRMWARE_VERSION     		0x00000
+#endif
+
 /**
  * \name Compiler configuration and platform-specific type definitions
  *

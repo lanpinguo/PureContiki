@@ -29,6 +29,8 @@
 #define OTA_FC_DSF_PRESENT                  (0x1 << 1)
 #define OTA_FC_HWV_PRESENT                  (0x1 << 2)
 
+#define OTA_TRY_TIMES_MAX					5
+
 	
 #define HAL_IBM_LEDGER_PAGE        			254
 
@@ -144,6 +146,7 @@ typedef struct
 	uint16_t 	blockSize;		/* max size in a block */
 	uint32_t 	totalLen;		/* total length in bytes */
 	uint32_t 	checkCode;
+	uint32_t 	try_times_max;	/** Try times max when timeout**/
 	OTA_UPGRADE_OPTION_e option;
 	OTA_State_e	state;
 	uip_ipaddr_t ripaddr;   	/**< The IP address of the remote peer. */

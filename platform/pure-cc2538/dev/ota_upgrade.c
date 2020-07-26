@@ -41,14 +41,13 @@ static uint8_t buf[FLASH_BUF_LEN]; /* flash shared buf */
 
 
 
-static OTA_Info_t ota_info;
 static OTA_Info_t ota_info_current = {
-	.deviceType = 1,
-	.version = 0x10000,
-	.primary = 1,
-	.seqno = 0,
-	.totalLen = 0,
-	.state = OTA_STATE_NONE,
+	.deviceType = OTA_DEVICE_TYPE,
+	.version 	= OTA_FIRMWARE_VERSION,
+	.primary 	= 1,
+	.seqno 		= 0,
+	.totalLen 	= 0,
+	.state 		= OTA_STATE_NONE,
 };
 
 static struct etimer ota_timeout;
@@ -77,18 +76,22 @@ int32_t OTA_UpgradeStart(char * data)
 
 	OTA_UpgradeRequestFrameHeader_t * frame = (OTA_UpgradeRequestFrameHeader_t *)data;
 
-	printf("device type: %lu, version: %lu, fileLen : %lu\r\n",
+	PRINTF("device type: %lu, version: %lu, fileLen : %lu\r\n",
 			frame->deviceType,
 			frame->version,
 			frame->fileLen);
-	buffer_dump((uint8_t *)data,uip_datalen());
+	BUFFER_DUMP((uint8_t *)data,uip_datalen());
 
+	if(ota_info_current.deviceType != frame->deviceType){
+		PRINTF("device type mismatch %lu/%lu \r\n",frame->deviceType, ota_info_current.deviceType);
+		return -1;
+	}
 
-	printf("Erase ext-img: %u \r\n",frame->primary);
 	if(frame->primary >= IMG_MAX_NUMBER){
 		return -1;
 	}
 	
+	PRINTF("erase ext-img: %u \r\n",frame->primary);
 	/* Erase external flash pages */
 	xmem_erase(IMG_HEADER_SIZE + IMG_DATA_MAX_SIZE, IMG_BASE(frame->primary));
 
@@ -96,6 +99,7 @@ int32_t OTA_UpgradeStart(char * data)
 	ota_info_current.blockSize = frame->blockSize;
 	ota_info_current.state = OTA_STATE_RUNNING;
 	ota_info_current.primary = frame->primary;
+	ota_info_current.try_times_max = OTA_TRY_TIMES_MAX;
 	ota_info_current.totalLen = 0;
 	ota_info_current.rport  = UIP_UDP_BUF->srcport;
     uip_ipaddr_copy(&ota_info_current.ripaddr, &UIP_IP_BUF->srcipaddr);
@@ -137,7 +141,7 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 			OTA_RebootRequestFrame_t * frame = (OTA_RebootRequestFrame_t *)data;
 			if(frame->magicNumber == OTA_HDR_MAGIC_NUMBER){
 				if(frame->domain != 0){
-					if(frame->deviceType != ota_info.deviceType){
+					if(frame->deviceType != ota_info_current.deviceType){
 						return 0;
 					}
 				}
@@ -167,7 +171,7 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 
 			}
 			
-			printf("seqno %u, data len: %u\r\n",frame->seqno, frame->dataLength);
+			PRINTF("seqno %u, data len: %u\r\n",frame->seqno, frame->dataLength);
 			//buffer_dump((uint8_t *)data,uip_datalen());
 			/* Write data into flash */
 			xmem_pwrite(frame->data,
@@ -211,7 +215,7 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 
 			etimer_stop(&ota_timeout);
 			
-			printf("seqno %u, checkCode: 0x%08lx\r\n",frame->seqno, frame->checkCode);
+			PRINTF("seqno %u, checkCode: 0x%08lx\r\n",frame->seqno, frame->checkCode);
 			//buffer_dump((uint8_t *)data,uip_datalen());
 			ota_info_current.checkCode = frame->checkCode;
 			/* re-generate check code */
@@ -263,7 +267,7 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 				tx_conn->rport = ota_info_current.rport;
 				uip_udp_packet_send(tx_conn, &req, sizeof(req));
 			}
-			printf("total lentgh : %lu, Local Check Code: 0x%08lx\r\n",ota_info_current.totalLen, checkCode);
+			PRINTF("total lentgh : %lu, Local Check Code: 0x%08lx\r\n",ota_info_current.totalLen, checkCode);
 			ota_info_current.state = OTA_STATE_NONE;
 		}
 
@@ -283,6 +287,12 @@ static void try_to_request_data_again(void)
 		return;
 	}
 
+	if(ota_info_current.try_times_max == 0){
+		ota_info_current.state = OTA_STATE_NONE;
+	}
+
+	ota_info_current.try_times_max--;
+	
 	/* Request current block */
 	req.type 		= OTA_FRAME_TYPE_DATA_REQUEST;
 	req.deviceType 	= ota_info_current.deviceType;
@@ -322,7 +332,7 @@ ota_packet_handler(void)
 		OTA_StateMachineUpdate(appdata,0);
 	}
 	else{
-		printf("ota_packet_handler no new data :%u \r\n",uip_newdata());
+		PRINTF("ota_packet_handler no new data :%u \r\n",uip_newdata());
 	}
 }
 
@@ -339,7 +349,7 @@ PROCESS_THREAD(ota_upgrade_process, ev, data)
 	PROCESS_PAUSE();
 
 
-	printf("\r\nUDP server started. nbr:%d routes:%d \r\n",
+	PRINTF("\r\nUDP server started. nbr:%d routes:%d \r\n",
 			NBR_TABLE_CONF_MAX_NEIGHBORS,
 			UIP_CONF_MAX_ROUTES);
 
@@ -348,22 +358,20 @@ PROCESS_THREAD(ota_upgrade_process, ev, data)
 
 	server_conn = udp_new(NULL, 0, NULL);
 	if(server_conn == NULL) {
-		printf("No UDP connection available, exiting the process!\r\n");
+		PRINTF("No UDP connection available, exiting the process!\r\n");
 		PROCESS_EXIT();
 	}
 	
 	udp_bind(server_conn, UIP_HTONS(UDP_SERVER_PORT));
 
-	printf("Created a server connection with remote address ");
-	uip_ipaddr_print(&server_conn->ripaddr);
-	printf(" local/remote port %u/%u\r\n",
+	PRINTF("Created a server connection with local/remote port %u/%u\r\n",
 			UIP_HTONS(server_conn->lport),
 			UIP_HTONS(server_conn->rport));
 
 
 	tx_conn = udp_new(NULL, 0, NULL);
 	if(tx_conn == NULL) {
-		printf("No UDP connection available, exiting the process!\r\n");
+		PRINTF("No UDP connection available, exiting the process!\r\n");
 		PROCESS_EXIT();
 	}
 
