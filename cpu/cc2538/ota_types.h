@@ -1,5 +1,9 @@
 #ifndef _OTA_TYPES_H_
 #define _OTA_TYPES_H_
+
+#include "net/ip/uip.h"
+
+
 /* ------------------------------------------------------------------------------------------------
  *                                          Typedefs
  * ------------------------------------------------------------------------------------------------
@@ -142,6 +146,9 @@ typedef struct
 	uint32_t 	checkCode;
 	OTA_UPGRADE_OPTION_e option;
 	OTA_State_e	state;
+	uip_ipaddr_t ripaddr;   	/**< The IP address of the remote peer. */
+	uint16_t rport;        		/**< The remote port number in network byte order. */
+
 }__attribute__ ((packed)) OTA_Info_t;
 
 
@@ -184,6 +191,7 @@ typedef struct
 	uint32_t 	version;
 	uint16_t 	seqno;
 	uint32_t 	checkCode;
+	uint8_t 	state;
 
 }__attribute__ ((packed)) OTA_FinishFrameHeader_t;
 

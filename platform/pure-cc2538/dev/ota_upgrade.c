@@ -97,14 +97,17 @@ int32_t OTA_UpgradeStart(char * data)
 	ota_info_current.state = OTA_STATE_RUNNING;
 	ota_info_current.primary = frame->primary;
 	ota_info_current.totalLen = 0;
+	ota_info_current.rport  = UIP_UDP_BUF->srcport;
+    uip_ipaddr_copy(&ota_info_current.ripaddr, &UIP_IP_BUF->srcipaddr);
+
 	
 	req.type = OTA_FRAME_TYPE_DATA_REQUEST;
 	req.deviceType = ota_info_current.deviceType;
 	req.version = ota_info_current.version;
 	req.seqno = ota_info_current.seqno = 0;
 	
-    uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
-	tx_conn->rport = UIP_UDP_BUF->srcport;
+    uip_ipaddr_copy(&tx_conn->ripaddr, &ota_info_current.ripaddr);
+	tx_conn->rport = ota_info_current.rport;
 	uip_udp_packet_send(tx_conn, &req, sizeof(req));
 
 	return 0;
@@ -191,8 +194,8 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 				ota_info_current.state = OTA_STATE_FINISH;
 			}
 			
-		    uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
-			tx_conn->rport = UIP_UDP_BUF->srcport;
+		    uip_ipaddr_copy(&tx_conn->ripaddr, &ota_info_current.ripaddr);
+			tx_conn->rport = ota_info_current.rport;
 			uip_udp_packet_send(tx_conn, &req, sizeof(req));
 
 			etimer_set(&ota_timeout,  CLOCK_SECOND * 3);
@@ -246,6 +249,20 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 							IMG_HEADER_START(ota_info_current.primary));
 
 			}
+			else{
+				/** Notify server the image check failed **/
+				OTA_FinishFrameHeader_t req;
+				/* Request next block */
+				req.type = OTA_FRAME_TYPE_FINISH;
+				req.deviceType = ota_info_current.deviceType;
+				req.version = ota_info_current.version;
+				req.seqno = ota_info_current.seqno;
+				req.state = 0xFF; /** check failed **/
+				
+			    uip_ipaddr_copy(&tx_conn->ripaddr, &ota_info_current.ripaddr);
+				tx_conn->rport = ota_info_current.rport;
+				uip_udp_packet_send(tx_conn, &req, sizeof(req));
+			}
 			printf("total lentgh : %lu, Local Check Code: 0x%08lx\r\n",ota_info_current.totalLen, checkCode);
 			ota_info_current.state = OTA_STATE_NONE;
 		}
@@ -267,15 +284,22 @@ static void try_to_request_data_again(void)
 	}
 
 	/* Request current block */
-	req.type = OTA_FRAME_TYPE_DATA_REQUEST;
-	req.deviceType = ota_info_current.deviceType;
-	req.version = ota_info_current.version;
-	req.seqno = ota_info_current.seqno;
+	req.type 		= OTA_FRAME_TYPE_DATA_REQUEST;
+	req.deviceType 	= ota_info_current.deviceType;
+	req.version 	= ota_info_current.version;
+	req.seqno 		= ota_info_current.seqno;
 
 
-	uip_ipaddr_copy(&tx_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
-	tx_conn->rport = UIP_UDP_BUF->srcport;
+    uip_ipaddr_copy(&tx_conn->ripaddr, &ota_info_current.ripaddr);
+	tx_conn->rport = ota_info_current.rport;
 	uip_udp_packet_send(tx_conn, &req, sizeof(req));
+
+	printf("try to request data through tx-connection with remote address ");
+	uip_ipaddr_print(&tx_conn->ripaddr);
+	printf("local/remote port %u/%u\r\n",
+			UIP_HTONS(tx_conn->lport),
+			UIP_HTONS(tx_conn->rport));
+
 
 	etimer_set(&ota_timeout,  CLOCK_SECOND * 3);
 
