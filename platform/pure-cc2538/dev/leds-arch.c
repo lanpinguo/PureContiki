@@ -80,8 +80,6 @@ leds_arch_init(void)
 	    ioc_set_over(leds_table[i].port, leds_table[i].pin, IOC_OVERRIDE_OE);
 	}
 
-
-	printf("leds_arch_init done\r\n");
 }
 /*---------------------------------------------------------------------------*/
 unsigned char
