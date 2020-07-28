@@ -55,7 +55,7 @@
 PROCESS(serial_shell_process, "Contiki serial shell");
 /*---------------------------------------------------------------------------*/
 void
-shell_default_output(const char *text1, int len1, const char *text2, int len2)
+shell_default_output_serial(const char *text1, int len1, const char *text2, int len2)
 {
   int i;
   if(text1 == NULL) {
@@ -80,7 +80,7 @@ shell_default_output(const char *text1, int len1, const char *text2, int len2)
 }
 /*---------------------------------------------------------------------------*/
 void
-shell_prompt(char *str)
+shell_prompt_serial(char *str)
 {
   printf("\r\n%02x.%02x: %s", 
   			linkaddr_node_addr.u8[LINKADDR_CONF_SIZE - 2],
@@ -89,7 +89,7 @@ shell_prompt(char *str)
 }
 /*---------------------------------------------------------------------------*/
 void
-shell_exit(void)
+shell_exit_serial(void)
 {
 }
 /*---------------------------------------------------------------------------*/

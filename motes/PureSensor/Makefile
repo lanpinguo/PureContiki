@@ -19,6 +19,8 @@ PLATFORM_HAS_BUTTON = 1
 PLATFORM_HAS_LEDS = 1
 
 APPS = serial-shell 
+APPS += telnetd
+CFLAGS += -DTELNET_ENABLE=1
 #APPS += ping6
 APPS += er-coap
 APPS += rest-engine

@@ -56,7 +56,8 @@ endif
 APPS += serial-shell 
 APPS += er-coap
 APPS += rest-engine
-
+APPS += telnetd
+CFLAGS += -DTELNET_ENABLE=1
 
 #TSCH CONFIG
 MAKE_WITH_ORCHESTRA ?= 0 # force Orchestra from command line

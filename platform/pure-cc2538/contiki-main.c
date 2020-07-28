@@ -271,6 +271,7 @@ int show_system_info(uint32_t mode)
 	}
 	return 0;
 }
+
  
 int
 main(void)

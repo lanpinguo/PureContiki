@@ -20,6 +20,8 @@ PLATFORM_HAS_BUTTON = 0
 PLATFORM_HAS_HCHO_SENSOR = 1
 
 APPS = serial-shell 
+APPS += telnetd
+CFLAGS += -DTELNET_ENABLE=1
 #APPS += ping6
 APPS += er-coap
 APPS += rest-engine

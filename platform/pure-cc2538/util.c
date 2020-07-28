@@ -30,6 +30,42 @@
 extern int show_system_info(uint32_t mode);
 
 
+extern void shell_default_output_telnet(const char *str1, int len1, const char *str2, int len2);
+extern void shell_prompt_telnet(char *str);
+extern void shell_exit_telnet(void);
+
+extern void shell_default_output_serial(const char *text1, int len1, const char *text2, int len2);
+extern void shell_prompt_serial(char *str);
+extern void shell_exit_serial(void);
+
+
+void
+shell_default_output(const char *str1, int len1, const char *str2, int len2)
+{
+#if TELNET_ENABLE
+	shell_default_output_telnet(str1, len1, str2, len2);
+#endif
+	shell_default_output_serial(str1, len1, str2, len2);
+}
+/*---------------------------------------------------------------------------*/
+void
+shell_exit(void)
+{
+#if TELNET_ENABLE
+	shell_exit_telnet();
+#endif
+	shell_exit_serial();
+}
+
+void
+shell_prompt(char *str)
+{
+#if TELNET_ENABLE
+	shell_prompt_telnet(str);
+#endif
+	shell_prompt_serial(str);
+}
+
 
 PROCESS_NAME(testcoffee_process);
 
@@ -265,13 +301,15 @@ SHELL_COMMAND(list_neighbor_command,
 
 PROCESS_THREAD(shell_list_neighbor_process, ev, data)
 {
-
+	char buf[] = "hello world";
 
 	PROCESS_BEGIN();
 
 	PROCESS_PAUSE();
+	
 	uip_ds6_nbr_dump();
 	rpl_print_neighbor_list();	
+	shell_default_output(buf,strlen(buf),NULL,0);
 	
 	PROCESS_END();
 }

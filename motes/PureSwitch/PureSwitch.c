@@ -115,6 +115,7 @@ PROCESS_NAME(node_process);
 #endif
 PROCESS_NAME(shell_debug_process);
 PROCESS_NAME(ota_upgrade_process);
+PROCESS_NAME(telnetd_process);
 
 
 /*---------------------------------------------------------------------------*/
@@ -281,6 +282,7 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
    start when this module is loaded. We put both our processes
    there. */
 AUTOSTART_PROCESSES(
+	&telnetd_process,
 	&shell_debug_process,
 	&ota_upgrade_process,
 	&pure_x_shell_process,
