@@ -174,14 +174,14 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 			PRINTF("seqno %u, data len: %u\r\n",frame->seqno, frame->dataLength);
 			//buffer_dump((uint8_t *)data,uip_datalen());
 			/* Write data into flash */
-			xmem_pwrite(frame->data,
-						frame->dataLength,
-						IMG_DATA_START(ota_info_current.primary) + frame->seqno * ota_info_current.blockSize);
+			xmem_pwrite_raw(frame->data,
+							frame->dataLength,
+							IMG_DATA_START(ota_info_current.primary) + frame->seqno * ota_info_current.blockSize);
 			/* Set flag indicating current block is programed into ext-flash */
 			flag  = ~(1<<(frame->seqno % 8));
-			xmem_pwrite( &flag,
-						 1,
-						 IMG_FLAG_DOMAIN_OFFSET(ota_info_current.primary) + frame->seqno / 8 );
+			xmem_pwrite_raw( &flag,
+							 1,
+							 IMG_FLAG_DOMAIN_OFFSET(ota_info_current.primary) + frame->seqno / 8 );
 			
 			ota_info_current.totalLen += frame->dataLength;
 
@@ -230,7 +230,7 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 					break;
 				}
 				
-				xmem_pread(buf, len, IMG_DATA_START(ota_info_current.primary) + i);
+				xmem_pread_raw(buf, len, IMG_DATA_START(ota_info_current.primary) + i);
 				
 				checkCode = crc32_data(buf, len, checkCode);
 
@@ -248,7 +248,7 @@ int32_t OTA_StateMachineUpdate(char* data, uint32_t event)
 				imgHeader->blockSize	= ota_info_current.blockSize;
 
 				
-				xmem_pwrite(buf,
+				xmem_pwrite_raw(buf,
 							sizeof(OTA_FlashImageHeader_t),
 							IMG_HEADER_START(ota_info_current.primary));
 

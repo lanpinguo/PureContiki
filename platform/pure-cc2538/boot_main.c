@@ -157,6 +157,7 @@ int boot_app(void)
 {
 	volatile uint32_t ledgerPageAddr = FLASH_FW_ADDR;
 
+#if BOOT_LED_ENABLE
 	// Set direction output and initial value for PC2 and PC0
 	// Greed LED on PA2
 	// Red LED on PA4
@@ -164,8 +165,7 @@ int boot_app(void)
 	HWREG(GPIO_A_DIR) |= 0x34;
 	HWREG(GPIO_A_DATA + (0x34 << 2)) = 0;
 	
-	//xmem_init();
-
+#endif
 	
 
 	for (int pgCnt = 0; pgCnt < HAL_IBM_LEDGER_PAGE; pgCnt++, ledgerPageAddr += FLASH_PAGE_SIZE)
@@ -176,9 +176,11 @@ int boot_app(void)
 		{
 			continue;
 		}
+
+#if BOOT_LED_ENABLE
 		// Turn on both LED's.
 		HWREG(GPIO_A_DATA + (0x30 << 2)) = 0x30;
-
+#endif
 		if (pLedger->imageValid == OTA_HEADER_IMG_VALID)
 		{
 			dbg_output(img_found, ENCODING_TYPE_RAW, sizeof(img_found));
@@ -213,11 +215,14 @@ int boot_app(void)
 void debug_led(void)
 {
 	volatile unsigned long ulLoopCount;
+
+	
+#if BOOT_LED_ENABLE
 	REG(GPIO_A_BASE + GPIO_DIR) = 0x04; /* PA2 output*/
 
 	// Turn Blue	LED.
 	REG(GPIO_A_BASE + GPIO_DATA + (0x04 << 2)) ^= 0x04;
-
+#endif
 	// Delay for a bit
 	for(ulLoopCount = 200000; ulLoopCount > 0; ulLoopCount--);
 }
@@ -262,7 +267,7 @@ int main(void)
 
 
 	/* Try copy a image from external flash */
-	xmem_pread(&needRestoreFactoryImg,sizeof(needRestoreFactoryImg),IMG_DEFAULLT_FACTORY_START);
+	xmem_pread_raw(&needRestoreFactoryImg,sizeof(needRestoreFactoryImg),IMG_DEFAULLT_FACTORY_START);
 	if(needRestoreFactoryImg == OTA_EXT_IMG_STATUS_FRESH){
 		s = 0; /* search from factory default image */
 	}
@@ -273,8 +278,8 @@ int main(void)
 		imgStatusOffset 		= IMG_STATUS_OFFSET(s);
 		imgDataStartOffset 		= IMG_DATA_START(s);
 	
-		xmem_pread(&img_hdr,sizeof(OTA_FlashImageHeader_t),imgHeaderStartOffset);
-		xmem_pread(&img_status,sizeof(OTA_FlashImageStatus_t),imgStatusOffset);
+		xmem_pread_raw(&img_hdr,sizeof(OTA_FlashImageHeader_t),imgHeaderStartOffset);
+		xmem_pread_raw(&img_status,sizeof(OTA_FlashImageStatus_t),imgStatusOffset);
 		
 		dbg_output("Check ext-img:", ENCODING_TYPE_RAW, sizeof("Check ext-img:"));
 		dbg_output((char*)&img_hdr, ENCODING_TYPE_UTF8, sizeof(img_hdr));
@@ -316,7 +321,7 @@ int main(void)
 					count = SHARED_BUF_MAX;
 				}
 				
-				xmem_pread(shared_buf, count, imgDataStartOffset + pos);
+				xmem_pread_raw(shared_buf, count, imgDataStartOffset + pos);
 
 				dbg_output(".", ENCODING_TYPE_RAW, sizeof("."));
 				if( i % 32 == 0){
@@ -338,12 +343,12 @@ int main(void)
 
 			/* Set flag indicating ext-image already copyed into on-chip flash */
 			img_status.status = OTA_EXT_IMG_STATUS_STALE;
-			xmem_pwrite(&img_status,sizeof(OTA_FlashImageStatus_t),imgStatusOffset);
+			xmem_pwrite_raw(&img_status,sizeof(OTA_FlashImageStatus_t),imgStatusOffset);
 
 			/* do not search from factory default image in next boot */
 			if(s == 0){
 				needRestoreFactoryImg = OTA_EXT_IMG_STATUS_STALE;
-				xmem_pwrite(&needRestoreFactoryImg,sizeof(OTA_FlashImageStatus_t),IMG_DEFAULLT_FACTORY_START);
+				xmem_pwrite_raw(&needRestoreFactoryImg,sizeof(OTA_FlashImageStatus_t),IMG_DEFAULLT_FACTORY_START);
 			}
 			
 			break;

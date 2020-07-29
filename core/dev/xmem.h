@@ -33,6 +33,10 @@
 
 void xmem_init(void);
 
+int xmem_pread_raw(void *buf, int nbytes, unsigned long offset);
+
+int xmem_pwrite_raw(const void *buf, int nbytes, unsigned long offset);
+
 int xmem_pread(void *buf, int nbytes, unsigned long offset);
 
 int xmem_pwrite(const void *buf, int nbytes, unsigned long offset);

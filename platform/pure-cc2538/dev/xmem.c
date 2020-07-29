@@ -214,7 +214,7 @@ xmem_pread(void *_p, int size, unsigned long offset)
   for(; p < end; p++) {
     unsigned char u;
     SPI_READ(u);
-    *p = u;
+    *p = ~u;
   }
 
   SPI_FLASH_DISABLE();
@@ -240,7 +240,7 @@ program_page(unsigned long offset, const unsigned char *p, int nbytes)
 	SPI_WRITE_FAST(offset >> 0);	/* LSB */
 
 	for(; p < end; p++) {
-		SPI_WRITE_FAST(*p);
+		SPI_WRITE_FAST(~*p);
 	}
 	SPI_WAITFORTx_ENDED();
 
@@ -273,6 +273,93 @@ xmem_pwrite(const void *_buf, int size, unsigned long addr)
 
   return size;
 }
+
+
+
+/*---------------------------------------------------------------------------*/
+int
+xmem_pread_raw(void *_p, int size, unsigned long offset)
+{
+  unsigned char *p = _p;
+  const unsigned char *end = p + size;
+
+  wait_ready();
+
+  ENERGEST_ON(ENERGEST_TYPE_FLASH_READ);
+
+  SPI_FLASH_ENABLE();
+
+  SPI_WRITE_FAST(SPI_FLASH_INS_READ);
+  SPI_WRITE_FAST(offset >> 16);	/* MSB */
+  SPI_WRITE_FAST(offset >> 8);
+  SPI_WRITE_FAST(offset >> 0);	/* LSB */
+  SPI_WAITFORTx_ENDED();
+  
+  SPI_FLUSH();
+  for(; p < end; p++) {
+    unsigned char u;
+    SPI_READ(u);
+    *p = u;
+  }
+
+  SPI_FLASH_DISABLE();
+
+  ENERGEST_OFF(ENERGEST_TYPE_FLASH_READ);
+
+  return size;
+}
+/*---------------------------------------------------------------------------*/
+static const unsigned char *
+program_page_raw(unsigned long offset, const unsigned char *p, int nbytes)
+{
+	const unsigned char *end = p + nbytes;
+
+	wait_ready();
+	write_enable();
+
+	SPI_FLASH_ENABLE();
+
+	SPI_WRITE_FAST(SPI_FLASH_INS_PP);
+	SPI_WRITE_FAST(offset >> 16);	/* MSB */
+	SPI_WRITE_FAST(offset >> 8);
+	SPI_WRITE_FAST(offset >> 0);	/* LSB */
+
+	for(; p < end; p++) {
+		SPI_WRITE_FAST(*p);
+	}
+	SPI_WAITFORTx_ENDED();
+
+	SPI_FLASH_DISABLE();
+
+	watchdog_periodic();
+
+	return p;
+}
+/*---------------------------------------------------------------------------*/
+int
+xmem_pwrite_raw(const void *_buf, int size, unsigned long addr)
+{
+  const unsigned char *p = _buf;
+  const unsigned long end = addr + size;
+  unsigned long i, next_page;
+
+  ENERGEST_ON(ENERGEST_TYPE_FLASH_WRITE);
+
+  for(i = addr; i < end;) {
+    next_page = (i | 0xff) + 1;
+    if(next_page > end) {
+      next_page = end;
+    }
+    p = program_page_raw(i, p, next_page - i);
+    i = next_page;
+  }
+
+  ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE);
+
+  return size;
+}
+
+
 /*---------------------------------------------------------------------------*/
 int
 xmem_erase(long size, unsigned long addr)
