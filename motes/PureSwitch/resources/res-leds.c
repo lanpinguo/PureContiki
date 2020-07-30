@@ -50,9 +50,7 @@ res_post_put_handler(void *request, void *response, uint8_t *buffer,
                      uint16_t preferred_size, int32_t *offset)
 {
 	size_t len = 0;
-	const char *color = NULL;
 	const char *mode = NULL;
-	uint8_t led = LEDS_BLUE_CTRL;
 	int success = 1;
 
 

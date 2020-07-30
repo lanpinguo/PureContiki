@@ -71,6 +71,7 @@ typedef enum{
 	CONTIKI_MOD_CCM_STAR,		/* 22 */
 	CONTIKI_MOD_PROCESS,		/* 23 */
 	CONTIKI_MOD_OTA,			/* 24 */
+	CONTIKI_MOD_CFS_COFFEE,		/* 25 */
 }CONTIKI_MOD_ID_e;
 	
 typedef int (*TRACE_DEBUG_FILTER)(int mod, int line);
