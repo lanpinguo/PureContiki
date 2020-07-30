@@ -306,7 +306,7 @@ static void try_to_request_data_again(void)
 
 	printf("try to request data through tx-connection with remote address ");
 	uip_ipaddr_print(&tx_conn->ripaddr);
-	printf("local/remote port %u/%u\r\n",
+	printf(" local/remote port %u/%u\r\n",
 			UIP_HTONS(tx_conn->lport),
 			UIP_HTONS(tx_conn->rport));
 
