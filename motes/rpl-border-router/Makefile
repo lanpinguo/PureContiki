@@ -11,6 +11,8 @@ CONTIKI=../..
 #linker optimizations
 SMALL=1
 
+COFFEE_FILES = 10
+
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 
@@ -22,7 +24,7 @@ PROJECTDIRS += $(REST_RESOURCES_DIR)
 
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
-PROJECT_SOURCEFILES += coap-server.c coap-client.c
+PROJECT_SOURCEFILES += coap-server.c coap-client.c test-coffee.c
 
 PROJECT_SOURCEFILES += slip-bridge.c
 
