@@ -60,4 +60,6 @@ systemctl status pure-bridge-agent
 	CONTIKI_MOD_TSCH_SLOT,		/* 20 */
 	CONTIKI_MOD_TSCH_LOG,		/* 21 */
 	CONTIKI_MOD_CCM_STAR,		/* 22 */
-
+	CONTIKI_MOD_PROCESS,		/* 23 */
+	CONTIKI_MOD_OTA,			/* 24 */
+	CONTIKI_MOD_CFS_COFFEE,		/* 25 */
