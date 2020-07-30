@@ -109,7 +109,7 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 		int fd;
 		int r;
 
-		fd = cfs_open("default.json", CFS_WRITE );
+		fd = cfs_open("default.json", CFS_WRITE | CFS_READ);
 		if(fd < 0) {
 			printf("open failed fd=[%d] \r\n",fd);	
 			PROCESS_EXIT(); 
@@ -121,9 +121,8 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 			printf("write failed fd=[%d] \r\n",fd);	
 			PROCESS_EXIT(); 
 		}
-	    cfs_close(fd);
 
-		fd = cfs_open("default.json", CFS_READ);
+	    cfs_seek(fd, 0, CFS_SEEK_SET);
 		memset(buf,0,64);
 		/* Read buffer. */
 		r = cfs_read(fd, buf, 64);
