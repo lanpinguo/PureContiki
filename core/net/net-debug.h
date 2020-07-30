@@ -72,6 +72,7 @@ typedef enum{
 	CONTIKI_MOD_PROCESS,		/* 23 */
 	CONTIKI_MOD_OTA,			/* 24 */
 	CONTIKI_MOD_CFS_COFFEE,		/* 25 */
+	CONTIKI_MOD_CFS_COMMON,		/* 26 */
 }CONTIKI_MOD_ID_e;
 	
 typedef int (*TRACE_DEBUG_FILTER)(int mod, int line);
@@ -79,6 +80,7 @@ typedef int (*TRACE_DEBUG_FILTER)(int mod, int line);
 void net_debug_lladdr_print(const uip_lladdr_t *addr);
 int trace_dbg_print(int mod, int level, const char * format,...);
 int trace_print_filter_set(int enable,int mod_start,int mod_end,int line_start, int line__end);
+void trace_output_terminal_set(void* func);
 
 #define DEBUG_NONE      0
 #define DEBUG_PRINT     1

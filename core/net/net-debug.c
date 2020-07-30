@@ -52,6 +52,13 @@ static int g_mod_end = 0;
 static int g_line_start = 0;
 static int g_line_end = 20000;
 
+static StrFormatContext net_ctxt =
+{
+	NULL,
+	NULL
+};
+
+
 /*---------------------------------------------------------------------------*/
 int _trace_dbg_print(int mod, int line, const char *format, va_list ap)
 {
@@ -59,7 +66,9 @@ int _trace_dbg_print(int mod, int line, const char *format, va_list ap)
 
 	if(dbg_print_filter){
 		if(dbg_print_filter(mod, line)){
-			rc = vprintf(format, ap);
+			if(net_ctxt.write_str != NULL){
+				rc = format_str_v(&net_ctxt, format, ap);
+			}
 		}
 	}
 	return rc;
@@ -106,6 +115,11 @@ int trace_print_filter_set(int enable,int mod_start,int mod_end,int line_start, 
 		g_line_end = line__end;
 	}
 	return 0;
+}
+
+void trace_output_terminal_set(void* func)
+{
+	net_ctxt.write_str = func;
 }
 
 /*---------------------------------------------------------------------------*/

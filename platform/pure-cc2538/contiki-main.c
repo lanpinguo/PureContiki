@@ -68,6 +68,7 @@
 #include "reg.h"
 #include "ieee-addr.h"
 #include "lpm.h"
+#include "cfs/cfs.h"
 
 #if USB_ETH_CONF_ENABLE
 #include <cdc-eth.h>
@@ -85,12 +86,12 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+
+#define DEBUG DEBUG_PRINT
+#define MODULE_ID CONTIKI_MOD_CFS_COMMON
+#include "net/ip/uip-debug.h"
+
 /*---------------------------------------------------------------------------*/
-#if STARTUP_CONF_VERBOSE
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
 
 #if UART_CONF_ENABLE
 #define PUTS(s) puts(s)
@@ -100,24 +101,19 @@
 /*---------------------------------------------------------------------------*/
 
 char shell_prompt_text[] = "Mote>";
-FUNC_DEBUG_PRINT dbg_print_ip = NULL;
-FUNC_DEBUG_PRINT dbg_print_log = NULL;
+static int log_fd = 0;
 
 /*---------------------------------------------------------------------------*/
 void
 log_message(char *m1, char *m2)
 {
-	if(dbg_print_log){ 
-		dbg_print_log("\r\n%s%s", m1, m2);
-	}
+	PRINTF("\r\n%s%s", m1, m2);
 }
 /*---------------------------------------------------------------------------*/
 void
 uip_log(char *m)
 {
-	if(dbg_print_ip){ 
-		dbg_print_ip("\r\nuIP: '%s'", m);
-	}
+	PRINTF("\r\nuIP: '%s'", m);
 }
 
 #if 0
@@ -170,22 +166,20 @@ set_rf_params(void)
 
 void debug_led(void)
 {
-#if 1
-		volatile unsigned long ulLoopCount;
-		REG(GPIO_A_BASE + GPIO_DIR) = 0x04; /* PA2 output*/
-	
-		// Loop forever.
-		while(1)
+	volatile unsigned long ulLoopCount;
+	REG(GPIO_A_BASE + GPIO_DIR) = 0x04; /* PA2 output*/
+
+	// Loop forever.
+	while(1)
+	{
+		// Turn Blue	LED.
+		REG(GPIO_A_BASE + GPIO_DATA + (0x04 << 2)) ^= 0x04;
+
+		// Delay for a bit
+		for(ulLoopCount = 200000; ulLoopCount > 0; ulLoopCount--)
 		{
-				// Turn Blue	LED.
-				REG(GPIO_A_BASE + GPIO_DATA + (0x04 << 2)) ^= 0x04;
-	
-				// Delay for a bit
-				for(ulLoopCount = 200000; ulLoopCount > 0; ulLoopCount--)
-				{
-				}
-		};
-#endif
+		}
+	};
 }
 
 #define CC2592_PA_EN_PIN      (1<<3) /*PC3*/
@@ -194,45 +188,45 @@ void debug_led(void)
 
 int cc2592_init(void)
 {
-  PRINTF("\r\ncc2592 init\r\n");
-  /*REG(GPIO_C_BASE + GPIO_DIR) |= (CC2592_PA_EN_PIN | CC2592_LNA_EN_PIN);*/
-  REG(GPIO_D_BASE + GPIO_DIR) |= CC2592_HGM_PIN; 
-  return 0;
+	PRINTF("\r\ncc2592 init\r\n");
+	/*REG(GPIO_C_BASE + GPIO_DIR) |= (CC2592_PA_EN_PIN | CC2592_LNA_EN_PIN);*/
+	REG(GPIO_D_BASE + GPIO_DIR) |= CC2592_HGM_PIN; 
+	return 0;
 }
 
 
 /** Enable Rx. */
 int cc2592_rx_enable(void)
 {
-  //PRINTF("\r\ncc2592_rx_enable\r\n");
-  REG(GPIO_C_BASE + GPIO_DATA + (CC2592_LNA_EN_PIN << 2)) = CC2592_LNA_EN_PIN;
-  return 0;
+	//PRINTF("\r\ncc2592_rx_enable\r\n");
+	REG(GPIO_C_BASE + GPIO_DATA + (CC2592_LNA_EN_PIN << 2)) = CC2592_LNA_EN_PIN;
+	return 0;
 }
 
 /** Enable Tx. */
 int cc2592_tx_enable(void)
 {
-  //PRINTF("\r\ncc2592_tx_enable\r\n");
-  REG(GPIO_C_BASE + GPIO_DATA + (CC2592_LNA_EN_PIN << 2)) = ~CC2592_LNA_EN_PIN;
-  REG(GPIO_C_BASE + GPIO_DATA + (CC2592_PA_EN_PIN << 2)) = CC2592_PA_EN_PIN;
-  return 0;
+	//PRINTF("\r\ncc2592_tx_enable\r\n");
+	REG(GPIO_C_BASE + GPIO_DATA + (CC2592_LNA_EN_PIN << 2)) = ~CC2592_LNA_EN_PIN;
+	REG(GPIO_C_BASE + GPIO_DATA + (CC2592_PA_EN_PIN << 2)) = CC2592_PA_EN_PIN;
+	return 0;
 }
 
 /** Turn the radio on. */
 int cc2592_hgm_enable(void)
 {
-  //PRINTF("\r\ncc2592_hgm_enable\r\n");
-  REG(GPIO_D_BASE + GPIO_DATA + (CC2592_HGM_PIN << 2)) = CC2592_HGM_PIN;
-  return 0;
+	//PRINTF("\r\ncc2592_hgm_enable\r\n");
+	REG(GPIO_D_BASE + GPIO_DATA + (CC2592_HGM_PIN << 2)) = CC2592_HGM_PIN;
+	return 0;
 }
 
 /** Turn the extender off. */
 int cc2592_off(void)
 {
-  //PRINTF("\r\ncc2592_off\r\n");
-  REG(GPIO_C_BASE + GPIO_DATA + (CC2592_LNA_EN_PIN << 2)) = ~CC2592_LNA_EN_PIN;
-  REG(GPIO_C_BASE + GPIO_DATA + (CC2592_PA_EN_PIN << 2)) = ~CC2592_PA_EN_PIN;
-  return 0;
+	//PRINTF("\r\ncc2592_off\r\n");
+	REG(GPIO_C_BASE + GPIO_DATA + (CC2592_LNA_EN_PIN << 2)) = ~CC2592_LNA_EN_PIN;
+	REG(GPIO_C_BASE + GPIO_DATA + (CC2592_PA_EN_PIN << 2)) = ~CC2592_PA_EN_PIN;
+	return 0;
 }
 
 int rf_ext_driver_register(void)
@@ -242,6 +236,29 @@ int rf_ext_driver_register(void)
 	return 0;
 }
 
+static unsigned int 
+log_output_write_str(void *user_data, const char *data, unsigned int len)
+{
+	if (len > 0 && log_fd >= 0){
+		cfs_write(log_fd, data, len);
+	} 
+	return 0;
+}
+
+
+int log_system_init()
+{
+	log_fd = cfs_open("running.log", CFS_WRITE);
+	if(log_fd >= 0){
+		trace_output_terminal_set(log_output_write_str);
+	}
+	else{
+		printf("cfs open running.log failed \r\n");
+		return -1;
+	}
+
+	return 0;
+}
 
 int show_system_info(uint32_t mode)
 {
@@ -328,7 +345,10 @@ main(void)
 
 
 	INTERRUPTS_ENABLE();
-	//fade(LEDS_GREEN);
+
+	xmem_init();
+	
+	log_system_init();
 
 	
 	/* Initialise the H/W RNG engine. */
@@ -361,7 +381,6 @@ main(void)
 
 	adc_init();
 
-	xmem_init();
 
 
 
