@@ -100,9 +100,7 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 	/*printf("\r\ncoap client cli [%d] \r\n",argc);	*/
 	(void)argc;
 	if(strncmp(argv[0], "test", 4) == 0) {
-
-		//process_start(&testcoffee_process,NULL);
-	
+		process_start(&testcoffee_process,NULL);
 	}
 	else if(strncmp(argv[0], "info", 4) == 0){
 		show_system_info(3);
@@ -111,19 +109,29 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 		int wfd;
 		int r;
 
-		wfd = cfs_open("default.json", CFS_WRITE);
+		wfd = cfs_open("default.json", CFS_WRITE | CFS_READ);
 		if(wfd < 0) {
-			printf("\r\nopen failed fd=[%d] \r\n",wfd);	
+			printf("open failed fd=[%d] \r\n",wfd);	
 			PROCESS_EXIT(); 
 		}
 
 		/* Write buffer. */
-		r = cfs_write(wfd, buf, sizeof(buf));
+		r = cfs_write(wfd, "hello this is cfs test!", 24);
 		if(r < 0) {
-			printf("\r\nwrite failed fd=[%d] \r\n",wfd);	
+			printf("write failed fd=[%d] \r\n",wfd);	
 			PROCESS_EXIT(); 
 		}
 
+		memset(buf,0,64);
+		/* Read buffer. */
+		r = cfs_read(wfd, buf, 64);
+		if(r < 0) {
+			printf("read failed fd=[%d] \r\n",wfd);	
+			PROCESS_EXIT(); 
+		}
+		
+		buffer_dump((uint8_t*)buf, r);
+		
 		cfs_close(wfd);
 
 	}

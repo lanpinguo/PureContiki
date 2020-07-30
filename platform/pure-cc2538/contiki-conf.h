@@ -650,6 +650,9 @@ typedef uint32_t rtimer_clock_t;
 #undef XMEM_ERASE_UNIT_SIZE
 #define XMEM_ERASE_UNIT_SIZE				(4 * 1024)
 
+#define COFFEE_CONF_SECTOR_SIZE				XMEM_ERASE_UNIT_SIZE
+#define COFFEE_CONF_PAGE_SIZE				512
+#define COFFEE_CONF_CUSTOM_PORT				"cfs-coffee-custom.h"
 /** @} */
 /*---------------------------------------------------------------------------*/
 
