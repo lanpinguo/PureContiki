@@ -311,7 +311,6 @@ SHELL_COMMAND(list_neighbor_command,
 
 PROCESS_THREAD(shell_list_neighbor_process, ev, data)
 {
-	char buf[] = "hello world";
 
 	PROCESS_BEGIN();
 
@@ -319,7 +318,6 @@ PROCESS_THREAD(shell_list_neighbor_process, ev, data)
 	
 	uip_ds6_nbr_dump();
 	rpl_print_neighbor_list();	
-	shell_default_output(buf,strlen(buf),NULL,0);
 	
 	PROCESS_END();
 }
