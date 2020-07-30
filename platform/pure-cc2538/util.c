@@ -106,34 +106,36 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 		show_system_info(3);
 	}
 	else if(strncmp(argv[0], "default", 7) == 0){
-		int wfd;
+		int fd;
 		int r;
 
-		wfd = cfs_open("default.json", CFS_WRITE | CFS_READ);
-		if(wfd < 0) {
-			printf("open failed fd=[%d] \r\n",wfd);	
+		fd = cfs_open("default.json", CFS_WRITE );
+		if(fd < 0) {
+			printf("open failed fd=[%d] \r\n",fd);	
 			PROCESS_EXIT(); 
 		}
 
 		/* Write buffer. */
-		r = cfs_write(wfd, "hello this is cfs test!", 24);
+		r = cfs_write(fd, "hello this is cfs test!", 24);
 		if(r < 0) {
-			printf("write failed fd=[%d] \r\n",wfd);	
+			printf("write failed fd=[%d] \r\n",fd);	
 			PROCESS_EXIT(); 
 		}
+	    cfs_close(fd);
 
+		fd = cfs_open("default.json", CFS_READ);
 		memset(buf,0,64);
 		/* Read buffer. */
-		r = cfs_read(wfd, buf, 64);
+		r = cfs_read(fd, buf, 64);
 		if(r < 0) {
-			printf("read failed fd=[%d] \r\n",wfd);	
+			printf("read failed fd=[%d] \r\n",fd);	
 			PROCESS_EXIT(); 
 		}
 		
-		printf("read  fd=[%d] size: %d \r\n",wfd, r);	
-		buffer_dump((uint8_t*)buf, 64);
+		printf("read  fd=[%d] size: %d \r\n",fd, r);	
+		buffer_dump((uint8_t*)buf, r);
 		
-		cfs_close(wfd);
+		cfs_close(fd);
 
 	}
 	else if(strncmp(argv[0], "flash", 5) == 0){
