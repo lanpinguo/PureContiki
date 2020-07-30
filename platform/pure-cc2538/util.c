@@ -34,6 +34,7 @@ extern void shell_default_output_telnet(const char *str1, int len1, const char *
 extern void shell_prompt_telnet(char *str);
 extern void shell_exit_telnet(void);
 
+extern void shell_raw_output_serial(const char *text1, int len1, const char *text2, int len2);
 extern void shell_default_output_serial(const char *text1, int len1, const char *text2, int len2);
 extern void shell_prompt_serial(char *str);
 extern void shell_exit_serial(void);
@@ -47,6 +48,16 @@ shell_default_output(const char *str1, int len1, const char *str2, int len2)
 #endif
 	shell_default_output_serial(str1, len1, str2, len2);
 }
+
+void
+shell_raw_output(const char *str1, int len1, const char *str2, int len2)
+{
+#if TELNET_ENABLE
+	shell_default_output_telnet(str1, len1, str2, len2);
+#endif
+	shell_raw_output_serial(str1, len1, str2, len2);
+}
+
 /*---------------------------------------------------------------------------*/
 void
 shell_exit(void)

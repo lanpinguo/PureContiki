@@ -402,6 +402,22 @@ shell_output(struct shell_command *c,
     shell_default_output(data1, len1, data2, len2);
   }
 }
+
+
+/*---------------------------------------------------------------------------*/
+void
+shell_output_raw(struct shell_command *c,
+	     void *data1, int len1,
+	     const void *data2, int len2)
+{
+  if(c != NULL && c->child != NULL) {
+    input_to_child_command(c->child, data1, len1, data2, len2);
+  } else {
+    shell_raw_output(data1, len1, data2, len2);
+  }
+}
+
+
 /*---------------------------------------------------------------------------*/
 void
 shell_unregister_command(struct shell_command *c)

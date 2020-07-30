@@ -67,7 +67,7 @@ shell_default_output_serial(const char *text1, int len1, const char *text2, int 
     len2 = 0;
   }
 
-  printf("\r\n");
+  //printf("\r\n");
   /* Precision (printf("%.Ns", text1)) not supported on all platforms.
      putchar(c) not be supported on all platforms. */
   for(i = 0; i < len1; i++) {
@@ -78,6 +78,32 @@ shell_default_output_serial(const char *text1, int len1, const char *text2, int 
   }
   printf("\r\n");
 }
+
+void
+shell_raw_output_serial(const char *text1, int len1, const char *text2, int len2)
+{
+  int i;
+  if(text1 == NULL) {
+    text1 = "";
+    len1 = 0;
+  }
+  if(text2 == NULL) {
+    text2 = "";
+    len2 = 0;
+  }
+
+  //printf("\r\n");
+  /* Precision (printf("%.Ns", text1)) not supported on all platforms.
+     putchar(c) not be supported on all platforms. */
+  for(i = 0; i < len1; i++) {
+    printf("%c", text1[i]);
+  }
+  for(i = 0; i < len2; i++) {
+    printf("%c", text2[i]);
+  }
+  //printf("\r\n");
+}
+
 /*---------------------------------------------------------------------------*/
 void
 shell_prompt_serial(char *str)
