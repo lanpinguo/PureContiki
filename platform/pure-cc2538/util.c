@@ -130,7 +130,8 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 			PROCESS_EXIT(); 
 		}
 		
-		buffer_dump((uint8_t*)buf, r);
+		printf("read  fd=[%d] size: %d \r\n",wfd, r);	
+		buffer_dump((uint8_t*)buf, 64);
 		
 		cfs_close(wfd);
 
