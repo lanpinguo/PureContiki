@@ -14,7 +14,8 @@
 #include "crc32.h"
 
 #include "xmem.h"
-
+#include "dbg.h"
+#include "util.h"
 #include "shell.h"
 #include "serial-shell.h"
 #include "lib/list.h"
@@ -28,6 +29,7 @@
 
 
 extern int show_system_info(uint32_t mode);
+extern int log_system_reset();
 
 
 extern void shell_default_output_telnet(const char *str1, int len1, const char *str2, int len2);
@@ -38,6 +40,9 @@ extern void shell_raw_output_serial(const char *text1, int len1, const char *tex
 extern void shell_default_output_serial(const char *text1, int len1, const char *text2, int len2);
 extern void shell_prompt_serial(char *str);
 extern void shell_exit_serial(void);
+
+
+static int log_fd = 0;
 
 
 void
@@ -77,16 +82,72 @@ shell_prompt(char *str)
 	shell_prompt_serial(str);
 }
 
+static unsigned int 
+log_output_file(void *user_data, const char *data, unsigned int len)
+{
+	if (len > 0 && log_fd >= 0){
+		cfs_write(log_fd, data, len);
+	} 
+	return 0;
+}
+
+static unsigned int 
+log_output_terminal(void *user_data, const char *data, unsigned int len)
+{
+	if (len > 0) dbg_send_bytes((unsigned char*)data, len);
+	return 0;
+}
+
+int log_system_init()
+{
+	log_fd = cfs_open("running.log", CFS_WRITE);
+	if(log_fd >= 0){
+		trace_output_terminal_set(log_output_file);
+	}
+	else{
+		printf("cfs open running.log failed \r\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+
+int log_system_reset()
+{
+	trace_output_terminal_set(NULL);
+	cfs_close(log_fd);
+	log_fd = -1;
+	cfs_remove("running.log");
+
+	return 0;
+}
+
+
+int log_system_std_out_set(int mode)
+{
+
+	if(mode == UTIL_LOG_OUT_FILE){
+		if(log_fd >= 0){
+			trace_output_terminal_set(log_output_file);
+		}
+	}
+	else{
+		trace_output_terminal_set(log_output_terminal);
+	}
+
+	return 0;
+}
 
 PROCESS_NAME(testcoffee_process);
 
 /*---------------------------------------------------------------------------*/
 
 
-PROCESS(shell_debug_process, "flash");
+PROCESS(shell_debug_process, "util");
 SHELL_COMMAND(pure_command,
-	      "flash",
-	      "flash dump: dump flash content)",
+	      "util",
+	      "general debug tools",
 	      &shell_debug_process);
 
 
@@ -116,68 +177,33 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 	else if(strncmp(argv[0], "info", 4) == 0){
 		show_system_info(3);
 	}
-	else if(strncmp(argv[0], "default", 7) == 0){
-		int fd;
-		int r;
+	else if(strncmp(argv[0], "log", 3) == 0){
 
-		fd = cfs_open("default.json", CFS_WRITE | CFS_READ);
-		if(fd < 0) {
-			printf("open failed fd=[%d] \r\n",fd);	
-			PROCESS_EXIT(); 
-		}
+		if(argc >= 2){
 
-		/* Write buffer. */
-		r = cfs_write(fd, "hello this is cfs test!", 24);
-		if(r < 0) {
-			printf("write failed fd=[%d] \r\n",fd);	
-			PROCESS_EXIT(); 
-		}
-
-	    cfs_seek(fd, 0, CFS_SEEK_SET);
-		memset(buf,0,64);
-		/* Read buffer. */
-		r = cfs_read(fd, buf, 64);
-		if(r < 0) {
-			printf("read failed fd=[%d] \r\n",fd);	
-			PROCESS_EXIT(); 
-		}
-		
-		printf("read  fd=[%d] size: %d \r\n",fd, r);	
-		buffer_dump((uint8_t*)buf, r);
-		
-		cfs_close(fd);
-
-	}
-	else if(strncmp(argv[0], "flash", 5) == 0){
-		/* Erase 3 sectors */
-		//xmem_erase(6 * 512, 0);
-		/* Erase external flash pages */
-		xmem_erase(6 * 1024, 0);
-
-		for(i = 1 ; i < 6 * 512; i++){
-			buf[0] = 0x55;
-			xmem_pwrite(buf, 1, i - 1);
-		}
-
-		memset(buf,0,64);
-		for(i = 0 ; i < 6 * 512; ){
-			if(6 * 512 - i < 64){
-				xmem_pread(buf, size - i, i );
-				buffer_dump((uint8_t*)buf, size - i);
-				i += (6 * 512 -i);
-				if(6 * 512 - i <= 0){
-					break;
-				}
+			if(strncmp(argv[1], "reset", 5) == 0){
+				log_system_reset();
+				printf("reset log system done \r\n");	
 			}
-			else{
-				xmem_pread(buf, 64, i );
-				buffer_dump((uint8_t*)buf,64);
-				i += 64;
+			else if(strncmp(argv[1], "start", 5) == 0){
+				log_system_init();
+				printf("start log system done \r\n");	
 			}
+			else if(strncmp(argv[1], "terminal", 3) == 0){
+				log_system_std_out_set(UTIL_LOG_OUT_TERMIANL);
+				printf("output to terminal \r\n");	
+			}
+			else if(strncmp(argv[1], "file", 4) == 0){
+				log_system_std_out_set(UTIL_LOG_OUT_FILE);
+				printf("output to log file \r\n");	
+			}
+			PROCESS_EXIT(); 
 		}
-
+		else{
+			goto UNKNOWN_CMD;
+		}
+	
 	}
-
 	else if(strncmp(argv[0], "erase", 5) == 0){
 		if(argc == 3){
 			sscanf(argv[1],"%lu", &addr);
@@ -217,10 +243,58 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 
 	}
 
-
+UNKNOWN_CMD:
+	
+	printf("unknown command\r\n");
 
 	
 	PROCESS_END();
+}
+
+/*---------------------------------------------------------------------------*/
+int mod_map_parse(char * in, uint32_t * map)
+{
+	char * argv[32] = {NULL};
+	int argc;
+	int i,j,st=0,se=0,rc;
+
+	
+	
+	argc = str_split(in, ",", argv, 31);
+	/*printf("count:%d\r\n",argc);*/
+	for(i = 0 ; i < argc; i++)
+	{
+		/*printf("%s\r\n",argv[i]);*/
+		rc = sscanf(argv[i], "%u-%u", &st,&se);
+		if(rc < 2){
+			rc = sscanf(argv[i], "%u", &st);
+			if(rc < 1){
+				return -1;
+			}
+			if(st < 32){
+				map[0] |= (1 << st);
+			}
+			else{
+				map[1] |= (1 << (st % 32));
+			}
+		}
+		else{
+			if(se < st){
+				return -1;
+			}
+
+			for(j = st; j <= se ; j++){
+				if(j < 32){
+					map[0] |= (1 << j);
+				}
+				else{
+					map[1] |= (1 << (j % 32));
+				}
+			}
+		}
+	}
+
+	return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -233,13 +307,12 @@ SHELL_COMMAND(dbg_sw_command,
 
 PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 {
-	static char* argv[5];
-	static int argc;
-	static int enable = 0;
-	static int mod_start = 0;
-	static int mod_end = 0;
-	static int line_start = 0;
-	static int line_end = 0;
+	char* argv[5];
+	int argc;
+	int line_start = -1;
+	int line_end = -1;
+	static uint32_t mod_map[2] = {0};
+
 	
 	
 	PROCESS_BEGIN();
@@ -251,11 +324,7 @@ PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 		if(strncmp(argv[0], "line", 2) == 0) {
 			if(argc == 2){
 				sscanf(argv[1],"%d-%d",&line_start,&line_end);
-				enable = -1;
-				mod_start = -1;
-				mod_end = -1;
-				/*line_start = -1;*/
-				/*line_end = -1;*/
+				trace_print_filter_set(-1,NULL,line_start,line_end);
 			}
 			else{
 				goto ERROR;
@@ -265,30 +334,21 @@ PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 		} 
 		else if(strncmp(argv[0], "mod", 3) == 0) {
 			if(argc == 2){
-				sscanf(argv[1],"%d-%d",&mod_start,&mod_end);
-				enable = -1;
-				/*mod_start = -1;*/
-				/*mod_end = -1;*/
-				line_start = -1;
-				line_end = -1;
+				memset(mod_map,0,sizeof(mod_map));
+				if(mod_map_parse(argv[1],mod_map) < 0){
+					goto ERROR;
+				}	
+				trace_print_filter_set(-1,mod_map,-1,-1);
 			}
 			else{
 				goto ERROR;
 			}
 		}
 		else if(strncmp(argv[0], "enable", 3) == 0) {
-				enable = 1;
-				mod_start = -1;
-				mod_end = -1;
-				line_start = -1;
-				line_end = -1;
+			trace_print_filter_set(1,NULL,-1,-1);
 		}
 		else if(strncmp(argv[0], "disable", 3) == 0) {
-				enable = 0;
-				mod_start = -1;
-				mod_end = -1;
-				line_start = -1;
-				line_end = -1;
+			trace_print_filter_set(0,NULL,-1,-1);
 		}
 		else{
 			goto ERROR;
@@ -297,7 +357,6 @@ PROCESS_THREAD(shell_dbg_switch_process, ev, data)
 
 	}
 
-	trace_print_filter_set(enable,mod_start,mod_end,line_start,line_end);
 	goto DONE;
 	
 ERROR:
@@ -305,8 +364,8 @@ ERROR:
     PROCESS_EXIT();
 DONE:	
 	printf("\r\ntoggle module debug switch\r\n"
-			"{enable:%d,mod_start:%d,mod_end:%d,line_start:%d,line_end:%d}\r\n",
-			enable,mod_start,mod_end,line_start,line_end);	
+			"module map: %08lx%08lx, line range : %d ~ %d\r\n",
+			mod_map[1],mod_map[0],line_start,line_end);	
 	PROCESS_END();
 }
 

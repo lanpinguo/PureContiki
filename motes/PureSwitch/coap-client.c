@@ -147,27 +147,8 @@ tcpip_handler(void)
     printf("DATA recv '%s'\r\n", str);
   }
 }
-/*---------------------------------------------------------------------------*/
-static void
-print_local_addresses(void)
-{
-  int i;
-  uint8_t state;
 
-  PRINTF("Client IPv6 addresses: ");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTF("\r\n");
-      /* hack to make address "final" */
-      if(state == ADDR_TENTATIVE) {
-        uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
-      }
-    }
-  }
-}
+
 /*---------------------------------------------------------------------------*/
 static void
 set_global_address(void)
@@ -307,9 +288,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 
 	set_global_address();
 
-	PRINTF("CoAP client process started\r\n");
 
-	print_local_addresses();
 
 	/**************************************************************************/
 	static coap_packet_t request[1];      /* This way the packet can be treated as pointer as usual. */

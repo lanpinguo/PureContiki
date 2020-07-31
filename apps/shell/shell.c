@@ -556,7 +556,7 @@ int str_split(char * str,char delim[],char* argv[],int argc_max)
 	int argc = 0;
 	char *ap;
 
-	for (;((ap = strsep(&str, " \t")) != NULL) && (argc < argc_max); argc++)
+	for (;((ap = strsep(&str, delim)) != NULL) && (argc < argc_max); argc++)
 	{       
 		argv[argc] = ap;
 	}

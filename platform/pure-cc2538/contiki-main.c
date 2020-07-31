@@ -68,7 +68,7 @@
 #include "reg.h"
 #include "ieee-addr.h"
 #include "lpm.h"
-#include "cfs/cfs.h"
+#include "util.h"
 
 #if USB_ETH_CONF_ENABLE
 #include <cdc-eth.h>
@@ -88,7 +88,7 @@
 #include <stdio.h>
 
 #define DEBUG DEBUG_PRINT
-#define MODULE_ID CONTIKI_MOD_CFS_COMMON
+#define MODULE_ID CONTIKI_MOD_COMMON
 #include "net/ip/uip-debug.h"
 
 /*---------------------------------------------------------------------------*/
@@ -101,7 +101,6 @@
 /*---------------------------------------------------------------------------*/
 
 char shell_prompt_text[] = "Mote>";
-static int log_fd = 0;
 
 /*---------------------------------------------------------------------------*/
 void
@@ -236,29 +235,6 @@ int rf_ext_driver_register(void)
 	return 0;
 }
 
-static unsigned int 
-log_output_write_str(void *user_data, const char *data, unsigned int len)
-{
-	if (len > 0 && log_fd >= 0){
-		cfs_write(log_fd, data, len);
-	} 
-	return 0;
-}
-
-
-int log_system_init()
-{
-	log_fd = cfs_open("running.log", CFS_WRITE);
-	if(log_fd >= 0){
-		trace_output_terminal_set(log_output_write_str);
-	}
-	else{
-		printf("cfs open running.log failed \r\n");
-		return -1;
-	}
-
-	return 0;
-}
 
 int show_system_info(uint32_t mode)
 {

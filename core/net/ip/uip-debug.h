@@ -46,13 +46,13 @@
 #include "net/ip/uip.h"
 #include <stdio.h>
 
-void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
+void uip_debug_ipaddr_print(int mod, int line, const uip_ipaddr_t *addr);
 void uip_ipaddr_print(const uip_ipaddr_t *addr);
 int uip_ipaddr2str(const uip_ipaddr_t *addr, char* buf, int len_max);
 void buffer_dump(uint8_t * buf, uint32_t len);
 
 #if (DEBUG) & DEBUG_PRINT
-#define PRINT6ADDR(addr) uip_debug_ipaddr_print(addr)
+#define PRINT6ADDR(addr) uip_debug_ipaddr_print(MODULE_ID, __LINE__, addr)
 #else
 #define PRINT6ADDR(addr)
 #endif /* (DEBUG) & DEBUG_PRINT */
