@@ -82,7 +82,7 @@ rpl_set_mode(enum rpl_mode m)
        inform our parent that we now are reachable. Before we do this,
        we must set the mode variable, since DAOs will not be sent if
        we are in feather mode. */
-    PRINTF("RPL: switching to mesh mode\n");
+    PRINTF("RPL: switching to mesh mode\r\n");
     mode = m;
 
     if(default_instance != NULL) {
@@ -90,15 +90,15 @@ rpl_set_mode(enum rpl_mode m)
     }
   } else if(m == RPL_MODE_FEATHER) {
 
-    PRINTF("RPL: switching to feather mode\n");
+    PRINTF("RPL: switching to feather mode\r\n");
     if(default_instance != NULL) {
-      PRINTF("RPL: rpl_set_mode: RPL sending DAO with zero lifetime\n");
+      PRINTF("RPL: rpl_set_mode: RPL sending DAO with zero lifetime\r\n");
       if(default_instance->current_dag != NULL) {
         dao_output(default_instance->current_dag->preferred_parent, RPL_ZERO_LIFETIME);
       }
       rpl_cancel_dao(default_instance);
     } else {
-      PRINTF("RPL: rpl_set_mode: no default instance\n");
+      PRINTF("RPL: rpl_set_mode: no default instance\r\n");
     }
 
     mode = m;
@@ -149,7 +149,7 @@ rpl_purge_routes(void)
       dag = default_instance->current_dag;
       /* Propagate this information with a No-Path DAO to preferred parent if we are not a RPL Root */
       if(dag->rank != ROOT_RANK(default_instance)) {
-        PRINTF(" -> generate No-Path DAO\n");
+        PRINTF(" -> generate No-Path DAO\r\n");
         dao_output_target(dag->preferred_parent, &prefix, RPL_ZERO_LIFETIME);
         /* Don't schedule more than 1 No-Path DAO, let next iteration handle that */
         return;
@@ -222,7 +222,7 @@ rpl_remove_routes_by_nexthop(uip_ipaddr_t *nexthop, rpl_dag_t *dag)
     }
     r = uip_ds6_route_next(r);
   }
-  ANNOTATE("#L %u 0\n", nexthop->u8[sizeof(uip_ipaddr_t) - 1]);
+  ANNOTATE("#L %u 0\r\n", nexthop->u8[sizeof(uip_ipaddr_t) - 1]);
 }
 /*---------------------------------------------------------------------------*/
 uip_ds6_route_t *
@@ -232,7 +232,7 @@ rpl_add_route(rpl_dag_t *dag, uip_ipaddr_t *prefix, int prefix_len,
   uip_ds6_route_t *rep;
 
   if((rep = uip_ds6_route_add(prefix, prefix_len, next_hop)) == NULL) {
-    PRINTF("RPL: No space for more route entries\n");
+    PRINTF("RPL: No space for more route entries\r\n");
     return NULL;
   }
 
@@ -266,7 +266,7 @@ rpl_link_neighbor_callback(const linkaddr_t *addr, int status, int numtx)
       parent = rpl_find_parent_any_dag(instance, &ipaddr);
       if(parent != NULL) {
         /* Trigger DAG rank recalculation. */
-        PRINTF("RPL: rpl_link_neighbor_callback triggering update\n");
+        PRINTF("RPL: rpl_link_neighbor_callback triggering update\r\n");
         parent->flags |= RPL_PARENT_FLAG_UPDATED;
       }
     }
@@ -283,9 +283,9 @@ rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr)
   PRINTF("RPL: Neighbor state changed for ");
   PRINT6ADDR(&nbr->ipaddr);
 #if UIP_ND6_SEND_NS || UIP_ND6_SEND_RA
-  PRINTF(", nscount=%u, state=%u\n", nbr->nscount, nbr->state);
+  PRINTF(", nscount=%u, state=%u\r\n", nbr->nscount, nbr->state);
 #else /* UIP_ND6_SEND_NS || UIP_ND6_SEND_RA */
-  PRINTF(", state=%u\n", nbr->state);
+  PRINTF(", state=%u\r\n", nbr->state);
 #endif /* UIP_ND6_SEND_NS || UIP_ND6_SEND_RA */
   for(instance = &instance_table[0], end = instance + RPL_MAX_INSTANCES; instance < end; ++instance) {
     if(instance->used == 1 ) {
@@ -293,7 +293,7 @@ rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr)
       if(p != NULL) {
         p->rank = INFINITE_RANK;
         /* Trigger DAG rank recalculation. */
-        PRINTF("RPL: rpl_ipv6_neighbor_callback infinite rank\n");
+        PRINTF("RPL: rpl_ipv6_neighbor_callback infinite rank\r\n");
         p->flags |= RPL_PARENT_FLAG_UPDATED;
       }
     }
@@ -332,7 +332,7 @@ void
 rpl_init(void)
 {
   uip_ipaddr_t rplmaddr;
-  PRINTF("RPL: RPL started\n");
+  PRINTF("RPL: RPL started\r\n");
   default_instance = NULL;
 
   rpl_dag_init();
