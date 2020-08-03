@@ -41,8 +41,10 @@ extern void shell_default_output_serial(const char *text1, int len1, const char 
 extern void shell_prompt_serial(char *str);
 extern void shell_exit_serial(void);
 
+extern uint32_t xmemExist(void);
 
-static int log_fd = 0;
+
+static int log_fd = -1;
 
 
 void
@@ -100,12 +102,16 @@ log_output_terminal(void *user_data, const char *data, unsigned int len)
 
 int log_system_init()
 {
-	log_fd = cfs_open("running.log", CFS_WRITE);
+	if(xmemExist()){
+		log_fd = cfs_open("running.log", CFS_WRITE);
+	}
+	
 	if(log_fd >= 0){
-		trace_output_terminal_set(log_output_file);
+		log_system_std_out_set(UTIL_LOG_OUT_FILE);
 	}
 	else{
-		printf("cfs open running.log failed \r\n");
+		printf("cfs open running.log failed, switch to terminal \r\n");
+		log_system_std_out_set(UTIL_LOG_OUT_TERMIANL);
 		return -1;
 	}
 

@@ -67,19 +67,24 @@
 #define PRINTF(...) do {} while (0)
 #endif
 
-#define  SPI_FLASH_INS_WREN        0x06
-#define  SPI_FLASH_INS_WRDI        0x04
-#define  SPI_FLASH_INS_RDSR        0x05
-#define  SPI_FLASH_INS_WRSR        0x01
-#define  SPI_FLASH_INS_READ        0x03
-#define  SPI_FLASH_INS_FAST_READ   0x0b
-#define  SPI_FLASH_INS_PP          0x02
-#define  SPI_FLASH_INS_SE          0x20
-#define  SPI_FLASH_INS_BE          0xd8
-#define  SPI_FLASH_INS_DP          0xb9
-#define  SPI_FLASH_INS_RES         0xab
+#define  SPI_FLASH_INS_WREN        			0x06
+#define  SPI_FLASH_INS_WRDI        			0x04
+#define  SPI_FLASH_INS_RDSR        			0x05
+#define  SPI_FLASH_INS_WRSR        			0x01
+#define  SPI_FLASH_INS_READ        			0x03
+#define  SPI_FLASH_INS_FAST_READ   			0x0b
+#define  SPI_FLASH_INS_PP          			0x02
+#define  SPI_FLASH_INS_SE          			0x20
+#define  SPI_FLASH_INS_BE          			0xd8
+#define  SPI_FLASH_INS_DP          			0xb9
+#define  SPI_FLASH_INS_RES         			0xab
 /*---------------------------------------------------------------------------*/
+#define	FLASH_MANUFACTURER_ID				0xEF
+#define	FLASH_JEDEC_ID_W25Q128JV_IQ			((FLASH_MANUFACTURER_ID << 16) | 0x4018)
+#define	FLASH_JEDEC_ID_W25Q128JV_IM			((FLASH_MANUFACTURER_ID << 16) | 0x7018)
 
+
+/*---------------------------------------------------------------------------*/
 
 uint32_t W25qxx_ReadID(void)
 {
@@ -100,6 +105,23 @@ uint32_t W25qxx_ReadID(void)
 	return Temp;
 }
 
+uint32_t xmemExist(void)
+{
+	uint32_t flashId = 0;
+
+	flashId = W25qxx_ReadID();
+
+	switch ( flashId )
+	{
+	    case FLASH_JEDEC_ID_W25Q128JV_IQ :
+	    case FLASH_JEDEC_ID_W25Q128JV_IM :
+			return 1;
+	    default:
+			return 0;
+	}
+
+	return 0;
+}
 
 
 /*---------------------------------------------------------------------------*/

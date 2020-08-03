@@ -24,6 +24,7 @@
 #include "net/ip/uip-debug.h"
 
 extern int show_system_info(uint32_t mode);
+extern uint32_t xmemExist(void);
 
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define UIP_UDP_BUF       ((struct uip_udp_hdr *)&uip_buf[UIP_LLH_LEN + UIP_IPH_LEN])
@@ -322,6 +323,12 @@ ota_packet_handler(void)
 	static char *appdata;
 
 	PRINTF("ota_packet_handler enter \r\n");
+
+
+	if(!xmemExist()){
+		PRINTF("there is not xmem, so ignore all requests \r\n");
+	}
+
 	if(uip_newdata()) {
 
 		appdata = (char *)uip_appdata;
