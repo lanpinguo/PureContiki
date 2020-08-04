@@ -102,8 +102,9 @@ static char img_found[] 	= "Found Image:\r\n";
 
 static char shared_buf[SHARED_BUF_MAX] ;
 /*---------------------------------------------------------------------------*/
-void uart_write_byte(uint8_t uart, uint8_t b);
-uint32_t W25qxx_ReadID(void);
+extern void uart_write_byte(uint8_t uart, uint8_t b);
+extern uint32_t W25qxx_ReadID(void);
+extern uint32_t xmemExist(void);
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -264,7 +265,10 @@ int main(void)
 
 	//watchdog_start();
 	//fade(LEDS_ORANGE);
-
+	if(!xmemExist()){
+		/* Directly boot app */
+		goto BOOT_APP;
+	}
 
 	/* Try copy a image from external flash */
 	xmem_pread_raw(&needRestoreFactoryImg,sizeof(needRestoreFactoryImg),IMG_DEFAULLT_FACTORY_START);
@@ -357,6 +361,7 @@ int main(void)
 	}
 
 
+BOOT_APP:
 	dbg_output("booting:\r\n", ENCODING_TYPE_RAW, sizeof("booting:\r\n"));
 	rc = boot_app();
 	if(rc != 0){
