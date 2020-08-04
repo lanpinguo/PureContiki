@@ -31,6 +31,12 @@
 #ifndef PROJECT_ROUTER_CONF_H_
 #define PROJECT_ROUTER_CONF_H_
 
+
+
+#define FLASH_CONF_FW_ADDR				(CC2538_DEV_FLASH_ADDR + 10*1024)
+#define FLASH_CONF_FW_SIZE 				(CC2538_DEV_FLASH_SIZE - 10*1024)
+
+
 #ifndef WITH_NON_STORING
 #define WITH_NON_STORING 0 /* Set this to run with non-storing mode */
 #endif /* WITH_NON_STORING */
