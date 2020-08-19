@@ -98,6 +98,9 @@
 #else
 #define PUTS(s)
 #endif
+
+uint32_t W25qxx_ReadID(void);
+
 /*---------------------------------------------------------------------------*/
 
 char shell_prompt_text[] = "Mote>";
@@ -246,13 +249,15 @@ int show_system_info(uint32_t mode)
 
 		soc_print_info();
 
-		PRINTF("\r\nSys Status: 0x%08lx\r\n", REG(SYS_CTRL_CLOCK_STA));
-		PRINTF("Net: ");
-		PRINTF("%s\r\n", NETSTACK_NETWORK.name);
-		PRINTF("MAC: ");
-		PRINTF("%s\r\n", NETSTACK_MAC.name);
-		PRINTF("RDC: ");
-		PRINTF("%s\r\n", NETSTACK_RDC.name);
+		printf("\r\nSys Status: 0x%08lx\r\n", REG(SYS_CTRL_CLOCK_STA));
+		printf("Net: ");
+		printf("%s\r\n", NETSTACK_NETWORK.name);
+		printf("MAC: ");
+		printf("%s\r\n", NETSTACK_MAC.name);
+		printf("RDC: ");
+		printf("%s\r\n", NETSTACK_RDC.name);
+		printf("ex-flash:%08lx\r\n", W25qxx_ReadID());
+
 	}
 	
 	if(mode & 0x02){
