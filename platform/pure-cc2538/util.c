@@ -179,9 +179,11 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 	(void)argc;
 	if(strncmp(argv[0], "test", 4) == 0) {
 		process_start(&testcoffee_process,NULL);
+		PROCESS_EXIT(); 
 	}
 	else if(strncmp(argv[0], "info", 4) == 0){
 		show_system_info(3);
+		PROCESS_EXIT(); 
 	}
 	else if(strncmp(argv[0], "log", 3) == 0){
 
@@ -224,6 +226,7 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 			printf("\r\nxmem erase %u bytes from address 0x%lx done \r\n",
 					rc, addr*1024);	
 		}
+		PROCESS_EXIT(); 
 
 	}
 	else if(strncmp(argv[0], "dump", 4) == 0){
@@ -246,6 +249,7 @@ PROCESS_THREAD(shell_debug_process, ev, data)
 			}
 		}
 
+		PROCESS_EXIT(); 
 
 	}
 
