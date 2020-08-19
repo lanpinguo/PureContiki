@@ -315,7 +315,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				coap_set_header_uri_path(request, service_urls[1]);
 				generate_nbr_notify_payload(&global_ip_addr,2,msg);
 			
-				printf("\r\nPOST: %s PAYLOAD: %s\r\n", service_urls[1], msg);
+				PRINTF("\r\nPOST: %s PAYLOAD: %s\r\n", service_urls[1], msg);
 				coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
 										client_chunk_handler);
