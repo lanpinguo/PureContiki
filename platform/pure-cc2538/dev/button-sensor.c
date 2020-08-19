@@ -107,19 +107,41 @@ btn_callback(uint8_t port, uint8_t pin)
 
   timer_set(&debouncetimer, CLOCK_SECOND / 8);
 
+#ifdef BUTTON_SELECT_PORT
   if((port == BUTTON_SELECT_PORT) && (pin == BUTTON_SELECT_PIN)) {
     sensors_changed(&button_select_sensor);
-  } else if((port == BUTTON_LEFT_PORT) && (pin == BUTTON_LEFT_PIN)) {
+  } 
+#endif
+
+#ifdef BUTTON_LEFT_PORT
+  if((port == BUTTON_LEFT_PORT) && (pin == BUTTON_LEFT_PIN)) {
     sensors_changed(&button_left_sensor);
-  } else if((port == BUTTON_RIGHT_PORT) && (pin == BUTTON_RIGHT_PIN)) {
+  } 
+#endif
+
+#ifdef BUTTON_RIGHT_PORT
+  if((port == BUTTON_RIGHT_PORT) && (pin == BUTTON_RIGHT_PIN)) {
     sensors_changed(&button_right_sensor);
-  } else if((port == BUTTON_UP_PORT) && (pin == BUTTON_UP_PIN)) {
+  } 
+#endif
+
+#ifdef BUTTON_UP_PORT
+  if((port == BUTTON_UP_PORT) && (pin == BUTTON_UP_PIN)) {
     sensors_changed(&button_up_sensor);
-  } else if((port == BUTTON_DOWN_PORT) && (pin == BUTTON_DOWN_PIN)) {
+  }
+#endif
+
+#ifdef BUTTON_DOWN_PORT
+  if((port == BUTTON_DOWN_PORT) && (pin == BUTTON_DOWN_PIN)) {
     sensors_changed(&button_down_sensor);
-  } else if((port == BUTTON_CANCEL_PORT) && (pin == BUTTON_CANCEL_PIN)) {
+  }
+#endif
+
+#ifdef BUTTON_CANCEL_PORT
+  if((port == BUTTON_CANCEL_PORT) && (pin == BUTTON_CANCEL_PIN)) {
     sensors_changed(&button_cancel_sensor);
   }
+#endif  
 }
 
 /*---------------------------------------------------------------------------*/
@@ -134,6 +156,7 @@ btn_callback(uint8_t port, uint8_t pin)
  * \param value ignored
  * \return ignored
  */
+#ifdef BUTTON_CANCEL_PORT
 static int
 config_cancel(int type, int value)
 {
@@ -146,6 +169,10 @@ config_cancel(int type, int value)
   gpio_register_callback(btn_callback, BUTTON_CANCEL_PORT, BUTTON_CANCEL_PIN);
   return 1;
 }
+
+SENSORS_SENSOR(button_cancel_sensor, BUTTON_SENSOR, NULL, config_cancel, NULL);
+
+#endif
 
 
 /*---------------------------------------------------------------------------*/
@@ -160,6 +187,7 @@ config_cancel(int type, int value)
  * \param value ignored
  * \return ignored
  */
+#ifdef BUTTON_SELECT_PORT
 static int
 config_select(int type, int value)
 {
@@ -172,6 +200,10 @@ config_select(int type, int value)
   gpio_register_callback(btn_callback, BUTTON_SELECT_PORT, BUTTON_SELECT_PIN);
   return 1;
 }
+
+SENSORS_SENSOR(button_select_sensor, BUTTON_SENSOR, NULL, config_select, NULL);
+
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Init function for the left button.
@@ -184,6 +216,7 @@ config_select(int type, int value)
  * \param value ignored
  * \return ignored
  */
+#ifdef BUTTON_LEFT_PORT
 static int
 config_left(int type, int value)
 {
@@ -196,6 +229,10 @@ config_left(int type, int value)
   gpio_register_callback(btn_callback, BUTTON_LEFT_PORT, BUTTON_LEFT_PIN);
   return 1;
 }
+
+SENSORS_SENSOR(button_left_sensor, BUTTON_SENSOR, NULL, config_left, NULL);
+
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Init function for the right button.
@@ -208,11 +245,11 @@ config_left(int type, int value)
  * \param value ignored
  * \return ignored
  */
+#ifdef BUTTON_RIGHT_PORT
 static int
 config_right(int type, int value)
 {
   config(BUTTON_RIGHT_PORT_BASE, BUTTON_RIGHT_PIN_MASK);
-
   ioc_set_over(BUTTON_RIGHT_PORT, BUTTON_RIGHT_PIN, IOC_OVERRIDE_PUE);
 
   NVIC_EnableIRQ(BUTTON_RIGHT_VECTOR);
@@ -220,6 +257,10 @@ config_right(int type, int value)
   gpio_register_callback(btn_callback, BUTTON_RIGHT_PORT, BUTTON_RIGHT_PIN);
   return 1;
 }
+
+SENSORS_SENSOR(button_right_sensor, BUTTON_SENSOR, NULL, config_right, NULL);
+
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Init function for the up button.
@@ -232,6 +273,7 @@ config_right(int type, int value)
  * \param value ignored
  * \return ignored
  */
+#ifdef BUTTON_UP_PORT
 static int
 config_up(int type, int value)
 {
@@ -244,6 +286,10 @@ config_up(int type, int value)
   gpio_register_callback(btn_callback, BUTTON_UP_PORT, BUTTON_UP_PIN);
   return 1;
 }
+
+SENSORS_SENSOR(button_up_sensor, BUTTON_SENSOR, NULL, config_up, NULL);
+
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Init function for the down button.
@@ -256,6 +302,7 @@ config_up(int type, int value)
  * \param value ignored
  * \return ignored
  */
+#ifdef BUTTON_DOWN_PORT
 static int
 config_down(int type, int value)
 {
@@ -268,6 +315,10 @@ config_down(int type, int value)
   gpio_register_callback(btn_callback, BUTTON_DOWN_PORT, BUTTON_DOWN_PIN);
   return 1;
 }
+
+SENSORS_SENSOR(button_down_sensor, BUTTON_SENSOR, NULL, config_down, NULL);
+
+#endif
 /*---------------------------------------------------------------------------*/
 void
 button_sensor_init()
@@ -275,11 +326,6 @@ button_sensor_init()
   timer_set(&debouncetimer, 0);
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(button_cancel_sensor, BUTTON_SENSOR, NULL, config_cancel, NULL);
-SENSORS_SENSOR(button_select_sensor, BUTTON_SENSOR, NULL, config_select, NULL);
-SENSORS_SENSOR(button_left_sensor, BUTTON_SENSOR, NULL, config_left, NULL);
-SENSORS_SENSOR(button_right_sensor, BUTTON_SENSOR, NULL, config_right, NULL);
-SENSORS_SENSOR(button_up_sensor, BUTTON_SENSOR, NULL, config_up, NULL);
-SENSORS_SENSOR(button_down_sensor, BUTTON_SENSOR, NULL, config_down, NULL);
+
 
 /** @} */
