@@ -43,9 +43,11 @@
 #include "rom-util.h"
 
 #include <stdint.h>
+#include "ota_types.h"
+
+
 /*---------------------------------------------------------------------------*/
 extern int main(void);
-extern int boot_main(void);
 
 /*---------------------------------------------------------------------------*/
 /* System handlers provided here */
@@ -69,6 +71,24 @@ void udma_isr(void);
 void udma_err_isr(void);
 void crypto_isr(void);
 void pka_isr(void);
+
+
+
+/* ------------------------------------------------------------------------------------------------
+ *                                          Constants
+ * ------------------------------------------------------------------------------------------------
+ */
+__attribute__((__section__(".image_data"), used))
+static const OTA_ImageHeader_t ImageHeader = {
+  .magicNumber = OTA_HDR_MAGIC_NUMBER,
+  .headerVersion = OTA_HDR_HEADER_VERSION,
+  .headerLength = sizeof(OTA_ImageHeader_t),
+  .imageValid = OTA_HEADER_IMG_VALID,
+};
+
+
+
+
 
 /* Link in the USB ISR only if USB is enabled */
 #if USB_SERIAL_CONF_ENABLE | USB_ETH_CONF_ENABLE
@@ -108,7 +128,7 @@ void uart1_isr(void);
 #endif
 /*---------------------------------------------------------------------------*/
 /* Allocate stack space */
-static uint64_t stack[256] __attribute__ ((section(".stack")));
+static uint64_t stack[1024] __attribute__ ((section(".stack")));
 /*---------------------------------------------------------------------------*/
 __attribute__((__section__(".vectors")))
 void(*const vectors[])(void) =
@@ -279,48 +299,20 @@ void(*const vectors[])(void) =
 };
 /*---------------------------------------------------------------------------*/
 
-#if FLASH_OTA_BOOT_MANAGER
-__attribute__((__section__(".boot_vectors"), used))
-void(*const boot_vectors[])(void) =
-{
-  (void (*)(void))((unsigned long)stack + sizeof(stack)),   /* Stack pointer */
-  boot_reset_handler,         /* Reset handler */
-  nmi_handler,                /* The NMI handler */
-  default_handler,            /* The hard fault handler */
-  default_handler,            /* 4 The MPU fault handler */
-  default_handler,            /* 5 The bus fault handler */
-  default_handler,            /* 6 The usage fault handler */
-  0,                          /* 7 Reserved */
-  0,                          /* 8 Reserved */
-  0,                          /* 9 Reserved */
-  0,                          /* 10 Reserved */
-  svcall_handler,             /* 11 SVCall handler */
-  default_handler,            /* 12 Debug monitor handler */
-  0,                          /* 13 Reserved */
-  pendsv_handler,             /* 14 The PendSV handler */
-  clock_isr,                  /* 15 The SysTick handler */
-  default_handler,            /* 16 GPIO Port A */
-  default_handler,            /* 17 GPIO Port B */
-  default_handler,            /* 18 GPIO Port C */
-  default_handler,            /* 19 GPIO Port D */
-  0,                          /* 20 none */
-};
-#endif 
-
+#ifndef OTA_VERSION_NO_CCA
 __attribute__((__section__(".flashcca")))
 const flash_cca_lock_page_t flash_cca_lock_page = {
-  FLASH_CCA_BOOTLDR_CFG,        /* Boot loader backdoor configuration */
-  FLASH_CCA_IMAGE_VALID,        /* Image valid */
-#if FLASH_OTA_BOOT_MANAGER
-  &boot_vectors,                /*Boot Manager Vector table */
 #else
-	&vectors,										 /* Normal Vector table */
-#endif
-/* Unlock all pages and debug */
-  { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }
+const flash_cca_lock_page_t flash_cca_lock_page = {
+#endif	
+	FLASH_CCA_BOOTLDR_CFG,        /* Boot loader backdoor configuration */
+	FLASH_CCA_IMAGE_VALID,        /* Image valid */
+	&vectors,					  /* Normal Vector table */
+	/* Unlock all pages and debug */
+	{ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }
 };
 /*---------------------------------------------------------------------------*/
 /* Linker constructs indicating .data and .bss segment locations */
@@ -363,26 +355,5 @@ reset_handler(void)
 }
 /*---------------------------------------------------------------------------*/
 
-#if FLASH_OTA_BOOT_MANAGER
-/*---------------------------------------------------------------------------*/
-__attribute__((__section__(".boot_fw"), used))
-void boot_reset_handler(void)
-{
-  REG(SYS_CTRL_EMUOVR) = 0xFF;
-
-  /* Copy the data segment initializers from flash to SRAM. */
-  //rom_util_memcpy(&_data, &_ldata, &_edata - &_data);
-
-  /* Zero-fill the bss segment. */
-  //rom_util_memset(&_bss, 0, &_ebss - &_bss);
-
-  /* call the application's entry point. */
-  boot_main();
-
-  /* End here if main () returns */
-  while(1);
-}
-/*---------------------------------------------------------------------------*/
-#endif
 
 /** @} */

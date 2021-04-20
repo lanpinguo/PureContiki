@@ -55,6 +55,10 @@ CONTIKI_CPU_DIRS += ../cc253x/usb/common ../cc253x/usb/common/cdc-acm
 
 
 
+ifneq ($(BOOTLOADER_MODE_ENABLE),)
+CONTIKI_CPU_SOURCEFILES += soc.c uart.c watchdog.c
+CONTIKI_CPU_SOURCEFILES += nvic.c sys-ctrl.c gpio.c ioc.c spi.c
+else
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += soc.c clock.c rtimer-arch.c uart.c watchdog.c
 CONTIKI_CPU_SOURCEFILES += nvic.c sys-ctrl.c gpio.c ioc.c spi.c adc.c
@@ -68,25 +72,34 @@ CONTIKI_CPU_SOURCEFILES += dbg.c ieee-addr.c
 CONTIKI_CPU_SOURCEFILES += slip-arch.c slip.c
 CONTIKI_CPU_SOURCEFILES += i2c.c cc2538-temp-sensor.c vdd3-sensor.c
 CONTIKI_CPU_SOURCEFILES += cfs-coffee.c cfs-coffee-arch.c pwm.c
-ifneq ($(FLASH_OTA_BOOT_MANAGER),0)
-CONTIKI_CPU_SOURCEFILES += bootloader.c
+
 endif
 
-DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-snprintf.c dbg-sprintf.c strformat.c
+ifneq ($(BOOTLOADER_MODE_ENABLE),)
+  DEBUG_IO_SOURCEFILES = 
+else
 
-USB_CORE_SOURCEFILES += usb-core.c cdc-acm.c
+  DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-snprintf.c dbg-sprintf.c strformat.c
+
+  USB_CORE_SOURCEFILES += usb-core.c cdc-acm.c
 
 ifdef USB_CDC_ETH_CLASS
-USB_ARCH_SOURCEFILES += usb-arch.c cdc-eth.c cdc-eth-descriptors.c \
+  USB_ARCH_SOURCEFILES += usb-arch.c cdc-eth.c cdc-eth-descriptors.c \
                         cdc-eth-string-descriptors.c crc32.c
 else
-USB_ARCH_SOURCEFILES += usb-arch.c usb-serial.c cdc-acm-descriptors.c
+  USB_ARCH_SOURCEFILES += usb-arch.c usb-serial.c cdc-acm-descriptors.c
+endif
+
 endif
 
 ifneq ($(TARGET_START_SOURCEFILES),)
   CPU_START_SOURCEFILES = TARGET_START_SOURCEFILES
 else
+ifneq ($(BOOTLOADER_MODE_ENABLE),)
+  CPU_START_SOURCEFILES = startup-bootloader.c
+else
   CPU_START_SOURCEFILES = startup-gcc.c
+endif
 endif
 CPU_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_START_SOURCEFILES)}}
 

@@ -50,13 +50,33 @@
 /** \brief Exports a global symbol to be used by the sensor API */
 SENSORS(
 #if PLATFORM_HAS_BUTTON
+
+#ifdef BUTTON_CANCEL_PORT
 &button_cancel_sensor,
-&button_select_sensor, 
-&button_left_sensor, 
-&button_right_sensor,
-&button_up_sensor, 
-&button_down_sensor, 
 #endif
+
+#ifdef BUTTON_SELECT_PORT
+&button_select_sensor, 
+#endif
+
+#ifdef BUTTON_LEFT_PORT
+&button_left_sensor, 
+#endif
+
+#ifdef BUTTON_RIGHT_PORT
+&button_right_sensor,
+#endif
+
+#ifdef BUTTON_UP_PORT
+&button_up_sensor, 
+#endif
+
+#ifdef BUTTON_DOWN_PORT
+&button_down_sensor, 
+#endif 
+
+#endif /* PLATFORM_HAS_BUTTON */
+
 #if PLATFORM_HAS_ADC_ALS
 &als_sensor,
 #endif

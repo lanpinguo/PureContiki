@@ -49,55 +49,32 @@ static void
 res_post_put_handler(void *request, void *response, uint8_t *buffer,
                      uint16_t preferred_size, int32_t *offset)
 {
-  size_t len = 0;
-  const char *color = NULL;
-  const char *mode = NULL;
-  uint8_t led = 0;
-  int success = 1;
+	size_t len = 0;
+	const char *mode = NULL;
+	int success = 1;
 
-  if((len = REST.get_query_variable(request, "color", &color))) {
-    if(strncmp(color, "r", len) == 0) {
-      led = LEDS_RED;
-    } else if(strncmp(color, "g", len) == 0) {
-      led = LEDS_GREEN;
-#if BOARD_SMARTRF06EB
-    } else if(strncmp(color, "y", len) == 0) {
-      led = LEDS_YELLOW;
-    } else if(strncmp(color, "o", len) == 0) {
-      led = LEDS_ORANGE;
-#endif
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  }
 
-  if(success && (len = REST.get_post_variable(request, "mode", &mode))) {
-    if(strncmp(mode, "on", len) == 0) {
-      leds_on(led);
-    } else if(strncmp(mode, "off", len) == 0) {
-      leds_off(led);
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  }
-
-  if(!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }
+	if(success && (len = REST.get_post_variable(request, "mode", &mode))) {
+		if(strncmp(mode, "on", len) == 0) {
+			leds_arch_set(0x1);
+		} else if(strncmp(mode, "off", len) == 0) {
+			leds_arch_set(0x0);
+		} else {
+			success = 0;
+		}
+	}
+	printf("status led: %s\r\n",mode);
+	if(!success) {
+		REST.set_response_status(response, REST.status.BAD_REQUEST);
+	}
 }
 /*---------------------------------------------------------------------------*/
 /*
- * A simple actuator example, depending on the color query parameter and post
- * variable mode, corresponding led is activated or deactivated
+ * post variable mode, corresponding led is activated or deactivated
  */
-#define RESOURCE_PARAMS "r|g"
 
 RESOURCE(res_leds,
-         "title=\"LEDs: ?color=" RESOURCE_PARAMS ", POST/PUT mode=on|off\";rt=\"Control\"",
+         "title=\"Status LEDs: ? POST/PUT mode=on|off\";rt=\"Control\"",
          NULL,
          res_post_put_handler,
          res_post_put_handler,

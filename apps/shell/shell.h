@@ -180,6 +180,25 @@ void shell_prompt(char *prompt);
 void shell_default_output(const char *data1, int size1,
 			  const char *data2, int size2);
 
+
+/**
+ * \brief      Print a line of output from the shell
+ * \param data1 A pointer to the first half of the data
+ * \param size1 The size of the first half of the data
+ * \param data2 A pointer to the second half of the data
+ * \param size2 The size of the second half of the data
+ *
+ *
+ *             This function is called by a shell command to output
+ *             data. The output is split into two halves to make it
+ *             easier for shell commands to output data that contains
+ *             a static part (such as a static string) and a dynamic
+ *             part (a dynamically generated string).
+ *
+ */
+void shell_raw_output(const char *data1, int size1,
+			  const char *data2, int size2);
+
 /**
  * \brief      Request shell exit
  *
@@ -239,6 +258,26 @@ static struct shell_command name = { NULL, command, \
 void shell_output(struct shell_command *c,
 		  void *data1, int size1,
 		  const void *data2, int size2);
+
+/**
+ * \brief      Output data from a shell command
+ * \param c    The command that outputs raw data
+ * \param data1 A pointer to the first half of the data
+ * \param size1 The size of the first half of the data
+ * \param data2 A pointer to the second half of the data
+ * \param size2 The size of the second half of the data
+ *
+ *             This function is called by a shell command to output
+ *             data. The output is split into two halves to make it
+ *             easier for shell commands to output data that contains
+ *             a static part (such as a static string) and a dynamic
+ *             part (a dynamically generated string).
+ *
+ */
+void shell_output_raw(struct shell_command *c,
+		  void *data1, int size1,
+		  const void *data2, int size2);
+
 /**
  * \brief      Output strings from a shell command
  * \param c    The command that outputs data

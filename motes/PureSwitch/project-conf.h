@@ -26,10 +26,13 @@
 #ifndef __PROJECT_CONF_H__
 #define __PROJECT_CONF_H__
 
-#define XMEM_ERASE_UNIT_SIZE 			1024 /*1K*/
+
+#define OTA_DEVICE_TYPE					1
+#define OTA_FIRMWARE_VERSION			0x10000
+
 #define COFFEE							1
 #define FLASH_CONF_FW_ADDR				(CC2538_DEV_FLASH_ADDR + 10*1024)
-#define FLASH_CONF_FW_SIZE 				(0x7f800 - 10*1024)
+#define FLASH_CONF_FW_SIZE 				(CC2538_DEV_FLASH_SIZE - 10*1024)
 
 #define COFFEE_CONF_START				CC2538_DEV_FLASH_ADDR
 #define COFFEE_CONF_SIZE        		(10*1024)
@@ -90,10 +93,9 @@
 
 #define PLATFORM_HAS_LEDS       		1
 
-#define LEDS_YELLOW             2 /**< LED2 (Yellow) -> PC1 */
-#define LEDS_RED                1 /**< LED1 (Red)  -> PC0 */
+#define LEDS_BLUE_CTRL        			0 
 
-#define LEDS_CONF_ALL           LEDS_YELLOW
+#define LEDS_CONF_ALL           		0
 
 #define PLATFORM_LEDS_MAP 		\
 { \

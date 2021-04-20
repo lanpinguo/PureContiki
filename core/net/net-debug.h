@@ -65,20 +65,34 @@ typedef enum{
 	CONTIKI_MOD_NET ,			/* 16 */
 	CONTIKI_MOD_IP6,			/* 17 */
 	CONTIKI_MOD_TCP,			/* 18 */
+	CONTIKI_MOD_TSCH,			/* 19 */
+	CONTIKI_MOD_TSCH_SLOT,		/* 20 */
+	CONTIKI_MOD_TSCH_LOG,		/* 21 */
+	CONTIKI_MOD_TSCH_QUEUE,		/* 22 */
+	CONTIKI_MOD_CCM_STAR,		/* 23 */
+	CONTIKI_MOD_PROCESS,		/* 24 */
+	CONTIKI_MOD_OTA,			/* 25 */
+	CONTIKI_MOD_CFS_COFFEE,		/* 26 */
+	CONTIKI_MOD_COMMON,			/* 27 */
+
+	CONTIKI_MOD_END,
 }CONTIKI_MOD_ID_e;
 	
 typedef int (*TRACE_DEBUG_FILTER)(int mod, int line);
 
 void net_debug_lladdr_print(const uip_lladdr_t *addr);
 int trace_dbg_print(int mod, int level, const char * format,...);
-int trace_print_filter_set(int enable,int mod_start,int mod_end,int line_start, int line__end);
+int trace_print_filter_set(int enable, uint32_t *mod, int line_start, int line__end);
+void trace_output_terminal_set(void* func);
 
 #define DEBUG_NONE      0
 #define DEBUG_PRINT     1
 #define DEBUG_ANNOTATE  2
 #define DEBUG_FULL      DEBUG_ANNOTATE | DEBUG_PRINT
 
-
+#ifndef MODULE_ID
+#define MODULE_ID	CONTIKI_MOD_NONE	
+#endif
 
 /* PRINTA will always print if the debug routines are called directly */
 #ifdef __AVR__

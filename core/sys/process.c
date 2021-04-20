@@ -80,10 +80,10 @@ static volatile unsigned char poll_requested;
 
 static void call_process(struct process *p, process_event_t ev, process_data_t data);
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
+int trace_dbg_print(int mod, int level, const char * format,...);
+#define PRINTF(...) trace_dbg_print(23,__LINE__,__VA_ARGS__)
 #else
 #define PRINTF(...)
 #endif
@@ -178,7 +178,7 @@ call_process(struct process *p, process_event_t ev, process_data_t data)
 
 #if DEBUG
   if(p->state == PROCESS_STATE_CALLED) {
-    printf("process: process '%s' called again with event %d\r\n", PROCESS_NAME_STRING(p), ev);
+    PRINTF("process: process '%s' called again with event %d\r\n", PROCESS_NAME_STRING(p), ev);
   }
 #endif /* DEBUG */
   

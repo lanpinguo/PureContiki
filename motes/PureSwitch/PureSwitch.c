@@ -69,8 +69,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "crc32.h"
 
-
+#include "xmem.h"
 
 #include "shell.h"
 #include "serial-shell.h"
@@ -87,207 +88,34 @@
 #include "coap-server.h"
 #include "coap-client.h"
 /*#include "ping6.h"*/
+#include "util.h"
 #include "hcho-sensor.h"
 
 #define DEBUG DEBUG_PRINT
+#define MODULE_ID CONTIKI_MOD_NONE
 #include "net/ip/uip-debug.h"
 #include "relay_switch.h"
+#include "dev/leds.h"
 
-#define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
+
 #define RELAY_SW_ACTIVE_TIME	(60 * 60 * 6) /* 6 hours */
 #define RELAY_SW_DEACTIVE_TIME	(60 * 60 * 18) /* 18 hours */
 
-
-
 process_event_t dbg_event;
+
+
 
 /*
 static struct etimer et;
 static uint32_t sw_on_flag = 1;
 */
 
-PROCESS_NAME(testcoffee_process);
-
-
-
-
-/*---------------------------------------------------------------------------*/
-
-
-PROCESS(shell_debug_process, "pure");
-SHELL_COMMAND(pure_command,
-	      "pure",
-	      "pure [num]: blink LEDs ([num] times)",
-	      &shell_debug_process);
-
-
-/*---------------------------------------------------------------------------*/
-
-
-
-PROCESS_THREAD(shell_debug_process, ev, data)
-{
-	char* argv[5];
-	int argc;
-
-
-	
-	PROCESS_BEGIN();
-	
-	if(data == NULL) {
-		PROCESS_EXIT(); 
-	}
-	argc = str_split((char*)data,(char*)" ",argv,5);
-	/*printf("\r\ncoap client cli [%d] \r\n",argc);	*/
-	(void)argc;
-	if(strncmp(argv[0], "test", 4) == 0) {
-
-		process_start(&testcoffee_process,NULL);
-	
-	}
-	else if(strncmp(argv[0], "default", 7) == 0){
-		int wfd;
-		unsigned char buf[50] = "hello world";
-		int r;
-
-		wfd = cfs_open("default.json", CFS_WRITE);
-		if(wfd < 0) {
-			printf("\r\nopen failed fd=[%d] \r\n",wfd);	
-			PROCESS_EXIT(); 
-		}
-
-		/* Write buffer. */
-		r = cfs_write(wfd, buf, sizeof(buf));
-		if(r < 0) {
-			printf("\r\nwrite failed fd=[%d] \r\n",wfd);	
-			PROCESS_EXIT(); 
-		}
-
-		cfs_close(wfd);
-
-	}
-
-
-
-
-
-	
-	PROCESS_END();
-}
-
-
-
-
-PROCESS(shell_list_neighbor_process, "list rpl neighbor");
-SHELL_COMMAND(list_neighbor_command,
-	      "lsnb",
-	      "lsnb: list rpl neighbors",
-	      &shell_list_neighbor_process);
-
-
-/*---------------------------------------------------------------------------*/
-
-PROCESS_THREAD(shell_list_neighbor_process, ev, data)
-{
-
-
-	PROCESS_BEGIN();
-
-	PROCESS_PAUSE();
-	uip_ds6_nbr_dump();
-	rpl_print_neighbor_list();	
-	
-	PROCESS_END();
-}
-
-
-/*---------------------------------------------------------------------------*/
-
-PROCESS(shell_dbg_switch_process, "debug switch");
-SHELL_COMMAND(dbg_sw_command,
-		"debug",
-		"debug [enable|disable] [module]: turn on/off the debug info of module",
-		&shell_dbg_switch_process);
-
-PROCESS_THREAD(shell_dbg_switch_process, ev, data)
-{
-	static char* argv[5];
-	static int argc;
-	static int enable = 0;
-	static int mod_start = 0;
-	static int mod_end = 0;
-	static int line_start = 0;
-	static int line_end = 0;
-	
-	
-	PROCESS_BEGIN();
-	
-	if(data != NULL) {
-		argc = str_split((char*)data,(char*)" ",argv,5);
-		/*printf("\r\ncoap client cli [%d] \r\n",argc);	*/
-
-		if(strncmp(argv[0], "line", 2) == 0) {
-			if(argc == 2){
-				sscanf(argv[1],"%d-%d",&line_start,&line_end);
-				enable = -1;
-				mod_start = -1;
-				mod_end = -1;
-				/*line_start = -1;*/
-				/*line_end = -1;*/
-			}
-			else{
-				goto ERROR;
-			}
-			
-			
-		} 
-		else if(strncmp(argv[0], "mod", 3) == 0) {
-			if(argc == 2){
-				sscanf(argv[1],"%d-%d",&mod_start,&mod_end);
-				enable = -1;
-				/*mod_start = -1;*/
-				/*mod_end = -1;*/
-				line_start = -1;
-				line_end = -1;
-			}
-			else{
-				goto ERROR;
-			}
-		}
-		else if(strncmp(argv[0], "enable", 3) == 0) {
-				enable = 1;
-				mod_start = -1;
-				mod_end = -1;
-				line_start = -1;
-				line_end = -1;
-		}
-		else if(strncmp(argv[0], "disable", 3) == 0) {
-				enable = 0;
-				mod_start = -1;
-				mod_end = -1;
-				line_start = -1;
-				line_end = -1;
-		}
-		else{
-			goto ERROR;
-		}
-
-
-	}
-
-	trace_print_filter_set(enable,mod_start,mod_end,line_start,line_end);
-	goto DONE;
-	
-ERROR:
-	printf("\r\nParameter Error !!\r\n");	
-    PROCESS_EXIT();
-DONE:	
-	printf("\r\ntoggle module debug switch\r\n"
-			"{enable:%d,mod_start:%d,mod_end:%d,line_start:%d,line_end:%d}\r\n",
-			enable,mod_start,mod_end,line_start,line_end);	
-	PROCESS_END();
-}
-
+#if MAC_USING_TSCH
+PROCESS_NAME(node_process);
+#endif
+PROCESS_NAME(shell_debug_process);
+PROCESS_NAME(ota_upgrade_process);
+PROCESS_NAME(telnetd_process);
 
 
 /*---------------------------------------------------------------------------*/
@@ -354,17 +182,8 @@ DONE:
 	printf("\r\nSuccessfully\r\n");/*dummp avoid compiler error*/
 	PROCESS_END();
 }
-/*---------------------------------------------------------------------------*/
 
 
-void
-shell_pure_init(void)
-{
-  shell_register_command(&pure_command);
-  shell_register_command(&list_neighbor_command);
-  shell_register_command(&dbg_sw_command);
-  shell_register_command(&coap_client_command);
-}
 
 
 #define BTN_4_SW 	((1 << 0) | (1 << 2) | (1 << 3))
@@ -410,6 +229,8 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 	shell_time_init();
 	shell_memdebug_init();
 	shell_pure_init();
+	shell_register_command(&coap_client_command);
+
 #if COFFEE
 	shell_coffee_init();
 	shell_file_init();
@@ -417,6 +238,10 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 
 	hcho_sensor_init(1);  
 
+	/* Defalut disable status indication leds*/
+	leds_arch_set(0x0);
+
+	
 #if 0
 	etimer_set(&et, RELAY_SW_ACTIVE_TIME * CLOCK_SECOND);
 	sw_ctrl(sw_on_flag);
@@ -453,12 +278,18 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 
 
 
-
 /* The AUTOSTART_PROCESSES() definition specifices what processes to
    start when this module is loaded. We put both our processes
    there. */
-AUTOSTART_PROCESSES(&pure_x_shell_process,\
-	&coap_server_process, \
+AUTOSTART_PROCESSES(
+	&telnetd_process,
+	&shell_debug_process,
+	&ota_upgrade_process,
+	&pure_x_shell_process,
+#if MAC_USING_TSCH
+	&node_process,
+#endif
+	&coap_server_process, 
 	&coap_client_process);
 
 

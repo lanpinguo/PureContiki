@@ -83,10 +83,6 @@
 
 /**************************************************************************/
 
-#define UDP_CLIENT_PORT 8765
-#define UDP_SERVER_PORT 5678
-
-#define UDP_EXAMPLE_ID  190
 
 /* #define DEBUG DEBUG_PRINT */
 /* #include "net/ip/uip-debug.h" */
@@ -151,27 +147,8 @@ tcpip_handler(void)
     printf("DATA recv '%s'\r\n", str);
   }
 }
-/*---------------------------------------------------------------------------*/
-static void
-print_local_addresses(void)
-{
-  int i;
-  uint8_t state;
 
-  PRINTF("Client IPv6 addresses: ");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTF("\r\n");
-      /* hack to make address "final" */
-      if(state == ADDR_TENTATIVE) {
-        uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
-      }
-    }
-  }
-}
+
 /*---------------------------------------------------------------------------*/
 static void
 set_global_address(void)
@@ -301,6 +278,9 @@ PROCESS_THREAD(coap_client_process, ev, data)
    #endif
  */
 	COAP_CLIENT_ARG_t* p_coap_args;
+	static char msg[64] = "";
+
+	
 
 	PROCESS_BEGIN();
 
@@ -308,9 +288,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 
 	set_global_address();
 
-	PRINTF("CoAP client process started\r\n");
 
-	print_local_addresses();
 
 	/**************************************************************************/
 	static coap_packet_t request[1];      /* This way the packet can be treated as pointer as usual. */
@@ -339,8 +317,6 @@ PROCESS_THREAD(coap_client_process, ev, data)
 									  client_chunk_handler);
 
 			}else if(data == &button_left_sensor){
-				static int state = 0;
-				char msg[64] = "";
 
 				state = ~state;
 				coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
@@ -370,7 +346,6 @@ PROCESS_THREAD(coap_client_process, ev, data)
 					                  client_chunk_handler);
 			}
 			else if (p_coap_args->mod_id == COAP_CLIENT_SW){
-				char msg[64] = "";
 				coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
 				coap_set_header_uri_path(request, service_urls[4]);
 				generate_relay_sw_config_payload(p_coap_args->coap_conf,p_coap_args->coap_param, msg);

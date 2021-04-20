@@ -5,9 +5,9 @@ TARGET = pure-cc2538
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
-REST_RESOURCES_DIR = ./resources
+REST_RESOURCES_DIR = ./resources ../common_resources
 
-REST_RESOURCES_FILES += res-leds.c  
+REST_RESOURCES_FILES += res-defines.c res-device.c res-leds.c  
 
 PROJECTDIRS += $(REST_RESOURCES_DIR)
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
@@ -19,17 +19,47 @@ PLATFORM_HAS_BUTTON = 1
 PLATFORM_HAS_LEDS = 1
 
 APPS = serial-shell 
+APPS += telnetd
+CFLAGS += -DTELNET_ENABLE=1
 #APPS += ping6
 APPS += er-coap
 APPS += rest-engine
 
+#TSCH CONFIG
+MAKE_WITH_ORCHESTRA ?= 0 # force Orchestra from command line
+MAKE_WITH_SECURITY ?= 0 # force Security from command line
+USING_TSCH ?= 0 # force TSCH Selection from command line
 
-COFFEE_FILES = 4
+ifeq ($(USING_TSCH),1)
+
+PROJECT_SOURCEFILES +=  tsch_node.c
+
+APPS += orchestra
+MODULES += core/net/mac/tsch
+CFLAGS += -DMAC_USING_TSCH
+
+ifeq ($(MAKE_WITH_ORCHESTRA),1)
+CFLAGS += -DWITH_ORCHESTRA=1
+endif
+
+ifeq ($(MAKE_WITH_SECURITY),1)
+CFLAGS += -DWITH_SECURITY=1
+endif
+
+endif
+
+
+COFFEE_FILES = 10
 
 #CONTIKI_WITH_RIME = 1
 CONTIKI_WITH_IPV6 = 1
 #CONTIKI_WITH_IPV4 =1
-SOURCE_LDSCRIPT = ./cc2538_boot.lds
+ifeq ($(OTA_ENABLE),1)
+  CFLAGS += -DOTA_VERSION_NO_CCA=1
+  SOURCE_LDSCRIPT = ./cc2538_no_cca.lds
+else
+  SOURCE_LDSCRIPT = ./cc2538_boot.lds
+endif
 #USB_CDC_ETH_CLASS = 1
 
 all: $(CONTIKI_PROJECT) hexImage

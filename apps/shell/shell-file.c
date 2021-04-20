@@ -245,7 +245,7 @@ PROCESS_THREAD(shell_read_process, ev, data)
 	  cfs_close(fd);
 	  PROCESS_EXIT();
 	}
-	shell_output(&read_command,
+	shell_output_raw(&read_command,
 		     buf, len, "", 0);
 	
 	process_post(&shell_read_process, PROCESS_EVENT_CONTINUE, NULL);

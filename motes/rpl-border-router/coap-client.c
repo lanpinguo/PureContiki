@@ -90,7 +90,7 @@ extern process_event_t dbg_event;
 extern process_event_t nbr_chg_event;
 
 static struct etimer et;
-static uint8_t sync_done = 0;
+uint8_t sync_done = 0;
 static uint8_t ageing = 0;
 
 /* static struct uip_udp_conn *client_conn; */
@@ -315,7 +315,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 				coap_set_header_uri_path(request, service_urls[1]);
 				generate_nbr_notify_payload(&global_ip_addr,2,msg);
 			
-				printf("\r\nPOST: %s PAYLOAD: %s\r\n", service_urls[1], msg);
+				PRINTF("\r\nPOST: %s PAYLOAD: %s\r\n", service_urls[1], msg);
 				coap_set_payload(request, (uint8_t *)msg, sizeof(msg) - 1);
 				COAP_BLOCKING_REQUEST(&server_ipaddr[0], REMOTE_PORT, request,
 										client_chunk_handler);
@@ -323,7 +323,7 @@ PROCESS_THREAD(coap_client_process, ev, data)
 			}
 			else{
 				/* The live time of sync state is 5 minutes*/
-				if(++ageing > 100){
+				if(++ageing > 10){
 					sync_done = 0;
 					ageing = 0;
 				}

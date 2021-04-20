@@ -11,18 +11,20 @@ CONTIKI=../..
 #linker optimizations
 SMALL=1
 
+COFFEE_FILES = 10
+
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 
-REST_RESOURCES_DIR = ./resources
+REST_RESOURCES_DIR = ./resources ../common_resources 
 
-REST_RESOURCES_FILES += res-device.c res-nbr.c
+REST_RESOURCES_FILES += res-defines.c res-device.c res-nbr.c
 
 PROJECTDIRS += $(REST_RESOURCES_DIR)
 
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
-PROJECT_SOURCEFILES += coap-server.c coap-client.c
+PROJECT_SOURCEFILES += coap-server.c coap-client.c test-coffee.c
 
 PROJECT_SOURCEFILES += slip-bridge.c
 
@@ -56,12 +58,44 @@ endif
 APPS += serial-shell 
 APPS += er-coap
 APPS += rest-engine
+APPS += telnetd
+CFLAGS += -DTELNET_ENABLE=1
+
+#TSCH CONFIG
+MAKE_WITH_ORCHESTRA ?= 0 # force Orchestra from command line
+MAKE_WITH_SECURITY ?= 0 # force Security from command line
+USING_TSCH ?= 0 # force TSCH Selection from command line
+
+ifeq ($(USING_TSCH),1)
+
+#PROJECT_SOURCEFILES +=  tsch_node.c
+
+APPS += orchestra
+MODULES += core/net/mac/tsch
+CFLAGS += -DMAC_USING_TSCH
+
+ifeq ($(MAKE_WITH_ORCHESTRA),1)
+CFLAGS += -DWITH_ORCHESTRA=1
+endif
+
+ifeq ($(MAKE_WITH_SECURITY),1)
+CFLAGS += -DWITH_SECURITY=1
+endif
+
+endif
 
 
 ifeq ($(PREFIX),)
  PREFIX = fd00::1/64
 endif
-SOURCE_LDSCRIPT = ./cc2538_boot.lds
+
+ifeq ($(OTA_ENABLE),1)
+  CFLAGS += -DOTA_VERSION_NO_CCA=1
+  SOURCE_LDSCRIPT = ./cc2538_no_cca.lds
+else
+  SOURCE_LDSCRIPT = ./cc2538_boot.lds
+endif
+
 CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
 

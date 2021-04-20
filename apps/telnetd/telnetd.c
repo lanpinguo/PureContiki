@@ -90,13 +90,9 @@ static struct telnetd_state s;
 #define TELNET_DO    253
 #define TELNET_DONT  254
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+#define DEBUG DEBUG_PRINT
+#define MODULE_ID CONTIKI_MOD_OTA
+#include "net/ip/uip-debug.h"
 
 struct telnetd_buf {
   char bufmem[TELNETD_CONF_NUMLINES * TELNETD_CONF_LINELEN];
@@ -107,6 +103,7 @@ struct telnetd_buf {
 static struct telnetd_buf buf;
 
 static uint8_t connected;
+static const char crnl[2] = {ISO_cr, ISO_nl};
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -121,7 +118,7 @@ buf_append(struct telnetd_buf *buf, const char *data, int len)
 {
   int copylen;
 
-  PRINTF("buf_append len %d (%d) '%.*s'\n", len, buf->ptr, len, data);
+  PRINTF("buf_append len %d (%d) '%.*s'\r\n", len, buf->ptr, len, data);
   copylen = MIN(len, buf->size - buf->ptr);
   memcpy(&buf->bufmem[buf->ptr], data, copylen);
   petsciiconv_toascii(&buf->bufmem[buf->ptr], copylen);
@@ -141,7 +138,7 @@ buf_pop(struct telnetd_buf *buf, int len)
 {
   int poplen;
 
-  PRINTF("buf_pop len %d (%d)\n", len, buf->ptr);
+  PRINTF("buf_pop len %d (%d)\r\n", len, buf->ptr);
   poplen = MIN(len, buf->ptr);
   memcpy(&buf->bufmem[0], &buf->bufmem[poplen], buf->ptr - poplen);
   buf->ptr -= poplen;
@@ -165,15 +162,14 @@ telnetd_quit(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-shell_prompt(char *str)
+shell_prompt_telnet(char *str)
 {
   buf_append(&buf, str, (int)strlen(str));
 }
 /*---------------------------------------------------------------------------*/
 void
-shell_default_output(const char *str1, int len1, const char *str2, int len2)
+shell_default_output_telnet(const char *str1, int len1, const char *str2, int len2)
 {
-  static const char crnl[2] = {ISO_cr, ISO_nl};
 
   if(len1 > 0 && str1[len1 - 1] == '\n') {
     --len1;
@@ -182,7 +178,7 @@ shell_default_output(const char *str1, int len1, const char *str2, int len2)
     --len2;
   }
 
-  /*  PRINTF("shell_default_output: %.*s %.*s\n", len1, str1, len2, str2);*/
+  /*  PRINTF("shell_default_output: %.*s %.*s\r\n", len1, str1, len2, str2);*/
   
 #if TELNETD_CONF_GUI
   telnetd_gui_output(str1, len1, str2, len2);
@@ -193,7 +189,7 @@ shell_default_output(const char *str1, int len1, const char *str2, int len2)
 }
 /*---------------------------------------------------------------------------*/
 void
-shell_exit(void)
+shell_exit_telnet(void)
 {
   s.state = STATE_CLOSE;
 }
@@ -239,7 +235,7 @@ senddata(void)
 {
   int len;
   len = MIN(buf_len(&buf), uip_mss());
-  PRINTF("senddata len %d\n", len);
+  PRINTF("senddata len %d\r\n", len);
   buf_copyto(&buf, uip_appdata, len);
   uip_send(uip_appdata, len);
   s.numsent = len;
@@ -248,7 +244,7 @@ senddata(void)
 static void
 get_char(uint8_t c)
 {
-  PRINTF("telnetd: get_char '%c' %d %d\n", c, c, s.bufptr);
+  PRINTF("telnetd: get_char '%c' %d %d\r\n", c, c, s.bufptr);
 
   if(c == 0) {
     return;
@@ -264,7 +260,7 @@ get_char(uint8_t c)
       s.buf[(int)s.bufptr] = 0;
     }
     petsciiconv_topetscii(s.buf, TELNETD_CONF_LINELEN);
-    PRINTF("telnetd: get_char '%.*s'\n", s.bufptr, s.buf);
+    PRINTF("telnetd: get_char '%.*s'\r\n", s.bufptr, s.buf);
     shell_input(s.buf, s.bufptr);
     s.bufptr = 0;
   }
@@ -290,12 +286,12 @@ newdata(void)
   uint8_t *ptr;
     
   len = uip_datalen();
-  PRINTF("newdata len %d '%.*s'\n", len, len, (char *)uip_appdata);
+  PRINTF("newdata len %d '%.*s'\r\n", len, len, (char *)uip_appdata);
 
   ptr = uip_appdata;
   while(len > 0 && s.bufptr < sizeof(s.buf)) {
     c = *ptr;
-    PRINTF("newdata char '%c' %d %d state %d\n", c, c, len, s.state);
+    PRINTF("newdata char '%c' %d %d state %d\r\n", c, c, len, s.state);
     ++ptr;
     --len;
     switch(s.state) {

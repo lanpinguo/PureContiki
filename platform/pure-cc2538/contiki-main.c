@@ -68,6 +68,7 @@
 #include "reg.h"
 #include "ieee-addr.h"
 #include "lpm.h"
+#include "util.h"
 
 #if USB_ETH_CONF_ENABLE
 #include <cdc-eth.h>
@@ -79,42 +80,42 @@
 #include "relay_switch.h"
 #endif
 
+#include "xmem.h"
+
+
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+
+#define DEBUG DEBUG_PRINT
+#define MODULE_ID CONTIKI_MOD_COMMON
+#include "net/ip/uip-debug.h"
+
 /*---------------------------------------------------------------------------*/
-#if STARTUP_CONF_VERBOSE
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
 
 #if UART_CONF_ENABLE
 #define PUTS(s) puts(s)
 #else
 #define PUTS(s)
 #endif
+
+uint32_t W25qxx_ReadID(void);
+
 /*---------------------------------------------------------------------------*/
 
 char shell_prompt_text[] = "Mote>";
-FUNC_DEBUG_PRINT dbg_print_ip = NULL;
-FUNC_DEBUG_PRINT dbg_print_log = NULL;
 
 /*---------------------------------------------------------------------------*/
 void
 log_message(char *m1, char *m2)
 {
-	if(dbg_print_log){ 
-		dbg_print_log("\r\n%s%s", m1, m2);
-	}
+	PRINTF("\r\n%s%s", m1, m2);
 }
 /*---------------------------------------------------------------------------*/
 void
 uip_log(char *m)
 {
-	if(dbg_print_ip){ 
-		dbg_print_ip("\r\nuIP: '%s'", m);
-	}
+	PRINTF("\r\nuIP: '%s'", m);
 }
 
 #if 0
@@ -154,16 +155,6 @@ set_rf_params(void)
   /* Populate linkaddr_node_addr. Maintain endianness */
   memcpy(&linkaddr_node_addr, &ext_addr[8 - LINKADDR_SIZE], LINKADDR_SIZE);
 
-#if STARTUP_CONF_VERBOSE
-  {
-    int i;
-    printf("Node Configured with address ");
-    for(i = 0; i < LINKADDR_SIZE - 1; i++) {
-      printf("%02x:", linkaddr_node_addr.u8[i]);
-    }
-    printf("%02x\n", linkaddr_node_addr.u8[i]);
-  }
-#endif
 
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
@@ -177,22 +168,20 @@ set_rf_params(void)
 
 void debug_led(void)
 {
-#if 1
-		volatile unsigned long ulLoopCount;
-		REG(GPIO_A_BASE + GPIO_DIR) = 0x04; /* PA2 output*/
-	
-		// Loop forever.
-		while(1)
+	volatile unsigned long ulLoopCount;
+	REG(GPIO_A_BASE + GPIO_DIR) = 0x04; /* PA2 output*/
+
+	// Loop forever.
+	while(1)
+	{
+		// Turn Blue	LED.
+		REG(GPIO_A_BASE + GPIO_DATA + (0x04 << 2)) ^= 0x04;
+
+		// Delay for a bit
+		for(ulLoopCount = 200000; ulLoopCount > 0; ulLoopCount--)
 		{
-				// Turn Blue	LED.
-				REG(GPIO_A_BASE + GPIO_DATA + (0x04 << 2)) ^= 0x04;
-	
-				// Delay for a bit
-				for(ulLoopCount = 200000; ulLoopCount > 0; ulLoopCount--)
-				{
-				}
-		};
-#endif
+		}
+	};
 }
 
 #define CC2592_PA_EN_PIN      (1<<3) /*PC3*/
@@ -201,45 +190,45 @@ void debug_led(void)
 
 int cc2592_init(void)
 {
-  PRINTF("\r\ncc2592 init\r\n");
-  /*REG(GPIO_C_BASE + GPIO_DIR) |= (CC2592_PA_EN_PIN | CC2592_LNA_EN_PIN);*/
-  REG(GPIO_D_BASE + GPIO_DIR) |= CC2592_HGM_PIN; 
-  return 0;
+	PRINTF("\r\ncc2592 init\r\n");
+	/*REG(GPIO_C_BASE + GPIO_DIR) |= (CC2592_PA_EN_PIN | CC2592_LNA_EN_PIN);*/
+	REG(GPIO_D_BASE + GPIO_DIR) |= CC2592_HGM_PIN; 
+	return 0;
 }
 
 
 /** Enable Rx. */
 int cc2592_rx_enable(void)
 {
-  //PRINTF("\r\ncc2592_rx_enable\r\n");
-  REG(GPIO_C_BASE + GPIO_DATA + (CC2592_LNA_EN_PIN << 2)) = CC2592_LNA_EN_PIN;
-  return 0;
+	//PRINTF("\r\ncc2592_rx_enable\r\n");
+	REG(GPIO_C_BASE + GPIO_DATA + (CC2592_LNA_EN_PIN << 2)) = CC2592_LNA_EN_PIN;
+	return 0;
 }
 
 /** Enable Tx. */
 int cc2592_tx_enable(void)
 {
-  //PRINTF("\r\ncc2592_tx_enable\r\n");
-  REG(GPIO_C_BASE + GPIO_DATA + (CC2592_LNA_EN_PIN << 2)) = ~CC2592_LNA_EN_PIN;
-  REG(GPIO_C_BASE + GPIO_DATA + (CC2592_PA_EN_PIN << 2)) = CC2592_PA_EN_PIN;
-  return 0;
+	//PRINTF("\r\ncc2592_tx_enable\r\n");
+	REG(GPIO_C_BASE + GPIO_DATA + (CC2592_LNA_EN_PIN << 2)) = ~CC2592_LNA_EN_PIN;
+	REG(GPIO_C_BASE + GPIO_DATA + (CC2592_PA_EN_PIN << 2)) = CC2592_PA_EN_PIN;
+	return 0;
 }
 
 /** Turn the radio on. */
 int cc2592_hgm_enable(void)
 {
-  //PRINTF("\r\ncc2592_hgm_enable\r\n");
-  REG(GPIO_D_BASE + GPIO_DATA + (CC2592_HGM_PIN << 2)) = CC2592_HGM_PIN;
-  return 0;
+	//PRINTF("\r\ncc2592_hgm_enable\r\n");
+	REG(GPIO_D_BASE + GPIO_DATA + (CC2592_HGM_PIN << 2)) = CC2592_HGM_PIN;
+	return 0;
 }
 
 /** Turn the extender off. */
 int cc2592_off(void)
 {
-  //PRINTF("\r\ncc2592_off\r\n");
-  REG(GPIO_C_BASE + GPIO_DATA + (CC2592_LNA_EN_PIN << 2)) = ~CC2592_LNA_EN_PIN;
-  REG(GPIO_C_BASE + GPIO_DATA + (CC2592_PA_EN_PIN << 2)) = ~CC2592_PA_EN_PIN;
-  return 0;
+	//PRINTF("\r\ncc2592_off\r\n");
+	REG(GPIO_C_BASE + GPIO_DATA + (CC2592_LNA_EN_PIN << 2)) = ~CC2592_LNA_EN_PIN;
+	REG(GPIO_C_BASE + GPIO_DATA + (CC2592_PA_EN_PIN << 2)) = ~CC2592_PA_EN_PIN;
+	return 0;
 }
 
 int rf_ext_driver_register(void)
@@ -248,6 +237,39 @@ int rf_ext_driver_register(void)
     cc2592_hgm_enable();
 	return 0;
 }
+
+
+int show_system_info(uint32_t mode)
+{
+    int i;
+
+	if(mode & 0x1){
+		PUTS(CONTIKI_VERSION_STRING);
+		PUTS(BOARD_STRING);
+
+		soc_print_info();
+
+		printf("\r\nSys Status: 0x%08lx\r\n", REG(SYS_CTRL_CLOCK_STA));
+		printf("Net: ");
+		printf("%s\r\n", NETSTACK_NETWORK.name);
+		printf("MAC: ");
+		printf("%s\r\n", NETSTACK_MAC.name);
+		printf("RDC: ");
+		printf("%s\r\n", NETSTACK_RDC.name);
+		printf("ex-flash:%08lx\r\n", W25qxx_ReadID());
+
+	}
+	
+	if(mode & 0x02){
+	    printf("Node address ");
+	    for(i = 0; i < LINKADDR_SIZE - 1; i++) {
+	      printf("%02x:", linkaddr_node_addr.u8[i]);
+	    }
+	    printf("%02x\r\n", linkaddr_node_addr.u8[i]);
+	}
+	return 0;
+}
+
  
 int
 main(void)
@@ -304,23 +326,12 @@ main(void)
 
 
 	INTERRUPTS_ENABLE();
-	//fade(LEDS_GREEN);
 
-	PUTS(CONTIKI_VERSION_STRING);
-	PUTS(BOARD_STRING);
-#if STARTUP_CONF_VERBOSE
-	soc_print_info();
-#endif
+	xmem_init();
+	
+	log_system_init();
 
-
-	PRINTF("\r\nSys Status: 0x%08lx\r\n", REG(SYS_CTRL_CLOCK_STA));
-	PRINTF("Net: ");
-	PRINTF("%s\r\n", NETSTACK_NETWORK.name);
-	PRINTF("MAC: ");
-	PRINTF("%s\r\n", NETSTACK_MAC.name);
-	PRINTF("RDC: ");
-	PRINTF("%s\r\n", NETSTACK_RDC.name);
-
+	
 	/* Initialise the H/W RNG engine. */
 	random_init(0);
 
@@ -334,6 +345,8 @@ main(void)
 
 	set_rf_params();
 
+	show_system_info(0x3);
+	
 #if CRYPTO_CONF_INIT
 	crypto_init();
 	crypto_disable();
@@ -349,14 +362,21 @@ main(void)
 
 	adc_init();
 
+
+
+
 	process_start(&sensors_process, NULL);
 
 	energest_init();
 	ENERGEST_ON(ENERGEST_TYPE_CPU);
 
 	//mac_sniffer_callback = usbeth_send;
+#if PLATFORM_HAS_LEDS
+	leds_arch_init();
+#endif
+
 #if PLATFORM_HAS_RELAY_SWITCH
-		relay_switch_init();
+	relay_switch_init();
 #endif
 
 
@@ -365,7 +385,7 @@ main(void)
 	watchdog_start();
 	//fade(LEDS_ORANGE);
 
-	cc2538_rf_set_promiscous_mode(1);
+	/*cc2538_rf_set_promiscous_mode(1);*/
 
 
 	while(1) {

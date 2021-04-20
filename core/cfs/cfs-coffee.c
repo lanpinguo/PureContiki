@@ -46,18 +46,9 @@
 #include <limits.h>
 #include <string.h>
 
-FUNC_DEBUG_PRINT dbg_print_coffee = NULL;
-
-#define DEBUG 1
-#if DEBUG
-#define PRINTF(...) do{ \
-	if(dbg_print_coffee){ \
-		dbg_print_coffee(__VA_ARGS__); \
-	}\
-}while(0) 
-#else
-#define PRINTF(...)
-#endif
+#define DEBUG DEBUG_PRINT
+#define MODULE_ID CONTIKI_MOD_CFS_COFFEE
+#include "net/ip/uip-debug.h"
 
 #include "contiki-conf.h"
 #include "cfs/cfs.h"
@@ -1331,7 +1322,7 @@ cfs_coffee_format(void)
 {
   coffee_page_t i;
 
-  PRINTF("Coffee: Formatting %u sectors", (unsigned)COFFEE_SECTOR_COUNT);
+  PRINTF("Coffee: Formatting %u sectors\r\n", (unsigned)COFFEE_SECTOR_COUNT);
 
   for(i = 0; i < COFFEE_SECTOR_COUNT; i++) {
     COFFEE_ERASE(i);

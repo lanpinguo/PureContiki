@@ -43,23 +43,44 @@
 
 #define MODULE_ID CONTIKI_MOD_NONE
 int default_print_filter(int mod, int line);
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 
 TRACE_DEBUG_FILTER dbg_print_filter = default_print_filter;
 
 static int g_enable = 0;
-static int g_mod_start = 0;
-static int g_mod_end = 0;
 static int g_line_start = 0;
 static int g_line_end = 20000;
+static uint32_t mod_map[2] = {0}; /* enable the number of module is upto 64*/
+	
+static StrFormatContext net_ctxt =
+{
+	NULL,
+	NULL
+};
+
 
 /*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
+static int mod_is_selected(int mod)
+{
+	if(	mod_map[mod / 32] & (1<<(mod % 32))){
+		return 1;
+	}
+
+	return 0;
+}
+
 int _trace_dbg_print(int mod, int line, const char *format, va_list ap)
 {
 	int     rc = 0;
 
 	if(dbg_print_filter){
 		if(dbg_print_filter(mod, line)){
-			rc = vprintf(format, ap);
+			if(net_ctxt.write_str != NULL){
+				rc = format_str_v(&net_ctxt, format, ap);
+			}
 		}
 	}
 	return rc;
@@ -81,24 +102,23 @@ int default_print_filter(int mod, int line)
 	int     rc = 0;
 
 	if(g_enable){
-		if((mod >= g_mod_start) && (mod <= g_mod_end) && (line >= g_line_start) && (line <= g_line_end)){
+		if(mod_is_selected(mod) && (line >= g_line_start) && (line <= g_line_end)){
 			rc = 1;
 		}
 	}
 	return rc;
 }
 
-int trace_print_filter_set(int enable,int mod_start,int mod_end,int line_start, int line__end)
+int trace_print_filter_set(int enable, uint32_t *mod, int line_start, int line__end)
 {
 	if(enable >= 0){
 		g_enable = enable;
 	}
-	if(mod_start >= 0){
-		g_mod_start = mod_start;
+	
+	if(mod != NULL){
+		memcpy(mod_map, mod, sizeof(mod_map));
 	}
-	if(mod_end >= 0){
-		g_mod_end = mod_end;
-	}
+	
 	if(line_start >= 0){
 		g_line_start = line_start;
 	}
@@ -106,6 +126,11 @@ int trace_print_filter_set(int enable,int mod_start,int mod_end,int line_start, 
 		g_line_end = line__end;
 	}
 	return 0;
+}
+
+void trace_output_terminal_set(void* func)
+{
+	net_ctxt.write_str = func;
 }
 
 /*---------------------------------------------------------------------------*/

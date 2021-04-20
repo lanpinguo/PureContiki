@@ -40,6 +40,7 @@
  * \file
  * LED driver implementation for the TI SmartRF06EB + cc2538EM
  */
+#include <stdio.h>
 #include "contiki.h"
 #include "reg.h"
 #include "dev/leds.h"
@@ -79,8 +80,6 @@ leds_arch_init(void)
 	    ioc_set_over(leds_table[i].port, leds_table[i].pin, IOC_OVERRIDE_OE);
 	}
 
-
-	printf("leds_arch_init done\r\n");
 }
 /*---------------------------------------------------------------------------*/
 unsigned char
@@ -107,8 +106,7 @@ void
 leds_arch_set(unsigned char leds)
 {
 	int port,pin;
-	unsigned char value = 0;
-	unsigned long tmp,i;
+	unsigned long i;
 	
 	for(i = 0 ; i < LEDS_NUM; i++){
 		port = leds_table[i].port;

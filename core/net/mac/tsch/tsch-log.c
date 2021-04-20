@@ -56,7 +56,8 @@
 #else /* TSCH_LOG_LEVEL */
 #define DEBUG DEBUG_NONE
 #endif /* TSCH_LOG_LEVEL */
-#include "net/net-debug.h"
+#define MODULE_ID CONTIKI_MOD_TSCH_LOG
+#include "net/ip/uip-debug.h"
 
 #if TSCH_LOG_LEVEL >= 2 /* Skip this file for log levels 0 or 1 */
 
@@ -79,44 +80,44 @@ tsch_log_process_pending(void)
   int16_t log_index;
   /* Loop on accessing (without removing) a pending input packet */
   if(log_dropped != last_log_dropped) {
-    printf("TSCH:! logs dropped %u\n", log_dropped);
+    PRINTF("TSCH:! logs dropped %u\r\n", log_dropped);
     last_log_dropped = log_dropped;
   }
   while((log_index = ringbufindex_peek_get(&log_ringbuf)) != -1) {
     struct tsch_log_t *log = &log_array[log_index];
     if(log->link == NULL) {
-      printf("TSCH: {asn-%x.%lx link-NULL} ", log->asn.ms1b, log->asn.ls4b);
+      PRINTF("TSCH: {asn-%x.%lx link-NULL} ", log->asn.ms1b, log->asn.ls4b);
     } else {
       struct tsch_slotframe *sf = tsch_schedule_get_slotframe_by_handle(log->link->slotframe_handle);
-      printf("TSCH: {asn-%x.%lx link-%u-%u-%u-%u ch-%u} ",
+      PRINTF("TSCH: {asn-%x.%lx link-%u-%u-%u-%u ch-%u} ",
              log->asn.ms1b, log->asn.ls4b,
              log->link->slotframe_handle, sf ? sf->size.val : 0, log->link->timeslot, log->link->channel_offset,
              tsch_calculate_channel(&log->asn, log->link->channel_offset));
     }
     switch(log->type) {
       case tsch_log_tx:
-        printf("%s-%u-%u %u tx %d, st %d-%d",
+        PRINTF("%s-%u-%u %u tx %d, st %d-%d",
             log->tx.dest == 0 ? "bc" : "uc", log->tx.is_data, log->tx.sec_level,
                 log->tx.datalen,
                 log->tx.dest,
                 log->tx.mac_tx_status, log->tx.num_tx);
         if(log->tx.drift_used) {
-          printf(", dr %d", log->tx.drift);
+          PRINTF(", dr %d", log->tx.drift);
         }
-        printf("\r\n");
+        PRINTF("\r\r\n");
         break;
       case tsch_log_rx:
-        printf("%s-%u-%u %u rx %d",
+        PRINTF("%s-%u-%u %u rx %d",
             log->rx.is_unicast == 0 ? "bc" : "uc", log->rx.is_data, log->rx.sec_level,
                 log->rx.datalen,
                 log->rx.src);
         if(log->rx.drift_used) {
-          printf(", dr %d", log->rx.drift);
+          PRINTF(", dr %d", log->rx.drift);
         }
-        printf(", edr %d\n", (int)log->rx.estimated_drift);
+        PRINTF(", edr %d\r\n", (int)log->rx.estimated_drift);
         break;
       case tsch_log_message:
-        printf("%s\n", log->message);
+        PRINTF("%s\r\n", log->message);
         break;
     }
     /* Remove input from ringbuf */

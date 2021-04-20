@@ -47,9 +47,10 @@
 
 #define CCM_STAR_LEN_LEN        (CCM_NONCE_LEN_LEN - CCM_STAR_NONCE_LENGTH)
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
+#define MODULE_ID CONTIKI_MOD_CCM_STAR
+#include "net/ip/uip-debug.h"
 #else
 #define PRINTF(...)
 #endif

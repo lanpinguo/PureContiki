@@ -103,7 +103,7 @@ SECTIONS
 
     _heap = .;
     _eheap = ORIGIN(FRSRAM) + LENGTH(FRSRAM);
-
+    end = _eheap;
     .nrdata (NOLOAD) :
     {
         _nrdata = .;

@@ -54,6 +54,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "util.h"
 #include "shell.h"
 #include "serial-shell.h"
 #include "lib/list.h"
@@ -62,6 +63,13 @@
 #include "shell-memdebug.h"
 #include "coap-server.h"
 #include "coap-client.h"
+
+#if MAC_USING_TSCH
+#include "net/mac/tsch/tsch.h"
+#endif
+#if WITH_ORCHESTRA
+#include "orchestra.h"
+#endif /* WITH_ORCHESTRA */
 
 
 #define DEBUG DEBUG_FULL
@@ -76,279 +84,15 @@
 #endif
 
 
-extern 	FUNC_DEBUG_PRINT dbg_print_csma;
-extern 	FUNC_DEBUG_PRINT dbg_print_ip;
-extern 	FUNC_DEBUG_PRINT dbg_print_log;
-
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
+
 process_event_t dbg_event;
 
-
-
-
-PROCESS(shell_list_neighbor_process, "list rpl neighbor");
-SHELL_COMMAND(list_neighbor_command,
-	      "lsnb",
-	      "lsnb: list rpl neighbors",
-	      &shell_list_neighbor_process);
-
+PROCESS_NAME(shell_debug_process);
+PROCESS_NAME(ota_upgrade_process);
 
 /*---------------------------------------------------------------------------*/
-
-PROCESS_THREAD(shell_list_neighbor_process, ev, data)
-{
-
-
-	PROCESS_BEGIN();
-
-	PROCESS_PAUSE();
-	uip_ds6_nbr_dump();
-	rpl_print_neighbor_list();	
-	
-	PROCESS_END();
-}
-
-
-/*---------------------------------------------------------------------------*/
-
-PROCESS(shell_dbg_switch_process, "debug switch");
-SHELL_COMMAND(dbg_sw_command,
-		"debug",
-		"debug [enable|disable] [module]: turn on/off the debug info of module",
-		&shell_dbg_switch_process);
-
-PROCESS_THREAD(shell_dbg_switch_process, ev, data)
-{
-	static int mod_id;
-	const char *nextptr;
-	
-	
-	PROCESS_BEGIN();
-	
-	if(data != NULL) {
-	  mod_id = shell_strtolong(data, &nextptr);
-	  if(nextptr != data) {
-	  }
-	}
-	switch(mod_id){
-		case 1:
-			break;
-		case 2:
-			if(dbg_print_csma){
-				dbg_print_csma = NULL;
-			}
-			else{
-				dbg_print_csma = printf;
-			}
-			break;
-		case 3:
-			if(dbg_print_ip){
-				(dbg_print_ip) = NULL;
-			}
-			else{
-				(dbg_print_ip) = printf;
-			}
-			break;
-		case 4:
-			if((dbg_print_log)){
-				dbg_print_log = NULL;
-			}
-			else{
-				dbg_print_log = printf;
-			}
-			break;
-		default:
-			break;
-	}
-
-	printf("\r\ntoggle module [%d] debug switch\r\n",mod_id);	
-	
-	PROCESS_END();
-}
-
-
-
-/*---------------------------------------------------------------------------*/
-
-static int32_t ip_addr_parse(void * input, uip_ipaddr_t *ipaddr)
-{
-	int value[10];
-	int32_t rc;
-
-	
-	if(input == NULL || ipaddr == NULL){
-		return -1;
-	}
-
-	rc = sscanf( input
-			,"%02x%02x::%02x%02x:%02x%02x:%02x%02x:%02x%02x"
-			,&value[0],&value[1]
-			,&value[2],&value[3]
-			,&value[4],&value[5]
-			,&value[6],&value[7]
-			,&value[8],&value[9]);
-	
-			ipaddr->u8[0] = value[0] & 0xff;
-			ipaddr->u8[1] = value[1] & 0xff;
-			ipaddr->u8[8] = value[2] & 0xff;
-			ipaddr->u8[9] = value[3] & 0xff;
-			ipaddr->u8[10] = value[4] & 0xff;
-			ipaddr->u8[11] = value[5] & 0xff;
-			ipaddr->u8[12] = value[6] & 0xff;
-			ipaddr->u8[13] = value[7] & 0xff;
-			ipaddr->u8[14] = value[8] & 0xff;
-			ipaddr->u8[15] = value[9] & 0xff;
-
-	return rc;
-}
-
-void dump_server_addr(void)
-{
-	int i;
-	uint8_t *buf;
-
-
-	buf = (void*)get_remote_server_address(0);
-
-	printf("\r\n---------- SERVER LSIT -------------\r\n");	
-	for(i = 0 ; i < MAX_SERVER_NUM; i++){
-		
-		uint8_t *addr = buf + sizeof(uip_ipaddr_t) * i;
-		
-		printf("\r\n[%d] %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x ", 
-				i,
-				addr[0], addr[1],
-				addr[2], addr[3], 
-				addr[4], addr[5],
-				addr[6], addr[7], 
-				addr[8], addr[9], 
-				addr[10],addr[11], 
-				addr[12],addr[13], 
-				addr[14],addr[15]);
-
-	}
-	printf("\r\n---------- SERVER END -------------\r\n");	
-
-}
-
-
-
-PROCESS(dbg_coap_client_process, "debug coap client");
-SHELL_COMMAND(coap_client_command,
-		"coap",
-		"coap [enable|disable] [mode]: coap client debug ",
-		&dbg_coap_client_process);
-
-
-PROCESS_THREAD(dbg_coap_client_process, ev, data)
-{
-	//const char *nextptr;
-	char* argv[5];
-	int argc;
-	static COAP_CLIENT_ARG_t coap_args;
-	
-	PROCESS_BEGIN();
-	
-	if(data != NULL) {
-		argc = str_split((char*)data,(char*)" ",argv,5);
-		/*printf("\r\ncoap client cli [%d] \r\n",argc);	*/
-		coap_args.server_id = 0;
-	
-		if(strncmp(argv[0], "sw", 2) == 0) {
-			if(argc == 3 || argc == 4){
-				coap_args.mod_id = COAP_CLIENT_SW;
-
-				coap_args.coap_conf = atoi(argv[1]);
-				
-				if(strncmp(argv[2], "on", 2) == 0) {
-					coap_args.coap_param = 1;
-				} 
-				else if(strncmp(argv[2], "off", 3) == 0) {
-					coap_args.coap_param = 0;
-				}
-				else{
-					goto ERROR;
-				}
-
-				if(argc == 4){
-					coap_args.server_id = atoi(argv[3]);
-				}
-			}
-			else{
-				goto ERROR;
-			}
-			
-			/*post to coap client*/
-			process_post(&coap_client_process, dbg_event, &coap_args);
-			
-			
-		} 
-		else if(strncmp(argv[0], "res", 3) == 0) {
-			coap_args.mod_id = COAP_CLIENT_OWN;
-			if(argc == 2){
-				coap_args.server_id = atoi(argv[1]);
-			}
-			/*post to coap client*/
-			process_post(&coap_client_process, dbg_event, &coap_args);
-		}
-		else if(strncmp(argv[0], "server", 6) == 0) {
-			int server_id = 0;
-			static uip_ipaddr_t ipaddr;
-
-			
-			uip_ip6addr(&ipaddr, 0, 0, 0, 0, 0, 0, 0, 0);
-
-			if(argc == 3){
-				server_id = atoi(argv[1]);
-				ip_addr_parse(argv[2],&ipaddr);
-				printf("\r\nserver:\r\n");
-				PRINT6ADDR(&ipaddr);
-				set_remote_server_address(server_id, &ipaddr);
-
-			}
-			goto DONE;
-		}
-		else if(strncmp(argv[0], "dump", 4) == 0) {
-			dump_server_addr();
-		}
-		else if(strncmp(argv[0], "state", 5) == 0) {
-			coap_args.mod_id = COAP_CLIENT_SW_ST;
-			/*post to coap client*/
-			process_post(&coap_client_process, dbg_event, &coap_args);
-		}
-		else if(strncmp(argv[0], "hcho", 4) == 0) {
-			coap_args.mod_id = COAP_CLIENT_HCHO;
-			/*post to coap client*/
-			process_post(&coap_client_process, dbg_event, &coap_args);
-		}
-		else{
-			goto ERROR;
-		}
-
-
-	}
-	goto DONE;
-	
-ERROR:
-	printf("\r\nWrong param\r\n");
-    PROCESS_EXIT();
-
-DONE:	
-	printf("\r\nSuccessfully\r\n");/*dummp avoid compiler error*/
-	PROCESS_END();
-}
-
-
-
-void shell_pure_init(void)
-{
-	dbg_event = process_alloc_event();
-	shell_register_command(&list_neighbor_command);
-	shell_register_command(&dbg_sw_command);
-	shell_register_command(&coap_client_command);
-  
-}
 
 /*---------------------------------------------------------------------------*/
 void dbg_shell_init(void)
@@ -376,7 +120,12 @@ PROCESS(border_router_process, "Border router process");
 
 #if WEBSERVER==0
 /* No webserver */
-AUTOSTART_PROCESSES(&border_router_process,&coap_server_process,
+AUTOSTART_PROCESSES(
+	&shell_debug_process,
+	&ota_upgrade_process,
+
+	&border_router_process,
+	&coap_server_process,
 	&coap_client_process);
 #elif WEBSERVER>1
 /* Use an external webserver application */
@@ -420,8 +169,8 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
 }
 AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 
-static const char *TOP = "<html><head><title>ContikiRPL</title></head><body>\n";
-static const char *BOTTOM = "</body></html>\n";
+static const char *TOP = "<html><head><title>ContikiRPL</title></head><body>\r\n";
+static const char *BOTTOM = "</body></html>\r\n";
 #if BUF_USES_STACK
 static char *bufptr, *bufend;
 #define ADD(...) do {                                                   \
@@ -516,7 +265,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
       ipaddr_add(&nbr->ipaddr);
 #endif
 
-      ADD("\n");
+      ADD("\r\n");
 #if BUF_USES_STACK
       if(bufptr > bufend - 45) {
         SEND_STRING(&s->sout, buf);
@@ -529,7 +278,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
       }
 #endif
   }
-  ADD("</pre>Routes<pre>\n");
+  ADD("</pre>Routes<pre>\r\n");
   SEND_STRING(&s->sout, buf);
 #if BUF_USES_STACK
   bufptr = buf; bufend = bufptr + sizeof(buf);
@@ -565,9 +314,9 @@ PT_THREAD(generate_routes(struct httpd_state *s))
     ADD("/%u (via ", r->length);
     ipaddr_add(uip_ds6_route_nexthop(r));
     if(1 || (r->state.lifetime < 600)) {
-      ADD(") %lus\n", (unsigned long)r->state.lifetime);
+      ADD(") %lus\r\n", (unsigned long)r->state.lifetime);
     } else {
-      ADD(")\n");
+      ADD(")\r\n");
     }
     SEND_STRING(&s->sout, buf);
 #if BUF_USES_STACK
@@ -579,7 +328,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
   ADD("</pre>");
 
 #if RPL_WITH_NON_STORING
-  ADD("Links<pre>\n");
+  ADD("Links<pre>\r\n");
   SEND_STRING(&s->sout, buf);
 #if BUF_USES_STACK
   bufptr = buf; bufend = bufptr + sizeof(buf);
@@ -621,10 +370,10 @@ PT_THREAD(generate_routes(struct httpd_state *s))
       ADD(" (parent: ");
       ipaddr_add(&parent_ipaddr);
       if(1 || (link->lifetime < 600)) {
-        ADD(") %us\n", (unsigned int)link->lifetime); // iotlab printf does not have %lu
-        //ADD(") %lus\n", (unsigned long)r->state.lifetime);
+        ADD(") %us\r\n", (unsigned int)link->lifetime); // iotlab printf does not have %lu
+        //ADD(") %lus\r\n", (unsigned long)r->state.lifetime);
       } else {
-        ADD(")\n");
+        ADD(")\r\n");
       }
       SEND_STRING(&s->sout, buf);
 #if BUF_USES_STACK
@@ -669,14 +418,14 @@ print_local_addresses(void)
   int i;
   uint8_t state;
 
-  PRINTA("Server IPv6 addresses:\n");
+  PRINTA("Server IPv6 addresses:\r\n");
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused &&
        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
       PRINTA(" ");
-      uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTA("\n");
+      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+      PRINTA("\r\n");
     }
   }
 }
@@ -706,13 +455,16 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
   dag = rpl_set_root(RPL_DEFAULT_INSTANCE, &ipaddr);
   if(dag != NULL) {
     rpl_set_prefix(dag, &prefix, 64);
-    PRINTF("created a new RPL dag\n");
+    PRINTF("created a new RPL dag\r\n");
   }
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)
 {
 	static struct etimer et;
+	static enum { role_6ln, role_6dr, role_6dr_sec } node_role;
+
+
 
 	PROCESS_BEGIN();
 
@@ -731,13 +483,19 @@ PROCESS_THREAD(border_router_process, ev, data)
 
 	SENSORS_ACTIVATE(button_sensor);
 
-	PRINTF("RPL-Border router started\n");
-#if 0
-	/* The border router runs with a 100% duty cycle in order to ensure high
-	packet reception rates.
-	Note if the MAC RDC is not turned off now, aggressive power management of the
-	cpu will interfere with establishing the SLIP connection */
-	NETSTACK_MAC.off(1);
+	printf("RPL-Border router started\r\n");
+
+#if MAC_USING_TSCH
+	printf("RPL-Border use TSCH\r\n");
+	if(LLSEC802154_ENABLED) {
+		  node_role = role_6dr_sec;
+	} else {
+		  node_role = role_6dr;
+	}
+	printf("Init: node starting with role %s\r\n",
+	     node_role == role_6ln ? "6ln" : (node_role == role_6dr) ? "6dr" : "6dr-sec");
+	tsch_set_pan_secured(LLSEC802154_ENABLED && (node_role == role_6dr_sec));
+
 #endif
 
 	/* Request prefix until it has been received */
@@ -746,11 +504,21 @@ PROCESS_THREAD(border_router_process, ev, data)
 		request_prefix();
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 	}
-
+	
+#if MAC_USING_TSCH 
+	printf("RPL-Border Now turn the radio on\r\n");
+	NETSTACK_MAC.on();
+#else
 	/* Now turn the radio on, but disable radio duty cycling.
 	* Since we are the DAG root, reception delays would constrain mesh throughbut.
 	*/
 	NETSTACK_MAC.off(1);
+#endif
+
+#if WITH_ORCHESTRA
+	orchestra_init();
+#endif /* WITH_ORCHESTRA */
+
 
 #if DEBUG || 1
 	print_local_addresses();
@@ -759,7 +527,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 	while(1) {
 		PROCESS_YIELD();
 		if (ev == sensors_event && data == &button_sensor) {
-			PRINTF("Initiating global repair\n");
+			PRINTF("Initiating global repair\r\n");
 			rpl_repair_root(RPL_DEFAULT_INSTANCE);
 		}
 	}
