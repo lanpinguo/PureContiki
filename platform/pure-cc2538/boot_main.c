@@ -74,8 +74,9 @@
 /*---------------------------------------------------------------------------*/
 
 enum {
+	ENCODING_TYPE_STRING,
 	ENCODING_TYPE_RAW,
-	ENCODING_TYPE_UTF8,
+	ENCODING_TYPE_UINT32,
 };
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -129,11 +130,10 @@ int dbg_output(char * buf, uint32_t encoding, uint32_t len)
 {
 	int i = 0;
 
-	for(i = 0; i < len ; i++){
-		char raw_out = buf[i];
-		if(encoding == ENCODING_TYPE_UTF8){
+	if(encoding == ENCODING_TYPE_RAW){
+		for(i = 0; i < len ; i++){
+			char raw_out = buf[i];
 			char out;
-			
 			for(int j = 0; j < 2; j++, raw_out <<= 4){
 				
 				out = (raw_out & 0xF0) >> 4;
@@ -147,10 +147,34 @@ int dbg_output(char * buf, uint32_t encoding, uint32_t len)
 				uart_write_byte(0, out);
 			}
 		}
-		else{
+	}
+	else if(encoding == ENCODING_TYPE_UINT32){
+		/* Date in little endian */
+		for(i = 3; i >= 0 ; i--){
+			char raw_out = buf[i];
+			char out;
+			for(int j = 0; j < 2; j++, raw_out <<= 4){
+				
+				out = (raw_out & 0xF0) >> 4;
+				
+				if(out < 10){
+					out = out + '0';
+				}
+				else{
+					out = out + ('A' - 10);
+				}
+				uart_write_byte(0, out);
+			}
+		}
+	}
+	else{
+		for(i = 0; i < len ; i++){
+			char raw_out = buf[i];
 			uart_write_byte(0, raw_out);
 		}
 	}
+		
+	
 	return i;
 }
 
@@ -184,12 +208,14 @@ int boot_app(void)
 #endif
 		if (pLedger->imageValid == OTA_HEADER_IMG_VALID)
 		{
-			dbg_output(img_found, ENCODING_TYPE_RAW, sizeof(img_found));
-			dbg_output((char*)&pLedger->headerLength,ENCODING_TYPE_UTF8, 6);
-			dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
-			dbg_output("on page:", ENCODING_TYPE_RAW, sizeof("on page:"));
-			dbg_output((char*)&pgCnt, ENCODING_TYPE_UTF8, 4);
-			dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
+			//unsigned int test = 0x12345678;
+			dbg_output(img_found, ENCODING_TYPE_STRING, sizeof(img_found));
+			dbg_output((char*)&pLedger->headerLength,ENCODING_TYPE_RAW, 6);
+			dbg_output("\r\n", ENCODING_TYPE_STRING, 2);
+			dbg_output("on page:", ENCODING_TYPE_STRING, sizeof("on page:"));
+			//dbg_output((char*)&test , ENCODING_TYPE_UINT32, 4);
+			dbg_output((char*)&pgCnt, ENCODING_TYPE_UINT32, 4);
+			dbg_output("\r\n", ENCODING_TYPE_STRING, 2);
 			HWREG(GPIO_A_DATA + (0x04 << 2)) = 0x04;
 			ibm_ledger_t* img = (ibm_ledger_t*)(ledgerPageAddr);
 			// Sanity check NVIC entries.
@@ -256,12 +282,12 @@ int main(void)
 
 	w25q_id = W25qxx_ReadID();
 
-	dbg_output("Bootloader Version:", ENCODING_TYPE_RAW, sizeof("Bootloader Version:"));
-	dbg_output(BOOT_VERSION_STRING, ENCODING_TYPE_RAW, sizeof(BOOT_VERSION_STRING));
-	dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
-	dbg_output("SPI-Flash ID:", ENCODING_TYPE_RAW, sizeof("SPI-Flash ID:"));
-	dbg_output((char*)&w25q_id, ENCODING_TYPE_UTF8, sizeof(w25q_id));
-	dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
+	dbg_output("Bootloader Version:", ENCODING_TYPE_STRING, sizeof("Bootloader Version:"));
+	dbg_output(BOOT_VERSION_STRING, ENCODING_TYPE_STRING, sizeof(BOOT_VERSION_STRING));
+	dbg_output("\r\n", ENCODING_TYPE_STRING, 2);
+	dbg_output("SPI-Flash ID:", ENCODING_TYPE_STRING, sizeof("SPI-Flash ID:"));
+	dbg_output((char*)&w25q_id, ENCODING_TYPE_RAW, sizeof(w25q_id));
+	dbg_output("\r\n", ENCODING_TYPE_STRING, 2);
 
 	//watchdog_start();
 	//fade(LEDS_ORANGE);
@@ -285,9 +311,9 @@ int main(void)
 		xmem_pread_raw(&img_hdr,sizeof(OTA_FlashImageHeader_t),imgHeaderStartOffset);
 		xmem_pread_raw(&img_status,sizeof(OTA_FlashImageStatus_t),imgStatusOffset);
 		
-		dbg_output("Check ext-img:", ENCODING_TYPE_RAW, sizeof("Check ext-img:"));
-		dbg_output((char*)&img_hdr, ENCODING_TYPE_UTF8, sizeof(img_hdr));
-		dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
+		dbg_output("Check ext-img:", ENCODING_TYPE_STRING, sizeof("Check ext-img:"));
+		dbg_output((char*)&img_hdr, ENCODING_TYPE_RAW, sizeof(img_hdr));
+		dbg_output("\r\n", ENCODING_TYPE_STRING, 2);
 
 		
 		if( img_hdr.magicNumber ==  OTA_HDR_MAGIC_NUMBER && 
@@ -303,14 +329,14 @@ int main(void)
 				continue;
 			}
 			
-			dbg_output("Found ext-img:",ENCODING_TYPE_RAW,sizeof("Found ext-img:"));
-			dbg_output((char*)&img_hdr.fileLen, ENCODING_TYPE_UTF8, sizeof(img_hdr.fileLen));
-			dbg_output("\r\n", ENCODING_TYPE_RAW, 2);
+			dbg_output("Found ext-img:",ENCODING_TYPE_STRING,sizeof("Found ext-img:"));
+			dbg_output((char*)&img_hdr.fileLen, ENCODING_TYPE_RAW, sizeof(img_hdr.fileLen));
+			dbg_output("\r\n", ENCODING_TYPE_STRING, 2);
 
 			/* First, erase on-chip flash */
 			rom_util_page_erase(FLASH_FW_ADDR, FLASH_FW_SIZE);
 
-			dbg_output("copy ext-img :\r\n", ENCODING_TYPE_RAW, sizeof("copy ext-img :\r\n"));
+			dbg_output("copy ext-img :\r\n", ENCODING_TYPE_STRING, sizeof("copy ext-img :\r\n"));
 			/* copy ext-img to on-chip flash */
 			for(pos = 0, i = 1 ; pos < img_hdr.fileLen; i++){
 
@@ -327,9 +353,9 @@ int main(void)
 				
 				xmem_pread_raw(shared_buf, count, imgDataStartOffset + pos);
 
-				dbg_output(".", ENCODING_TYPE_RAW, sizeof("."));
+				dbg_output(".", ENCODING_TYPE_STRING, sizeof("."));
 				if( i % 32 == 0){
-					dbg_output("\r\n", ENCODING_TYPE_RAW, sizeof("\r\n"));
+					dbg_output("\r\n", ENCODING_TYPE_STRING, sizeof("\r\n"));
 				}
 				
 			    INTERRUPTS_DISABLE();
@@ -342,8 +368,8 @@ int main(void)
 				pos += count;
 			}
 
-			dbg_output("\r\n", ENCODING_TYPE_RAW, sizeof("\r\n"));
-			dbg_output("Copy Done!!\r\n", ENCODING_TYPE_RAW, sizeof("Copy Done!!\r\n"));
+			dbg_output("\r\n", ENCODING_TYPE_STRING, sizeof("\r\n"));
+			dbg_output("Copy Done!!\r\n", ENCODING_TYPE_STRING, sizeof("Copy Done!!\r\n"));
 
 			/* Set flag indicating ext-image already copyed into on-chip flash */
 			img_status.status = OTA_EXT_IMG_STATUS_STALE;
@@ -362,16 +388,16 @@ int main(void)
 
 
 BOOT_APP:
-	dbg_output("booting:\r\n", ENCODING_TYPE_RAW, sizeof("booting:\r\n"));
+	dbg_output("booting:\r\n", ENCODING_TYPE_STRING, sizeof("booting:\r\n"));
 	rc = boot_app();
 	if(rc != 0){
-		dbg_output(no_img_found, ENCODING_TYPE_RAW, sizeof(no_img_found));
+		dbg_output(no_img_found, ENCODING_TYPE_STRING, sizeof(no_img_found));
 	}
 
 
 	while(1) {
 
-		dbg_output(dummy, ENCODING_TYPE_RAW, sizeof(dummy));
+		dbg_output(dummy, ENCODING_TYPE_STRING, sizeof(dummy));
 		debug_led();
 		/* We have serviced all pending events. Enter a Low-Power mode. */
 		lpm_enter();
