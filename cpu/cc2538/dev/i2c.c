@@ -155,14 +155,18 @@ i2c_master_error(void)
   return I2C_MASTER_ERR_NONE;
 }
 /*---------------------------------------------------------------------------*/
+#define I2C_TIMEOUT         5000
 uint8_t
 i2c_single_send(uint8_t slave_addr, uint8_t data)
 {
+  int32_t timeout = I2C_TIMEOUT;
   i2c_master_set_slave_address(slave_addr, I2C_SEND);
   i2c_master_data_put(data);
   i2c_master_command(I2C_MASTER_CMD_SINGLE_SEND);
 
-  while(i2c_master_busy());
+  while(i2c_master_busy() && timeout > 0){
+    timeout--;
+  };
 
   /* Return the STAT register of I2C module if error occured, I2C_MASTER_ERR_NONE otherwise */
   return i2c_master_error();
@@ -172,17 +176,22 @@ uint8_t
 i2c_single_receive(uint8_t slave_addr, uint8_t *data)
 {
   uint8_t temp;
+  int32_t timeout = I2C_TIMEOUT;
 
   i2c_master_set_slave_address(slave_addr, I2C_RECEIVE);
   i2c_master_command(I2C_MASTER_CMD_SINGLE_RECEIVE);
 
-  while(i2c_master_busy());
+  while(i2c_master_busy() && timeout > 0){
+    timeout--;
+  };
+
   temp = i2c_master_error();
   if(temp == I2C_MASTER_ERR_NONE) {
     *data = i2c_master_data_get();
   }
   return temp;
 }
+
 /*---------------------------------------------------------------------------*/
 uint8_t
 i2c_burst_send(uint8_t slave_addr, uint8_t *data, uint8_t len)
