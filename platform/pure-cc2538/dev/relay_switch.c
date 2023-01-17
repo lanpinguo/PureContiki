@@ -71,6 +71,10 @@ relay_switch_init(void)
 	    ioc_set_over(relay_sw_table[i].port, relay_sw_table[i].pin, IOC_OVERRIDE_OE);
 	}
 
+	/* turn on default */
+	for(i = 0 ; i < SWITCH_NUM; i++){
+		relay_switch_set(i, 1);
+	}
 
 	printf("relay_switch_init done\r\n");
 

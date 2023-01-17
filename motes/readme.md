@@ -1,42 +1,60 @@
-1\
+## 1. device address record
+``` 
 coap server 0 fe80::0212:4b00:1005:fdf1
 coap server 0 fe80::0212:4b00:1940:c17a
 coap server 1 fe80::0212:4b00:18f1:d9d2
 coap server 2 fe80::0212:4b00:1940:c0e3
-
-2\
+``` 
+## 2. setup tunnel on linux server
+```bash
 ./tunslip6 -v5 -s /dev/ttyACM0 fd00::1/64 &
-./tunslip6 -s /dev/ttyACM0 fd00::1/64 &    
-3\
-wget -6 "http://[fd00::212:4b00:1005:fdf3]/"
+```
 
-4\
+```bash
+./tunslip6 -s /dev/ttyACM0 fd00::1/64 & 
+```   
+
+## 3. test coap service
+```bash
+ wget -6 "http://[fd00::212:4b00:1005:fdf3]/" 
+ ```
+
+## 4. test mote device
+
+``` 
 ping6 fd00::212:4b00:1005:fdf1
 ping6 fd00::212:4b00:18f1:d9d2
 ping6 fd00::212:4b00:1005:fdf3
 ping6 fd00::212:4b00:1940:c08f
 ping6 fd00::212:4b00:1940:c0d5
 ping6 fd00::1  
+``` 
+## 5. compile
 
-5、
-Compile version with using tsch as mac layer
-/work/contiki/motes (tsch-debug *)$ make USING_TSCH=1 all
+### (1) Compile version with using tsch as mac layer
 
-Compile version with using csma as mac layer
-/work/contiki/motes (tsch-debug *)$ make USING_TSCH=1 all
+``` /work/contiki/motes (tsch-debug *)$ make USING_TSCH=1 all``` 
 
+### (2) Compile version with using csma as mac layer
 
-/work/contiki/motes (tsch-debug *)$ make USING_TSCH=1 MAKE_WITH_SECURITY=1  all
+``` /work/contiki/motes (tsch-debug *)$ make USING_TSCH=1 all``` 
 
-/work/contiki/motes (tsch-debug *)$ make USING_TSCH=1 MAKE_WITH_SECURITY=1 OTA_ENABLE=1 all
+### (3) Compile version with SECURITY
+``` /work/contiki/motes (tsch-debug *)$ make USING_TSCH=1 MAKE_WITH_SECURITY=1  all``` 
 
-6\
+### (4) Compile version with OTA/SECURITY
+``` /work/contiki/motes (tsch-debug *)$ make USING_TSCH=1 MAKE_WITH_SECURITY=1 OTA_ENABLE=1 all``` 
+
+## 6. service
+``` 
 border-router-6lowpan.service
 pure-bridge-agent.service
 pure-web.service
 systemctl status pure-bridge-agent
+``` 
+## 7. debug module
 
-7\
+``` 
 	CONTIKI_MOD_NONE ,			/* 00 */
 	CONTIKI_MOD_SLIP_BRG,		/* 01 */
 	CONTIKI_MOD_RF ,			/* 02 */
@@ -65,3 +83,10 @@ systemctl status pure-bridge-agent
 	CONTIKI_MOD_OTA,			/* 25 */
 	CONTIKI_MOD_CFS_COFFEE,		/* 26 */
 	CONTIKI_MOD_COMMON,			/* 27 */
+``` 
+
+## 8. program board
+### example
+```bash
+ motes$ ./cc2538-bsl.py -e -w ./PureSwitch/PureSwitch.hex 
+ ```
