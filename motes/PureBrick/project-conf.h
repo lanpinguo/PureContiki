@@ -71,7 +71,7 @@
  * Switches on the Pure-X are connected as follows:
  */
 
-#define PLATFORM_HAS_RELAY_SWITCH		1
+// #define PLATFORM_HAS_RELAY_SWITCH		1
 /** INDICATE_CTRL -> PD0 */
 #define LED_CTRL_PORT     GPIO_D_NUM
 #define LED_CTRL_PIN      0

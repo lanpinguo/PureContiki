@@ -43,9 +43,9 @@
 #include "rest-engine.h"
 #include "er-coap.h"
 #include "dev/leds.h"
-#include "relay_switch.h"
 #include <string.h>
 #include "res_common_cfg.h"
+#include "PureBrick.h"
 
 #include <stdlib.h>
 #include <stdio.h>

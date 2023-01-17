@@ -117,8 +117,123 @@ PROCESS_NAME(shell_debug_process);
 PROCESS_NAME(ota_upgrade_process);
 PROCESS_NAME(telnetd_process);
 
+#define PCF8547_ADDR_BASE       0x20
+#define SWITCH_NUM              8
+
+
+int32_t i2c_switch_set(uint32_t ch, uint32_t val)
+{
+	int32_t rc;
+	uint8_t buf[2] = {0,0};
+
+    if(val > 0){
+        buf[0] = 0xFF;
+    }
+    else{
+        buf[0] = 0xFC;
+    }
+    rc = i2c_single_send(PCF8547_ADDR_BASE + ch, buf[0]);
+    if(rc){
+        printf("PCF8574 write in channel %ld, error (%lx)\r\n", ch, rc);
+    }
+    else{
+        printf("ch %ld state: 0x%02x\r\n", ch, buf[0]);
+    }
+
+    return rc;
+
+}
+
+int32_t i2c_switch_get(uint32_t ch, uint32_t* val)
+{
+	uint8_t buf[2] = {0,0};
+	int32_t rc;
+
+    rc = i2c_single_receive(PCF8547_ADDR_BASE + ch, buf);
+    if(rc){
+        printf("PCF8574 get in channel %ld, error (%lx)\r\n",ch, rc);
+    }
+    else{
+        printf("ch %ld state: 0x%02x\r\n", ch, buf[0]);
+    }
+
+    if((buf[0] & 0x02) == 0x02){
+        *val = 1;
+    }
+    else{
+        *val = 0;
+    }
+
+    return rc;
+}
+
+int32_t
+relay_switch_get_all(uint32_t *state, uint32_t *mask)
+{
+	int32_t rc;
+	uint32_t val;
+	int i;
+
+	
+	if(state == NULL || mask == NULL){
+		return -1;
+	}
+
+	/*clean first*/
+	*state = 0;
+	*mask = 0;
+
+	
+	for(i = 0 ; i < SWITCH_NUM; i++){
+        rc = i2c_switch_get(i, &val);
+        if(rc == 0){
+            if(val > 0){
+                *state |= (1<<i);
+            }
+            *mask |= (1<<i);
+        }
+		/*printf("[%d] = %x, state = %x\r\n",i,val,*state);*/
+	}
+
+
+	return 0;	
+}
+
+void
+relay_switch_set(uint8_t sw, uint8_t value)
+{
+	if(sw > (SWITCH_NUM - 1)){
+		return ;
+	}
+
+    i2c_switch_set(sw, value);
+}
 
 /*---------------------------------------------------------------------------*/
+int i2c_switch_init(void)
+{
+	uint8_t rc;
+    uint32_t val;   
+	
+	i2c_init(GPIO_D_NUM,1,GPIO_D_NUM,0,I2C_SCL_NORMAL_BUS_SPEED);
+    ioc_set_over(GPIO_D_NUM, 0, IOC_OVERRIDE_PUE);
+    ioc_set_over(GPIO_D_NUM, 1, IOC_OVERRIDE_PUE);
+    printf("\r\ni2c_init done\r\n");
+
+	/* Scan PCF8574 */
+    for(int i = 0 ; i < 8 ; i++){
+        rc = i2c_switch_get(i, &val);
+        if(rc){
+            printf("PCF8574 scan in channel %d, error (%x)\r\n",i, rc);
+        }
+        else{
+            printf("ch %d state: %ld\r\n", i,val);
+        }
+    }
+
+
+	return 0;
+}
 
 PROCESS(dbg_coap_client_process, "debug coap client");
 SHELL_COMMAND(coap_client_command,
@@ -206,12 +321,9 @@ void sw_ctrl(uint32_t active)
 	for(i = 0; i < sizeof(sw_state) * 8; i++){
 		if(sw_mask & (1 << i)){
 			printf("set Relay-SW[%d] : %s\r\n",i,(sw_state & sw_mask) > 0 ? "on" : "off");
-			relay_switch_set(i,(sw_state & sw_mask));
+			// relay_switch_set(i,(sw_state & sw_mask));
 		}
 	}
-
-
-
 }
 
 /*---------------------------------------------------------------------------*/
@@ -237,6 +349,8 @@ PROCESS_THREAD(pure_x_shell_process, ev, data)
 #endif
 
 	hcho_sensor_init(1);  
+
+    i2c_switch_init();
 
 	/* Defalut disable status indication leds*/
 	leds_arch_set(0x0);
