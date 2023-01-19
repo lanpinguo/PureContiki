@@ -89,6 +89,14 @@
 	/** SWITCH7 -> PB5 */ {GPIO_B_NUM, 5}  \
 }
 
+#define PLATFORM_IO_CFG_MAP 		\
+{ \
+	/**                   PORT   PIN **/ \
+	/** IO-CFG-0 -> PB0 */ {GPIO_B_NUM, 0}, \
+	/** IO-CFG-1 -> PB1 */ {GPIO_B_NUM, 1}, \
+	/** IO-CFG-2 -> PB2 */ {GPIO_B_NUM, 2}, \
+	/** IO-CFG-3 -> PB3 */ {GPIO_B_NUM, 3}, \
+}
 
 
 #define PLATFORM_HAS_LEDS       		1

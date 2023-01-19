@@ -238,7 +238,7 @@ int i2c_switch_init(void)
 PROCESS(dbg_coap_client_process, "debug coap client");
 SHELL_COMMAND(coap_client_command,
 		"coap",
-		"coap [enable|disable] [mode]: coap client debug ",
+		"coap coap client debug ",
 		&dbg_coap_client_process);
 
 
@@ -247,6 +247,8 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 	//const char *nextptr;
 	char* argv[5];
 	int argc;
+    uint32_t channel, value;
+
 	static COAP_CLIENT_ARG_t coap_args;
 	
 	PROCESS_BEGIN();
@@ -279,7 +281,28 @@ PROCESS_THREAD(dbg_coap_client_process, ev, data)
 		} 
 		else if(strncmp(argv[0], "res", 3) == 0) {
 			coap_args.mod_id = COAP_CLIENT_OWN;
-		}else{
+		}
+		else if(strncmp(argv[0], "lcl", 3) == 0) {
+			if(argc == 3){
+				channel = atoi(argv[1]);
+				if(strncmp(argv[2], "on", 2) == 0) {
+					value = 1;
+				} 
+				else if(strncmp(argv[2], "off", 3) == 0) {
+					value = 0;
+				}
+				else{
+					goto ERROR;
+				}
+                relay_switch_set(channel, value);
+                goto DONE;
+			}
+			else{
+				goto ERROR;
+			}
+			
+		} 
+        else{
 			goto ERROR;
 		}
 
